@@ -8,9 +8,11 @@ import { GoogleGenAI } from "@google/genai";
 
 export const FALLBACK_SENTENCE = "I do not have enough information in the provided CSULB sources.";
 export const CAMPUS_MAP_URL = "https://www.csulb.edu/maps";
-const DEFAULT_MODEL = "gemini-3.8-flash";
-// If the main model is overloaded (Google returns 503 "high demand"), we try this one once.
-const DEFAULT_BACKUP_MODEL = "gemini-3.5-flash-lite";
+// Main model: the fast, low-cost Flash-Lite. (We switched from gemini-3.8-flash because our
+// free-tier project was rate-limited on it for a whole day of testing.) Override with GEMINI_MODEL.
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
+// If the main model is busy or rate-limited, we try this one once. Override with GEMINI_BACKUP_MODEL.
+const DEFAULT_BACKUP_MODEL = "gemini-3.8-flash";
 
 // The rules Gemini must follow. This is the most important part of keeping answers grounded.
 const SYSTEM_PROMPT = `You are the CSULB Services Assistant. You help Cal State Long Beach students find information about university services.
@@ -93,8 +95,11 @@ export function hasApiKey() {
   return Boolean(process.env.GEMINI_API_KEY?.trim());
 }
 
-/** Ask Gemini. `input` already contains the sources, conversation, and question. */
-export async function askGemini(input: string): Promise<GeminiReply> {
+/**
+ * Ask Gemini. `input` already contains the sources, conversation, and question.
+ * Returns Gemini's reply and the name of the model that wrote it (main or backup).
+ */
+export async function askGemini(input: string): Promise<{ reply: GeminiReply; model: string }> {
   if (!hasApiKey()) {
     throw new FriendlyError(
       "missing_api_key",
@@ -121,6 +126,7 @@ export async function askGemini(input: string): Promise<GeminiReply> {
     );
 
   let outputText: string | undefined;
+  let usedModel = mainModel;
   try {
     let interaction;
     try {
@@ -134,6 +140,7 @@ export async function askGemini(input: string): Promise<GeminiReply> {
       const worthSwitching = status === 0 || status === 429 || status >= 500;
       if (!worthSwitching || backupModel === mainModel) throw err;
       console.warn(`[gemini] ${mainModel} failed (status=${status || "timeout/network"}), trying backup model ${backupModel}`);
+      usedModel = backupModel;
       interaction = await callModel(backupModel, 1, 25_000);
     }
     outputText = interaction.output_text ?? undefined;
@@ -146,7 +153,7 @@ export async function askGemini(input: string): Promise<GeminiReply> {
     if (!["answer", "clarify", "fallback"].includes(reply.type) || typeof reply.answer !== "string") {
       throw new Error("unexpected shape");
     }
-    return reply;
+    return { reply, model: usedModel };
   } catch {
     throw new FriendlyError("bad_ai_response", "The AI sent back an answer we couldn't read. Please try asking again.", 502);
   }

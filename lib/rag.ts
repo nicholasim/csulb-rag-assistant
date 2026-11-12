@@ -35,6 +35,7 @@ export type ChatResponse = {
   answer: string;
   sources: Source[]; // sources cited in the answer
   suggestion: { title: string; url: string } | null; // for fallbacks: where to look instead
+  model: string | null; // which Gemini model wrote the reply (null = no AI was needed)
 };
 
 /** Is the student asking for a map or how to get around? */
@@ -272,11 +273,11 @@ function buildInput(question: string, results: SearchResult[], history: ChatMess
 }
 
 /** The fallback reply, plus a link to look at instead when we have one. */
-function fallback(suggestion: ChatResponse["suggestion"]): ChatResponse {
+function fallback(suggestion: ChatResponse["suggestion"], model: string | null): ChatResponse {
   const answer = suggestion
     ? `${FALLBACK_SENTENCE} You may find help on this CSULB page: [${suggestion.title}](${suggestion.url})`
     : FALLBACK_SENTENCE;
-  return { type: "fallback", answer, sources: [], suggestion };
+  return { type: "fallback", answer, sources: [], suggestion, model };
 }
 
 const MAP_SUGGESTION = { title: "CSULB Campus Maps", url: CAMPUS_MAP_URL };
@@ -310,11 +311,11 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // 3. Nothing matched well enough: fall back without calling the AI.
   if ((results[0]?.score ?? 0) < MIN_SCORE) {
-    return fallback(isMapQuestion(question) ? MAP_SUGGESTION : null);
+    return fallback(isMapQuestion(question) ? MAP_SUGGESTION : null, null);
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
-  const reply = await askGemini(buildInput(question, results, history));
+  const { reply, model } = await askGemini(buildInput(question, results, history));
 
   // 5. Shape the response.
   if (reply.type === "fallback") {
@@ -324,7 +325,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
       : related
         ? { title: related.title, url: related.url }
         : null;
-    return fallback(suggestion);
+    return fallback(suggestion, model);
   }
 
   // Double-check contact details against the sources before showing anything.
@@ -342,5 +343,5 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     excerpt: bestExcerpt(chunks, question, textCiting(answer, id)),
   }));
 
-  return { type: reply.type, answer, sources, suggestion: null };
+  return { type: reply.type, answer, sources, suggestion: null, model };
 }

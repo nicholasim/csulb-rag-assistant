@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "fetch-sources": "tsx scripts/fetch-sources.ts",
-    "screenshots": "tsx scripts/take-screenshots.ts"
+    "screenshots": "tsx scripts/take-screenshots.ts",
+    "test:questions": "tsx scripts/run-tests.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

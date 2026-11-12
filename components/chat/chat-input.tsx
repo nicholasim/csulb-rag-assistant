@@ -40,8 +40,8 @@ export function ChatInput({
       <label htmlFor="question" className="sr-only">
         Ask a question about CSULB services
       </label>
-      {/* Focus: one thin gold ring instead of the default thick double ring. */}
-      <InputGroup className="rounded-2xl border-input bg-background has-[[data-slot=input-group-control]:focus-visible]:border-gold has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-gold">
+      {/* Focus: one thin, darker-gold ring (3.6:1 on white) instead of the default thick double ring. */}
+      <InputGroup className="rounded-2xl border-input bg-background has-[[data-slot=input-group-control]:focus-visible]:border-gold-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-gold-ring">
         <InputGroupTextarea
           id="question"
           ref={textareaRef}

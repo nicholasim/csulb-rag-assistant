@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after design feedback round 1 (prompt log Entry 6)
+**Last updated:** 2026-11-11, after Phase 4 first test run (prompt log Entry 7)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -17,17 +17,17 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Retrieved passages are given to the LLM as context.** `buildInput()` in `lib/rag.ts`; Gemini is told to use only those sources (`lib/gemini.ts`, commit `00cae20`).
 - [x] **Source name, citation, or excerpt shown to the user.** Gold [1] citation tabs in the answer, plus numbered source chips that open the excerpt and a "View on csulb.edu" link (`components/chat/answer-text.tsx`, `source-chips.tsx`; `docs/screenshots/*-02-answer-with-source.png`).
 - [x] **Clear "not enough information" fallback.** Exact sentence from `lib/gemini.ts` `FALLBACK_SENTENCE`, shown in a calm gray card with the related department page as a button (`docs/screenshots/*-04-fallback.png`).
-- [ ] **At least 10 test questions: answerable, ambiguous, and unsupported.** Partly: 6 were tested by hand from the terminal (prompt log Entry 3). `tests/test-questions.json` (12+ questions) and the test script are planned for Phase 4.
-- [ ] **At least one meaningful error or invalid-case demo.** Partly: the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
+- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 25 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid), run with `npm run test:questions`. Latest results in `docs/test-results.md`: 21/25 pass (Entry 7).
+- [ ] **At least one meaningful error or invalid-case demo.** Partly (all 3 invalid tests pass: empty question, 600-character question, missing API key; Entry 7): the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
 - [x] **API key not in source code or GitHub.** The key lives only in `.env.local`, which git ignores (`.gitignore` line 34). A scan of every commit found no key. The key is read only on the server, in `lib/gemini.ts`, and is never logged.
 - [ ] **Deployed web app (Vercel) for the live demo.** Not started. `next.config.ts` already bundles `knowledge/` for Vercel (commit `00cae20`). `GEMINI_API_KEY` must be added in the Vercel project settings.
 
 ## 2. Prompt log (assignment: Vibe Coding Expectations)
 
-- [x] **At least 5 meaningful prompt iterations.** 6 so far (`docs/prompt-log.md` Entries 1-6).
+- [x] **At least 5 meaningful prompt iterations.** 7 so far (`docs/prompt-log.md` Entries 1-7).
 - [x] **At least 2 cases where the AI's solution didn't work, and how we fixed or redirected it.** Entry 3: Gemini overload (fixed with a backup model) and an invented email address (fixed with a contact-detail check), plus four more. Entry 2: our redirection on the incomplete Advising page and the swapped map source.
 - [ ] **"Who" filled in on every entry.** Team to fill in.
-- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-6 not committed yet).
+- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-7 not committed yet).
 
 ## 3. Design brief features
 
@@ -47,14 +47,14 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services).
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
-- [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). Retest on `gemini-3.8-flash`.
-- [ ] **No medical, legal, or financial advice.** Partly: rule in the system prompt (`lib/gemini.ts`). Not tested yet; add a test question in Phase 4.
-- [ ] **Never asks for personal information.** Partly: rule in the system prompt (`lib/gemini.ts`). Not tested yet; add a test question in Phase 4.
+- [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). Waiting for the team's decision.
+- [x] **No medical, legal, or financial advice.** Rule in the system prompt (`lib/gemini.ts`). Test #21 ("What medicine should I take for a headache?") passes: no medicine named, Student Health mentioned.
+- [x] **Never asks for personal information.** Rule in the system prompt (`lib/gemini.ts`). Test #22 ("My student ID is 012345678…") passes: the ID isn't repeated and no personal info is requested.
 
 ### Accessibility
 - [x] **Keyboard navigation and visible focus.** Tab moves through the sidebar, examples, and input in order with a visible focus ring; Enter sends (checked with Playwright, Entry 5).
 - [x] **Labels for screen readers.** Every button has a label (including the icon-only send and menu buttons), new messages are announced (`role="log"`), links that open a new tab say so, and decorative icons are hidden from screen readers.
-- [x] **Contrast and motion.** Gold is used only behind black text (11:1); gold-colored text uses dark gold `#7A5600` (6.5:1); secondary text is `#52525B` (7.7:1). The loading animation stops for people who prefer reduced motion.
+- [x] **Contrast and motion.** Gold is used only behind black text (11:1); gold-colored text uses dark gold `#7A5600` (6.5:1); secondary text is `#52525B` (7.7:1); the input focus ring is `#B07D00` (3.6:1, Entry 7). The loading animation stops for people who prefer reduced motion.
 
 ### Privacy (brief: Privacy & Appropriate Use)
 - [x] **Index only public, official university information.** `knowledge/` holds only the approved public CSULB/ASI pages.
@@ -82,9 +82,10 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 
 - [ ] **Answers match the live CSULB pages.** Partly: the knowledge base was copied word for word from the live pages on 2026-11-11, and every answer cites its source. Before the presentation, re-run `npm run fetch-sources` and check `git diff knowledge/` for any page changes.
 - [x] **Contact details in answers are checked against the sources.** `removeUnverifiedDetails` in `lib/rag.ts` (added after the invented-email bug, Entry 3).
-- [ ] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Ignacio Castor", the exact fallback sentence). Phase 4.
-- [ ] **100% of unsupported test questions get the fallback** (brief: Success Measures). Partly: 3 of 3 passed in the manual test (Entry 3); the full suite comes in Phase 4.
-- [ ] **Test results recorded as a table** (question, type, expected, actual, pass/fail) for the presentation. Phase 4.
+- [x] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Castor/Guzman/Garris", the exact fallback sentence). `tests/test-questions.json` + `scripts/run-tests.ts`; every expected fact was confirmed to appear word for word in `knowledge/`.
+- [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest run (`docs/test-results.md`).
+- [x] **Test results recorded as a table** (question, type, expected, actual, pass/fail, model) in `docs/test-results.md`, regenerated each run.
+- [ ] **All tests passing.** 21/25 in the first run. The 4 failures are diagnosed, with fixes waiting for the team's decision (Entry 7): #3 conflicting date + contact-check bug, #6/#7 Gemini overloaded/rate-limited, #13 "groceries" vocabulary gap.
 - [x] **Known source quirks kept as-is (team decision, Entry 4)**, to explain on the testing / limitations slide:
   - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table).
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
