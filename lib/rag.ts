@@ -4,7 +4,9 @@
  *   question -> 1. check the input; crisis messages get CSULB's crisis contacts right away (crisis.ts);
  *                  reply to small talk ("hi", "thanks") right away (small-talk.ts);
  *                  fix typos for searching (spelling.ts)
- *            -> 2. retrieve the best-matching CSULB chunks (retrieval.ts)
+ *            -> 2. rewrite the question into 1-3 search queries (rewrite.ts), search with each
+ *                  query and the question itself, by keywords (retrieval.ts) and by meaning
+ *                  (vector-search.ts), and merge the results (rank-merge.ts)
  *            -> 3. nothing matches well? reply with the fallback, no AI needed
  *            -> 4. otherwise ask Gemini, giving it ONLY those chunks (gemini.ts)
  *            -> 5. return the answer + the sources it cited
@@ -17,6 +19,9 @@ import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
 import { crisisReply, isCrisisMessage } from "./crisis";
 import { officeByNumber } from "./directory";
+import { removePersonalDetails, rewriteQuestion } from "./rewrite";
+import { mergeRankings } from "./rank-merge";
+import { vectorSearch } from "./vector-search";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -43,6 +48,7 @@ export type ChatResponse = {
   suggestion: { title: string; url: string } | null; // for fallbacks: where to look instead
   model: string | null; // which Gemini model wrote the reply (null = no AI was needed)
   correctedQuestion: string | null; // the question with typos fixed, if we fixed any ("Showing results for: ...")
+  searchQueries?: string[]; // what we actually searched with (rewritten queries + the question), personal details removed
   examples?: string[]; // chat replies only: example questions shown as buttons
 };
 
@@ -273,7 +279,7 @@ export function removeUnverifiedDetails(answer: string, results: SearchResult[])
  * If we fixed typos, Gemini gets the student's own words AND the fixed version, so it can
  * tell if our fix changed what the student meant.
  */
-function buildInput(question: string, correctedQuestion: string | null, results: SearchResult[], history: ChatMessage[]) {
+function buildInput(question: string, correctedQuestion: string | null, searchQueries: string[], results: SearchResult[], history: ChatMessage[]) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "America/Los_Angeles" });
   const sources = results
     .map(({ chunk }, i) => `[${i + 1}] ${chunk.title} > ${chunk.heading}\nURL: ${chunk.url}\n${chunk.text}`)
@@ -284,15 +290,40 @@ function buildInput(question: string, correctedQuestion: string | null, results:
         .join("\n")}\n\n`
     : "";
   const spelling = correctedQuestion ? `\n(Spelling-corrected version we searched with: ${correctedQuestion})` : "";
-  return `Today's date: ${today}\n\nSOURCES:\n\n${sources}\n\n${conversation}STUDENT QUESTION:\n${question}${spelling}`;
+  const queries = searchQueries.length > 1 ? `\n(Search queries we used to find the sources: ${searchQueries.join(" | ")})` : "";
+  return `Today's date: ${today}\n\nSOURCES:\n\n${sources}\n\n${conversation}STUDENT QUESTION:\n${question}${spelling}${queries}`;
 }
 
 /** The fallback reply, plus a link to look at instead when we have one. */
-function fallback(suggestion: ChatResponse["suggestion"], model: string | null, correctedQuestion: string | null): ChatResponse {
+function fallback(suggestion: ChatResponse["suggestion"], model: string | null, correctedQuestion: string | null, searchQueries: string[]): ChatResponse {
   const answer = suggestion
     ? `${FALLBACK_SENTENCE} You may find help on this CSULB page: [${suggestion.title}](${suggestion.url})`
     : FALLBACK_SENTENCE;
-  return { type: "fallback", answer, sources: [], suggestion, model, correctedQuestion };
+  return { type: "fallback", answer, sources: [], suggestion, model, correctedQuestion, searchQueries };
+}
+
+const RESULTS_PER_QUERY = 10; // how deep each search list goes before merging
+
+// Meaning-based search alone can also let a question through to Gemini, if its best match is at
+// least this similar (0 to 1). Picked from our test questions (prompt log Entry 16); Infinity = off,
+// so only the keyword score decides.
+const MIN_SIMILARITY = Infinity;
+
+/**
+ * Search with every query, two ways: by keywords (BM25, retrieval.ts) and by meaning (embeddings,
+ * vector-search.ts). Then merge all the lists into the TOP_K chunks for Gemini (rank-merge.ts).
+ * bestScore / bestSimilarity are the best match from each kind: our "did anything really match?" check.
+ */
+async function retrieve(queries: string[]) {
+  const keywordLists = queries.map((q) => search(q, RESULTS_PER_QUERY));
+  const meaningLists = await vectorSearch(queries, RESULTS_PER_QUERY); // [] if unavailable
+  const bestScore = Math.max(0, ...keywordLists.map((list) => list[0]?.score ?? 0));
+  const bestSimilarity = Math.max(0, ...meaningLists.map((list) => list[0]?.similarity ?? 0));
+  const results = mergeRankings(
+    [...keywordLists.map((list) => list.map((r) => r.chunk)), ...meaningLists.map((list) => list.map((r) => r.chunk))],
+    TOP_K,
+  );
+  return { results, matched: bestScore >= MIN_SCORE || bestSimilarity >= MIN_SIMILARITY };
 }
 
 const MAP_SUGGESTION = { title: "CSULB Campus Maps", url: CAMPUS_MAP_URL };
@@ -341,21 +372,29 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   const searchText = spelling.corrected;
   const correctedQuestion = spelling.changes.length ? searchText : null;
 
-  // 2. Retrieve. A follow-up like "the second one" matches nothing on its own,
-  //    so if the first search is weak we search again together with the previous question.
-  let results = search(searchText, TOP_K);
+  // 2. Rewrite the question into search queries ("CS major" -> "Computer Science major"; a follow-up
+  //    becomes a full question). We always search with the question itself too, so a bad rewrite
+  //    can't hide an obvious match. Personal details (IDs, emails, phone numbers) are removed first.
+  const rewritten = await rewriteQuestion(smallTalk.rest, history);
+  const searchQueries = [...new Set([searchText, ...(rewritten ?? [])].map(removePersonalDetails).filter(Boolean))];
+  let { results, matched } = await retrieve(searchQueries);
+
+  // If the rewrite failed, a follow-up like "the second one" matches nothing on its own,
+  // so if the search is weak we search again together with the previous question (the old way).
   const lastUserQuestion = [...history].reverse().find((m) => m.role === "user")?.content;
-  if ((results[0]?.score ?? 0) < MIN_SCORE && lastUserQuestion) {
-    results = search(`${correctSpelling(lastUserQuestion).corrected} ${searchText}`, TOP_K);
+  if (!rewritten && !matched && lastUserQuestion) {
+    const retryQuery = removePersonalDetails(`${correctSpelling(lastUserQuestion).corrected} ${searchText}`);
+    ({ results, matched } = await retrieve([retryQuery]));
+    searchQueries.push(retryQuery);
   }
 
   // 3. Nothing matched well enough: fall back without calling the AI.
-  if ((results[0]?.score ?? 0) < MIN_SCORE) {
-    return fallback(isMapQuestion(searchText) ? MAP_SUGGESTION : null, null, correctedQuestion);
+  if (!matched) {
+    return fallback(isMapQuestion(searchText) ? MAP_SUGGESTION : null, null, correctedQuestion, searchQueries);
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
-  const { reply, model } = await askGemini(buildInput(question, correctedQuestion, results, history));
+  const { reply, model } = await askGemini(buildInput(question, correctedQuestion, searchQueries, results, history));
 
   // 5. Shape the response.
   if (reply.type === "fallback") {
@@ -368,7 +407,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
       : related
         ? { title: related.title, url: related.url }
         : officeByNumber(reply.related_office);
-    return fallback(suggestion, model, correctedQuestion);
+    return fallback(suggestion, model, correctedQuestion, searchQueries);
   }
 
   // Double-check contact details against the sources before showing anything.
@@ -386,5 +425,5 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     excerpt: bestExcerpt(chunks, searchText, textCiting(answer, id)),
   }));
 
-  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion };
+  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion, searchQueries };
 }

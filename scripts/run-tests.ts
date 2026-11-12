@@ -39,6 +39,7 @@ type Expect = {
   correctedQuestion?: string | null; // pattern the typo-fixed question must match; null = nothing should be fixed
   minExamples?: number; // chat replies: at least this many example-question buttons
   maxAnswerChars?: number; // the answer must be at most this long (e.g. a referral, not a written essay)
+  searchQueriesMustNotInclude?: string[]; // patterns that must never appear in the queries we searched with (e.g. a student ID)
 };
 
 type Test = {
@@ -64,6 +65,7 @@ type ApiResult = {
     suggestion?: { title: string; url: string } | null;
     model?: string | null;
     correctedQuestion?: string | null;
+    searchQueries?: string[];
     examples?: string[];
     error?: { code: string; message: string };
   };
@@ -123,6 +125,9 @@ function check(test: Test, result: ApiResult): string[] {
   if (expect.maxAnswerChars && (body.answer ?? "").length > expect.maxAnswerChars) {
     problems.push(`answer is ${(body.answer ?? "").length} characters, expected at most ${expect.maxAnswerChars}`);
   }
+  for (const pattern of expect.searchQueriesMustNotInclude ?? []) {
+    if ((body.searchQueries ?? []).some((q) => new RegExp(pattern, "i").test(q))) problems.push(`search queries should not contain /${pattern}/`);
+  }
   if (expect.minSources && (body.sources?.length ?? 0) < expect.minSources) {
     problems.push(`expected at least ${expect.minSources} source(s), got ${body.sources?.length ?? 0}`);
   }
@@ -149,7 +154,8 @@ function summarize(result: ApiResult) {
   if (body.error) return `HTTP ${httpStatus} error ${body.error.code}: "${body.error.message}"`;
   const text = (body.answer ?? "").replace(/\s+/g, " ").trim();
   const sources = body.sources?.length ? ` (${body.sources.length} source${body.sources.length > 1 ? "s" : ""})` : "";
-  const corrected = body.correctedQuestion ? `[searched: "${body.correctedQuestion}"] ` : "";
+  const searched = body.searchQueries?.length ? body.searchQueries : body.correctedQuestion ? [body.correctedQuestion] : [];
+  const corrected = searched.length ? `[searched: ${searched.map((q) => `"${q}"`).join(" + ")}] ` : "";
   return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}`;
 }
 
@@ -167,7 +173,7 @@ async function main() {
     process.exit(1);
   }
 
-  const rows: { test: Test; question: string; passed: boolean; problems: string[]; summary: string; model: string; answer: string }[] = [];
+  const rows: { test: Test; question: string; passed: boolean; problems: string[]; summary: string; model: string; answer: string; ms: number }[] = [];
   let calledGemini = false;
 
   for (const test of tests) {
@@ -175,11 +181,15 @@ async function main() {
     const usesAi = test.type !== "invalid";
     if (usesAi && calledGemini) await sleep(DELAY_MS); // space out AI calls to avoid rate limits
 
+    let ms = 0; // how long the (last) request took, not counting any wait before a retry
     const run = async (): Promise<ApiResult> => {
+      const started = Date.now();
       try {
         return test.runWithoutApiKey ? await askWithoutApiKey(question) : await askApp(question, test.history);
       } catch (err) {
         return { httpStatus: 0, body: { error: { code: "request_failed", message: (err as Error).message } } };
+      } finally {
+        ms = Date.now() - started;
       }
     };
     let result = await run();
@@ -203,13 +213,14 @@ async function main() {
       summary: summarize(result),
       model,
       answer: result.body.answer ?? result.body.error?.message ?? "",
+      ms,
     };
     rows.push(row);
     const shortQ = (test.history?.length ? "(follow-up) " : "") + question;
     const shortQShown = shortQ.length > 60 ? `${shortQ.slice(0, 57)}...` : shortQ || "(empty)";
     console.log(`${row.passed ? "PASS" : "FAIL"}  #${String(test.id).padStart(2)}  ${test.type.padEnd(11)} ${shortQShown}`);
     if (!row.passed) console.log(`        -> ${problems.join("; ")}`);
-    if (ONLY) console.log(`        ${row.summary}  [${model}]`);
+    if (ONLY) console.log(`        ${row.summary}  [${model}, ${(ms / 1000).toFixed(1)}s]`);
   }
 
   // Results table for the terminal and for docs/test-results.md.
@@ -220,6 +231,12 @@ async function main() {
       return `${type} ${ofType.filter((r) => r.passed).length}/${ofType.length}`;
     })
     .join(", ");
+  // Response times for questions answered by Gemini (not small talk, crisis, or no-AI fallbacks).
+  const aiTimes = rows.filter((r) => r.model.startsWith("gemini")).map((r) => r.ms).sort((a, b) => a - b);
+  const seconds = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+  const timing = aiTimes.length
+    ? `Response time with Gemini (${aiTimes.length} questions): average ${seconds(aiTimes.reduce((a, b) => a + b, 0) / aiTimes.length)}, median ${seconds(aiTimes[Math.floor(aiTimes.length / 2)])}, slowest ${seconds(aiTimes[aiTimes.length - 1])}.`
+    : "No questions used Gemini.";
   const models = [...new Set(rows.map((r) => r.model.replace(" (retried once)", "")).filter((m) => m.startsWith("gemini")))].join(", ") || "none";
 
   const lines = [
@@ -229,14 +246,16 @@ async function main() {
     "",
     `**${passed} of ${rows.length} passed** (${byType}). Gemini models that answered: ${models}.`,
     "",
+    `${timing} (Times don't include the wait before a retry.)`,
+    "",
     `Each test is checked automatically: the response type (answer / clarify / fallback / error), facts that must appear, and text that must not appear. The checks are listed in \`${TESTS_FILE}\`.${tests.some((t) => t.runWithoutApiKey) ? " The missing-API-key test calls the real \`/api/chat\` route code inside the test script with \`GEMINI_API_KEY\` removed, because the running app has a key." : ""} If Gemini is rate-limited or overloaded, the script waits ${RETRY_WAIT_MS / 1000} seconds and retries once; those rows say \"(retried once)\" in the Model column.`,
     "",
-    "| # | Question | Type | Expected behavior | Expected fact | Actual | Result | Model |",
-    "|---|---|---|---|---|---|---|---|",
+    "| # | Question | Type | Expected behavior | Expected fact | Actual | Result | Model | Time |",
+    "|---|---|---|---|---|---|---|---|---|",
     ...rows.map((r) => {
       const followUp = r.test.history?.length ? `(after: "${r.test.history.filter((m) => m.role === "user").map((m) => m.content).join(" / ")}") ` : "";
       const q = followUp + (r.question.length > 80 ? `${r.question.slice(0, 77)}... (${r.question.length} chars)` : r.question || "(empty)");
-      return `| ${r.test.id} | ${cell(q)} | ${r.test.type} | ${cell(r.test.expected_behavior)} | ${cell(r.test.expected_fact)} | ${cell(r.summary)} | ${r.passed ? "PASS" : "**FAIL**"} | ${cell(r.model)} |`;
+      return `| ${r.test.id} | ${cell(q)} | ${r.test.type} | ${cell(r.test.expected_behavior)} | ${cell(r.test.expected_fact)} | ${cell(r.summary)} | ${r.passed ? "PASS" : "**FAIL**"} | ${cell(r.model)} | ${seconds(r.ms)} |`;
     }),
   ];
   const failures = rows.filter((r) => !r.passed);
@@ -247,6 +266,7 @@ async function main() {
     }
   }
   console.log(`\n${passed} of ${rows.length} passed (${byType}). Models: ${models}.`);
+  console.log(timing);
   if (ONLY) {
     console.log(`Ran only tests ${ONLY.join(", ")}, so ${RESULTS_FILE} was not changed.`);
   } else {

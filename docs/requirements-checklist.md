@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-12, after the team's five decisions (Writing Center referral, clarify test, English word list, unreadable-reply fix, 741741 wording) and Step B2: office directory + account rule (prompt log Entry 14)
+**Last updated:** 2026-11-12, after Steps A2 (query rewriting) and A1 (hybrid search) were built. Their live test runs are waiting for Gemini's daily free-tier limit to reset (prompt log Entries 15-16)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -51,6 +51,19 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services). **Office directory (Step B2, Entry 14):** `lib/data/directory.json` lists 42 CSULB offices, each with its official page and one sentence copied word for word from that page. `npm run fetch-sources` checks each sentence is still on the live page. Gemini gets the numbered office names and, when it falls back, picks the office that handles that kind of question (`related_office`, or 0 for none), so it can't invent an office or a link. The "Try:" button prefers a related source page, then that office. Examples: the antibiotic question -> Student Health Services, a private loan -> Financial Aid. Student tests #39-40 and #43-45 pass, in 3 of 3 rounds for the group.
 - [x] **Basic conversation ("chat" replies):** greetings (with 3 example question buttons), thanks, goodbye, "what can you do?" / "who made you?" (official pages only, the service areas, our IS 300 team), and "how are you?" get fixed friendly replies with no AI and no sources (`lib/small-talk.ts`, Entry 11; `docs/screenshots/*-10-chat-hello.png`, `*-11-chat-what-can-you-do.png`). A greeting plus a real question is answered normally; off-topic facts ("capital of France", "write my essay") still fall back. Tests #31-42 pass.
 - [x] **Typos are fixed before searching** ("parkng permit" -> "parking permit"). `lib/spelling.ts`: edit distance against every word in our pages, 1 typo for 4-7 letters and 2 for 8+, no change on a tie, same first letter, and only into words that appear at least twice in our pages (Entry 11). **Real English words are never changed** (Entry 14): about 44,000 common words from SCOWL (`lib/data/english-words.json`, made by `npm run english-words`), so "died", "write" and "dorms" stay as typed. Greetings like "helo" and "thx" are never corrected. Gemini sees the original and the corrected wording, and the UI shows a gray "Showing results for: …" note (Entry 10; `docs/screenshots/*-09-spelling-note.png`). Misspelled tests #26-30 pass (Entry 14).
+- [ ] **Understanding any wording: query rewriting (Step A2).** Partly: built and checked offline (Entry 15).
+  - `lib/rewrite.ts` turns each message into 1-3 search queries: slang, "CS" → Computer Science, follow-ups, two-part questions, "my record" → how to check it, schoolwork → Writing Center/tutoring.
+  - The question itself is always searched too, and the results are merged with RRF (`lib/rank-merge.ts`).
+  - If the rewrite fails, the app searches as before. This was tested with a model name that doesn't exist.
+  - Personal details are removed from every query.
+  - **Left:** the live runs of both test sets, after the daily quota resets.
+- [ ] **Understanding any wording: hybrid search with embeddings (Step A1).** Partly: built, embedded and checked offline (Entry 16).
+  - `npm run embeddings` saves 290 vectors (0.9 MB, `gemini-embedding-001`, 768 numbers each) to `data/`. It's incremental, batched, waits out 429s, and is resumable, for the future full-site crawl.
+  - `lib/vector-search.ts` falls back to keyword search if the vectors are missing or stale, or the call fails (both tested).
+  - Vercel bundles `data/embeddings.*`.
+  - **Offline:** the right page is in the top 5 for 22/22 questions with known pages (19/22 with keywords only).
+  - **Left:** the live runs after the quota resets.
+- [x] **Schoolwork rule** (team decision, Entry 15). The prompt in `lib/gemini.ts` says never to write, rewrite, edit, outline or complete schoolwork, even indirectly. Instead the assistant refers the student to the University Writing Center or The Learning Center. Student tests #36 and #46-48 check for the referral, no content, and ≤ 600 characters. Live run pending.
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
 - [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). **Team decision (Entry 8): left as a known limitation for the limitations slide.** Flash-Lite doesn't reliably notice that the refund table's Feb. 2 row is the same deadline as the Registration table's Feb. 3.
@@ -158,6 +171,10 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **The SRWC membership page hides its contact email** behind a script ("This email address is being protected from spambots"), so that email isn't in our sources.
   - **The Writing Center page doesn't give the center's location.** "wheres the writing center" (student #7) sometimes falls back, and once answered with a room from a past writing-retreat event (LA2-200), which could mislead. The test passed on keywords, but the answer isn't really right (Entry 14).
   - **The office directory relies on Gemini to pick the office** for a fallback. Plain keyword matching on office descriptions was tried first and was too noisy ("take" matched Commencement's "take place"), so it wasn't used. Gemini can only pick a number from our 42-office list or 0, so a wrong pick is possible, but an invented office or link isn't (Entry 14).
+  - **Gemini free-tier daily limit: 500 requests per model per day** (`gemini-3.5-flash-lite`, reported by Google on 2026-11-12). With query rewriting, a normal question costs 2 requests, so the app handles about 250 questions a day on this key. One full run of both test sets uses about 180. When the limit is hit, the rewrite is skipped automatically, but answers then fail with "too many questions" until midnight Pacific (Entry 15).
+  - **Neither keyword nor meaning scores can tell unsupported questions from answerable ones** (keywords: unsupported up to 12.87 vs answerable from 3.30; meaning: unsupported up to 0.663 vs answerable from 0.604). The no-AI gate only stops near-empty matches, and Gemini's grounding prompt is the main guard (Entries 13, 16).
+  - **Names in a question can still reach the search queries.** Codes strip IDs, SSNs, emails and phone numbers, but names rely on the rewrite prompt (Entry 15).
+  - **All-caps acronyms can be "corrected" by spelling** ("ADHD" → "Add", "UCLA's" → "Ucua's"). Proposed fix: skip ALL-CAPS words (Entry 16, not applied yet).
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

@@ -839,4 +839,118 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 15 (Step A2: query rewriting, plus the schoolwork rule, ID removal, and timing)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code, plan mode, then normal mode)
+
+**Prompt:**
+> Next: Step A2 (query rewriting), then A1 (hybrid search with embeddings) right after. We'll need both for the full-site crawl later, so build them with that in mind. [...] After A2, rerun both test sets plus my questions and show before/after. Then do A1 and show before/after again. For each still-failing question, say whether it's wording, coverage, or an API error. Update the prompt log and checklist, and stop.
+>
+> *(On the plan:)* Approved, with these additions: 1. Schoolwork rule: [...] the assistant never writes, rewrites, edits, outlines, or completes schoolwork [...] It gives a short referral to the University Writing Center or tutoring instead. The rewriter should also never turn these into search queries for content. Add 3 tests [...]. 2. The rewriter must drop personal identifiers (student IDs, SSNs, names, emails, phone numbers) from search queries [...]. 3. Report the average and slowest response time after A2 and after A1, so we know how the demo will feel.
+>
+> *(Our message had a placeholder where our own failed questions should have gone; when Claude asked, we chose to skip that set for now.)*
+
+**What the AI did:**
+- **Query rewriting** (new `lib/rewrite.ts`):
+  - **The call:** one `gemini-3.5-flash-lite` call with structured output `{ queries: [1-3] }` and `thinking_level: "minimal"`. It has a 5-second timeout, no retries, and `store: false`.
+  - **What the prompt asks for:**
+    - expand slang and abbreviations ("CS" → Computer Science, "yr" → year, "gym" → Student Recreation and Wellness Center);
+    - turn follow-ups into full questions, and split two-part questions;
+    - turn "my record" questions into "how to check" queries;
+    - turn schoolwork requests into Writing Center / tutoring lookups;
+    - drop personal details;
+    - leave non-CSULB questions unchanged, so they still fall back.
+  - **Vocabulary:** it gets our category and office names as words to use, not as facts.
+  - **If it fails:** the app searches with the question as typed, the old way, and logs `[rewrite] skipped (…)`.
+- **Search** (`lib/rag.ts` + new `lib/rank-merge.ts`):
+  - The question itself is **always** searched too, so a bad rewrite can't hide an obvious match.
+  - Each query gets its own top-10 keyword search, and the lists are merged with Reciprocal Rank Fusion. Each list gives a chunk 1/(60 + its place), and the totals decide the top 5.
+  - The no-AI gate is unchanged: the best keyword score from any query must be ≥ 3.0.
+  - Gemini still sees the student's own words, plus a line listing the queries we searched with.
+  - The response has a new `searchQueries` field, which the test runner shows.
+- **Personal identifiers:**
+  - the rewrite prompt says to drop them;
+  - `removePersonalDetails()` also strips emails, SSNs, phone numbers and 6+ digit numbers (like a student ID) from every query, including the question itself, before searching.
+  - **Limitation:** names can't be caught by a pattern, so for names we rely on the prompt rule.
+  - Original test #22 now also checks that the student ID never appears in the searched queries.
+- **Schoolwork rule** (`lib/gemini.ts`):
+  - **The rule:** never write, rewrite, edit, outline or complete schoolwork (essays, papers, discussion posts, homework, code, exam answers, math problems), not even an example, a first sentence or a hint. Instead, give one or two sentences pointing to the University Writing Center or The Learning Center's tutoring.
+  - **Three new student tests (#46-48):** an example essay, the first paragraph of a paper, "integrate x^2". Each must name the Writing Center or tutoring, stay under 600 characters, and contain no essay text or solution (e.g. no "x^3/3").
+- **Timing:** `scripts/run-tests.ts` now records each question's time and reports the average, median and slowest time for questions answered by Gemini, not counting retry waits. It adds a "Time" column.
+  - **B2 baseline** (fresh run of the 14 answerable questions): **average 2.1 s, median 1.6 s, slowest 4.6 s.**
+- **`npm run explain -- "question"`** (new `scripts/explain.ts`): shows the rewritten queries, the top keyword matches per query, and the merged top 5.
+- **Offline checks:**
+  - "requirements to declare a CS major" now puts the CS requirements section at #2 of the top 5; before, it wasn't in the top 5;
+  - "switch my major" → change-of-major #2;
+  - "did my FAFSA go through" → the financial aid To Do List page in the top 2;
+  - the essay request → "University Writing Center appointment";
+  - "My student ID is 012345678 …" → a query with no ID;
+  - "capital of France" is unchanged and still falls back with no AI;
+  - each rewrite took 0.7-1.0 s.
+- **Forced failure:** with a model name that doesn't exist, the rewrite was skipped (`http-404`) and the question was still answered ($259).
+
+**Did it work?** The code works, but **the live A2 test results could not be measured today.**
+- The first full run of both sets used up **Gemini's free-tier daily limit**, which Google reports as **500 requests per day per model** for `gemini-3.5-flash-lite`. The original set got 429 errors on almost every question. The rewrite call was rate-limited 79 times, so most student questions silently used the old search path.
+- Those results were not kept; the committed B2 results were restored. The daily limit resets at midnight Pacific.
+- **What this means for the app:** with A2, each normal question costs 2 requests, so this key handles about **250 questions a day**. One full run of both test sets uses about 180.
+
+**Troubleshooting or redirection (if any):**
+1. **Claude used up the daily quota.** Today included the B1/B2 runs, Claude's diagnostics, and the A2 run, while the embeddings build (Entry 16) ran at the same time on a separate quota. Claude didn't check the remaining quota before starting a ~180-request run. Claude stopped once the error showed it was the daily limit, not a per-minute one, and didn't keep retrying.
+2. **Two spelling bugs found while testing** (not fixed yet; see Entry 16): "ADHD" was searched as "**Add**", and "UCLA's" as "**Ucua's**". All-caps acronyms get "corrected".
+
+**Screenshot / commit:** none (live results pending)
+
+---
+
+## Entry 16 (Step A1: hybrid search with Gemini embeddings)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:** same as Entry 15 ("then A1 (hybrid search with embeddings) right after [...] build them with that in mind [for the full-site crawl]").
+
+**What the AI did:**
+- **Model check:** one test call each. `gemini-embedding-001` returned one 768-number vector per text in a batch, in 346 ms. `gemini-embedding-2` merged a list of texts into a single vector, so it wasn't used. The model can be changed with `GEMINI_EMBEDDING_MODEL`.
+- **`npm run embeddings`** (new `scripts/build-embeddings.ts`, plus `lib/embeddings-store.ts`), built for a full-site crawl:
+  - **Incremental:** a fingerprint of each chunk's text decides what needs embedding, and removed chunks are dropped.
+  - **Batched:** 50 chunks per request.
+  - **Patient:** on 429/503 it waits 30 s and retries, up to 5 times.
+  - **Resumable:** it saves after every batch.
+  - **Output:** `data/embeddings.bin` (32-bit floats) plus `data/embeddings.json` (model, size, chunk ids and fingerprints).
+  - **Tested:** all 290 chunks embedded into a **0.9 MB** file. The run hit two 429s and waited them out by itself. A second run embedded nothing ("290 unchanged").
+  - At 10,000 chunks the file would be about 30 MB, still fine for Vercel.
+- **Meaning-based search** (new `lib/vector-search.ts`):
+  - all of a question's queries are embedded in **one** call (3 s timeout) and compared with every chunk by cosine similarity;
+  - it's well under 1 ms for 290 chunks, and an approximate index would only be needed at 50,000+ chunks;
+  - chunks whose text changed since the last `npm run embeddings` are skipped, with a log line;
+  - **if the files are missing, the model differs, or the call fails, it returns nothing and the app uses keyword search only.**
+- **Hybrid merge:** `retrieve()` in `lib/rag.ts` merges keyword lists and meaning lists for every query (same RRF), and keeps the top 5.
+- **Vercel:** `next.config.ts` bundles `data/embeddings.*`. The `.nft.json` lists both files and all 57 knowledge files.
+- `npm run explain` also shows the meaning-based matches.
+
+**Did it work?** The code works; live A1 tests are waiting for the generate quota, like A2. What could be measured today, with embedding calls only and no rewrite:
+- **The right page in the top 5 sent to Gemini**, for the 22 questions where we know the right page: **keywords only 19/22 → keywords + meaning 22/22.** Biggest gains:
+  - "switch my major": not found → #1;
+  - "did my FAFSA go through": not found → #3;
+  - "owe the school money": not found → #3;
+  - "dorms": #4 → #1;
+  - transcripts: #3 → #1;
+  - the ADHD question: #5 → #2.
+- **No-AI gate calibration with meaning scores (team decision 4):**
+  - answerable questions' best similarity goes as low as 0.604-0.618;
+  - unsupported questions' goes as high as 0.663 (tacos), 0.635 (best professor) and 0.632 (pizza);
+  - **the ranges overlap, so meaning scores can't decide whether to ask Gemini.** `MIN_SIMILARITY` is off; the gate stays keyword-only (≥ 3.0). Meaning search only improves which chunks Gemini sees.
+- **Forced failures:** a different model name → "saved vectors use a different model" → keyword only. No data files → "no data/embeddings files" → keyword only.
+
+**Troubleshooting or redirection (if any):**
+1. **The free-tier daily limit** (Entry 15) blocked the live A1 runs too. They need the same reset.
+2. **The acronym spelling bug** ("ADHD" → "Add", "UCLA's" → "Ucua's") showed up in this evaluation. **Proposed fix (not applied):** never "correct" a word typed in ALL CAPS, because those are acronyms (ADHD, FAFSA, GPA, UCLA).
+
+**Screenshot / commit:** none (live results pending)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

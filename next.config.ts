@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The chat API reads the knowledge/ Markdown files at runtime. This makes sure
+  // The chat API reads the knowledge/ Markdown files and data/ embeddings at runtime. This makes sure
   // Vercel copies them into the deployed server code.
   outputFileTracingIncludes: {
-    "/api/chat": ["./knowledge/**/*.md"],
+    // Also the saved embeddings (data/embeddings.bin and .json) for meaning-based search.
+    "/api/chat": ["./knowledge/**/*.md", "./data/embeddings.*"],
   },
   // Hide the small "N" development badge so it doesn't cover the page in screenshots.
   // (It never appears in the deployed app.)

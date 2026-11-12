@@ -1,0 +1,1166 @@
+{
+ "model": "gemini-embedding-001",
+ "dimensions": 768,
+ "chunks": [
+  {
+   "id": "academic-advising#1",
+   "hash": "24d537a888deae1a"
+  },
+  {
+   "id": "academic-advising#2",
+   "hash": "35576448f8bfb128"
+  },
+  {
+   "id": "academic-advising#3",
+   "hash": "67b9687efeb620eb"
+  },
+  {
+   "id": "academic-advising#4",
+   "hash": "27c0c25002dec34e"
+  },
+  {
+   "id": "academic-advising#5",
+   "hash": "011fede5b17b7b03"
+  },
+  {
+   "id": "academic-advising#6",
+   "hash": "a74a7faec161c301"
+  },
+  {
+   "id": "academic-advising#7",
+   "hash": "7a94ccb2856c059d"
+  },
+  {
+   "id": "academic-advising#8",
+   "hash": "47d1045e15162714"
+  },
+  {
+   "id": "academic-advising#9",
+   "hash": "aa7d6f6acca66018"
+  },
+  {
+   "id": "academic-advising#10",
+   "hash": "ae9bd96145276d32"
+  },
+  {
+   "id": "academic-advising#11",
+   "hash": "fe99e7aca5261968"
+  },
+  {
+   "id": "academic-advising#12",
+   "hash": "64c2c3b1332d89db"
+  },
+  {
+   "id": "academic-standing#1",
+   "hash": "f6ed3261efd826ad"
+  },
+  {
+   "id": "academic-standing#2",
+   "hash": "df83e6fbe0b2313a"
+  },
+  {
+   "id": "academic-standing#3",
+   "hash": "6f3fc18fd2521fc6"
+  },
+  {
+   "id": "academic-standing#4",
+   "hash": "5608e515c2f4cbfb"
+  },
+  {
+   "id": "academic-standing#5",
+   "hash": "77012f085d3f2453"
+  },
+  {
+   "id": "academic-standing#6",
+   "hash": "1e1c92e75bcd68d9"
+  },
+  {
+   "id": "academic-standing#7",
+   "hash": "db7b0769bae28a1a"
+  },
+  {
+   "id": "academic-standing#8",
+   "hash": "494f14e17863b43a"
+  },
+  {
+   "id": "academic-standing#9",
+   "hash": "417fd39d89263de1"
+  },
+  {
+   "id": "academic-standing#10",
+   "hash": "55414dc4566c539d"
+  },
+  {
+   "id": "academic-standing#11",
+   "hash": "611ffd57dae00c28"
+  },
+  {
+   "id": "academic-standing#12",
+   "hash": "a772fc8e663c9faa"
+  },
+  {
+   "id": "academic-standing#13",
+   "hash": "5459c7b2df1740c9"
+  },
+  {
+   "id": "academic-standing#14",
+   "hash": "f680b1f4c5c063f2"
+  },
+  {
+   "id": "academic-standing#15",
+   "hash": "de75fdc53a54a666"
+  },
+  {
+   "id": "apply-for-housing#1",
+   "hash": "cfd7a8018e088fd5"
+  },
+  {
+   "id": "apply-for-housing#2",
+   "hash": "c312f84316687c02"
+  },
+  {
+   "id": "apply-for-housing#3",
+   "hash": "3b66a4e5edc1e94b"
+  },
+  {
+   "id": "apply-for-housing#4",
+   "hash": "8da2d82b4e2d543a"
+  },
+  {
+   "id": "apply-for-housing#5",
+   "hash": "aec574da511f0319"
+  },
+  {
+   "id": "apply-to-graduate#1",
+   "hash": "cd7361f180766171"
+  },
+  {
+   "id": "apply-to-graduate#2",
+   "hash": "0f270f2c0a0967e1"
+  },
+  {
+   "id": "apply-to-graduate#3",
+   "hash": "2b18b04f755bfd94"
+  },
+  {
+   "id": "apply-to-graduate#4",
+   "hash": "6865f74797b8511e"
+  },
+  {
+   "id": "apply-to-graduate#5",
+   "hash": "1ca565026765644c"
+  },
+  {
+   "id": "apply-to-graduate#6",
+   "hash": "1a33c90c789067f8"
+  },
+  {
+   "id": "apply-to-graduate#7",
+   "hash": "c47a069e979d2835"
+  },
+  {
+   "id": "apply-to-graduate#8",
+   "hash": "99914c304e543b32"
+  },
+  {
+   "id": "asi-maps-hours#1",
+   "hash": "d8fa8593cdab3b1d"
+  },
+  {
+   "id": "asi-maps-hours#2",
+   "hash": "397c0f330b9481a6"
+  },
+  {
+   "id": "asi-maps-hours#3",
+   "hash": "235468208f675992"
+  },
+  {
+   "id": "basic-needs#1",
+   "hash": "ad8723ae3d550d80"
+  },
+  {
+   "id": "basic-needs#2",
+   "hash": "9d072fb010ff0fff"
+  },
+  {
+   "id": "beachalert#1",
+   "hash": "e30f827036b01536"
+  },
+  {
+   "id": "beachalert#2",
+   "hash": "d854a862e22a0108"
+  },
+  {
+   "id": "beachalert#3",
+   "hash": "a48e4dc0dcf53d1b"
+  },
+  {
+   "id": "beachid-password#1",
+   "hash": "3c54c2a4244322b7"
+  },
+  {
+   "id": "bob-murphy-access-center#1",
+   "hash": "dbc3065d8cb32661"
+  },
+  {
+   "id": "bob-murphy-access-center#2",
+   "hash": "6c94ed9c4ed0196f"
+  },
+  {
+   "id": "bob-murphy-access-center#3",
+   "hash": "d7a809b44bf6e723"
+  },
+  {
+   "id": "building-names-codes#1",
+   "hash": "bb930b6f751f682b"
+  },
+  {
+   "id": "building-names-codes#2",
+   "hash": "96b2b7728ae350a1"
+  },
+  {
+   "id": "caps-contact-faq#1",
+   "hash": "36e0345a3208eb70"
+  },
+  {
+   "id": "caps-contact-faq#2",
+   "hash": "51b08f32757c3d08"
+  },
+  {
+   "id": "caps-contact-faq#3",
+   "hash": "57253ed176a855a7"
+  },
+  {
+   "id": "caps-contact-faq#4",
+   "hash": "1775db516968c441"
+  },
+  {
+   "id": "caps-crisis-intervention#1",
+   "hash": "f272ad682e44117c"
+  },
+  {
+   "id": "caps#1",
+   "hash": "60f04b914da468dd"
+  },
+  {
+   "id": "career-development-center#1",
+   "hash": "60cd120df32c2569"
+  },
+  {
+   "id": "career-development-center#2",
+   "hash": "a6ab6404d45463d3"
+  },
+  {
+   "id": "cares-team#1",
+   "hash": "6855fcb91cd0b5f5"
+  },
+  {
+   "id": "cares-team#2",
+   "hash": "6bdf96f403e5fdf3"
+  },
+  {
+   "id": "change-of-major#1",
+   "hash": "e7cea12900c4ceb9"
+  },
+  {
+   "id": "change-of-major#2",
+   "hash": "1db894a9ef4b8ef2"
+  },
+  {
+   "id": "change-of-major#3",
+   "hash": "df5d3bc86af122b6"
+  },
+  {
+   "id": "change-of-major#4",
+   "hash": "c7b5e5c9987dc0f0"
+  },
+  {
+   "id": "change-of-major#5",
+   "hash": "0f9d0a8353ad4851"
+  },
+  {
+   "id": "change-of-major#6",
+   "hash": "22c5792c9cb5adbf"
+  },
+  {
+   "id": "change-of-major#7",
+   "hash": "9ca74e6330127e88"
+  },
+  {
+   "id": "change-of-major#8",
+   "hash": "8963d85118c008d6"
+  },
+  {
+   "id": "computer-labs#1",
+   "hash": "00b6cbb00d199e1e"
+  },
+  {
+   "id": "computer-labs#2",
+   "hash": "6ab5b58d8cda2acd"
+  },
+  {
+   "id": "computer-labs#3",
+   "hash": "508c0eb76089e9f5"
+  },
+  {
+   "id": "computer-labs#4",
+   "hash": "40a168661d874e57"
+  },
+  {
+   "id": "computer-labs#5",
+   "hash": "085041d1efa00798"
+  },
+  {
+   "id": "computer-science-bs#1",
+   "hash": "d35cebb62a4fd8a6"
+  },
+  {
+   "id": "computer-science-bs#2",
+   "hash": "d12d6df84e2e8d89"
+  },
+  {
+   "id": "day-1-textbook-access#1",
+   "hash": "729a317b8622da38"
+  },
+  {
+   "id": "day-1-textbook-access#2",
+   "hash": "24b1522366125527"
+  },
+  {
+   "id": "day-1-textbook-access#3",
+   "hash": "d5a909d6233b1dd0"
+  },
+  {
+   "id": "day-1-textbook-access#4",
+   "hash": "365c0cc5a28e706d"
+  },
+  {
+   "id": "dean-of-students#1",
+   "hash": "2ae615db66f09add"
+  },
+  {
+   "id": "declare-a-major#1",
+   "hash": "59b799d831bb5c48"
+  },
+  {
+   "id": "declare-a-major#2",
+   "hash": "80fb67de63d8a28a"
+  },
+  {
+   "id": "declare-a-major#3",
+   "hash": "d78902000fa58d71"
+  },
+  {
+   "id": "declare-a-major#4",
+   "hash": "b2b92ad7f351c498"
+  },
+  {
+   "id": "declare-a-major#5",
+   "hash": "fc4b010d9cdb8d8b"
+  },
+  {
+   "id": "dropping-and-withdrawing#1",
+   "hash": "bd1bfc1b406fbf5e"
+  },
+  {
+   "id": "dropping-and-withdrawing#2",
+   "hash": "8a2c487bcf901d26"
+  },
+  {
+   "id": "dropping-and-withdrawing#3",
+   "hash": "3421c63dbc663647"
+  },
+  {
+   "id": "dropping-and-withdrawing#4",
+   "hash": "0447c3b06fa32d3d"
+  },
+  {
+   "id": "dropping-and-withdrawing#5",
+   "hash": "301c65678acfb0f7"
+  },
+  {
+   "id": "dropping-and-withdrawing#6",
+   "hash": "3eee6c29fe72d556"
+  },
+  {
+   "id": "dropping-and-withdrawing#7",
+   "hash": "ae25cf339ee60fb9"
+  },
+  {
+   "id": "dropping-and-withdrawing#8",
+   "hash": "c3867defd3c62162"
+  },
+  {
+   "id": "dropping-and-withdrawing#9",
+   "hash": "ac9663ebd186d0a4"
+  },
+  {
+   "id": "dropping-and-withdrawing#10",
+   "hash": "aa536a46cd83747a"
+  },
+  {
+   "id": "dropping-and-withdrawing#11",
+   "hash": "d85912f578b26219"
+  },
+  {
+   "id": "dropping-and-withdrawing#12",
+   "hash": "8643787ead93c750"
+  },
+  {
+   "id": "dropping-and-withdrawing#13",
+   "hash": "500794006654303a"
+  },
+  {
+   "id": "engineering-major-requirements#1",
+   "hash": "7e4fa450f9552656"
+  },
+  {
+   "id": "engineering-major-requirements#2",
+   "hash": "10cb5393d20d7861"
+  },
+  {
+   "id": "engineering-major-requirements#3",
+   "hash": "1c969ccf8ee229ba"
+  },
+  {
+   "id": "engineering-major-requirements#4",
+   "hash": "0a94ca34bce0972b"
+  },
+  {
+   "id": "engineering-major-requirements#5",
+   "hash": "219ec6468c65a8b3"
+  },
+  {
+   "id": "engineering-major-requirements#6",
+   "hash": "174eef0afd26af46"
+  },
+  {
+   "id": "engineering-major-requirements#7",
+   "hash": "cc4162baf22810b0"
+  },
+  {
+   "id": "enrollment-key-dates#1",
+   "hash": "8c9bc8c7db37fdc1"
+  },
+  {
+   "id": "enrollment-key-dates#2",
+   "hash": "f801d84fccbe1887"
+  },
+  {
+   "id": "enrollment-key-dates#3",
+   "hash": "4315a83fc0de7f27"
+  },
+  {
+   "id": "enrollment-key-dates#4",
+   "hash": "081f063a075cd1ef"
+  },
+  {
+   "id": "enrollment-key-dates#5",
+   "hash": "d501e20b3a9b3cee"
+  },
+  {
+   "id": "enrollment-key-dates#6",
+   "hash": "110695dba964eadc"
+  },
+  {
+   "id": "enrollment-key-dates#7",
+   "hash": "db4df7920d8c630e"
+  },
+  {
+   "id": "enrollment-key-dates#8",
+   "hash": "3fa4ee7052941a0a"
+  },
+  {
+   "id": "enrollment-key-dates#9",
+   "hash": "41afaff048fc99ce"
+  },
+  {
+   "id": "enrollment-key-dates#10",
+   "hash": "8be856c072e2f034"
+  },
+  {
+   "id": "enrollment-key-dates#11",
+   "hash": "838c32ca9002753e"
+  },
+  {
+   "id": "enrollment-verification#1",
+   "hash": "be4179e493d1dce6"
+  },
+  {
+   "id": "enrollment-verification#2",
+   "hash": "fb15e6cdc0bd2bf1"
+  },
+  {
+   "id": "enrollment-verification#3",
+   "hash": "112a2943fb62679d"
+  },
+  {
+   "id": "enrollment-verification#4",
+   "hash": "029ac94c55377bc9"
+  },
+  {
+   "id": "financial-aid#1",
+   "hash": "62c6cb9bdc1a694b"
+  },
+  {
+   "id": "financial-aid#2",
+   "hash": "0009aa4d77c52172"
+  },
+  {
+   "id": "financial-aid#3",
+   "hash": "59dc7d4f50c5adb9"
+  },
+  {
+   "id": "financial-aid#4",
+   "hash": "d5d721c58df75d55"
+  },
+  {
+   "id": "financial-aid#5",
+   "hash": "d9421f7bde9b824f"
+  },
+  {
+   "id": "financial-aid#6",
+   "hash": "d0621082f73cb5e6"
+  },
+  {
+   "id": "financial-aid#7",
+   "hash": "b1ceda8a44a7fa72"
+  },
+  {
+   "id": "financial-aid#8",
+   "hash": "8ec37a7f12907cfc"
+  },
+  {
+   "id": "financial-aid#9",
+   "hash": "648f4399629c59c1"
+  },
+  {
+   "id": "food-services#1",
+   "hash": "2a98590bbd103bbd"
+  },
+  {
+   "id": "food-services#2",
+   "hash": "4bde355a40b6e81e"
+  },
+  {
+   "id": "food-services#3",
+   "hash": "9da54a92751e22cc"
+  },
+  {
+   "id": "food-services#4",
+   "hash": "923925808a91d2c4"
+  },
+  {
+   "id": "food-services#5",
+   "hash": "0bd1ee6bb7b9b893"
+  },
+  {
+   "id": "food-services#6",
+   "hash": "5d885ccee1c222d4"
+  },
+  {
+   "id": "ge-requirements#1",
+   "hash": "92167fe4dbaa4134"
+  },
+  {
+   "id": "ge-requirements#2",
+   "hash": "0402faf27e788165"
+  },
+  {
+   "id": "ge-requirements#3",
+   "hash": "9dc17d43f2bf9a92"
+  },
+  {
+   "id": "get-your-id#1",
+   "hash": "4f31e5048cbb5fa1"
+  },
+  {
+   "id": "get-your-id#2",
+   "hash": "42edf7b0fc890d5e"
+  },
+  {
+   "id": "grades-and-grading#1",
+   "hash": "cd4ce88f4621611f"
+  },
+  {
+   "id": "grades-and-grading#2",
+   "hash": "a6209484ed4017d8"
+  },
+  {
+   "id": "grades-and-grading#3",
+   "hash": "347b53056c94f4ae"
+  },
+  {
+   "id": "grades-and-grading#4",
+   "hash": "8cc2a6436218fb2d"
+  },
+  {
+   "id": "grades-and-grading#5",
+   "hash": "cca5e4b47a37dc36"
+  },
+  {
+   "id": "grades-and-grading#6",
+   "hash": "d208fcce5c2b09d8"
+  },
+  {
+   "id": "grades-and-grading#7",
+   "hash": "07ace7747a0ee9e4"
+  },
+  {
+   "id": "grades-and-grading#8",
+   "hash": "585850395706a104"
+  },
+  {
+   "id": "grades-and-grading#9",
+   "hash": "86c622088b094faa"
+  },
+  {
+   "id": "holds-and-to-do-lists#1",
+   "hash": "6f3d00adda6ebdad"
+  },
+  {
+   "id": "holds-and-to-do-lists#2",
+   "hash": "e753a49b1cbe96f7"
+  },
+  {
+   "id": "horn-center#1",
+   "hash": "0cb01cdf15f912a6"
+  },
+  {
+   "id": "horn-center#2",
+   "hash": "825d517b85349443"
+  },
+  {
+   "id": "housing-rates#1",
+   "hash": "b6cc456d7929be10"
+  },
+  {
+   "id": "housing-rates#2",
+   "hash": "b97d4fdea2956921"
+  },
+  {
+   "id": "housing-rates#3",
+   "hash": "f6e5545462576b4c"
+  },
+  {
+   "id": "housing-rates#4",
+   "hash": "175763f24ebcdbd4"
+  },
+  {
+   "id": "id-card-faqs#1",
+   "hash": "41b1f48f76199015"
+  },
+  {
+   "id": "id-card-faqs#2",
+   "hash": "c9fae17709274dce"
+  },
+  {
+   "id": "id-card-faqs#3",
+   "hash": "c92f17dcb4fe3e03"
+  },
+  {
+   "id": "id-card-faqs#4",
+   "hash": "e6efea6fd7a10307"
+  },
+  {
+   "id": "international-staff-contacts#1",
+   "hash": "629cf7979d7239b2"
+  },
+  {
+   "id": "international-staff-contacts#2",
+   "hash": "f2f4e3c488306b70"
+  },
+  {
+   "id": "international-student-advising#1",
+   "hash": "534191c6c6e420de"
+  },
+  {
+   "id": "international-student-advising#2",
+   "hash": "84a88feb5f5ab8d8"
+  },
+  {
+   "id": "library-research-desk#1",
+   "hash": "efa6e39916703747"
+  },
+  {
+   "id": "library-services-for-students#1",
+   "hash": "9d9d0730af4ac731"
+  },
+  {
+   "id": "library-services-for-students#2",
+   "hash": "3f6e7280ca2ac1b1"
+  },
+  {
+   "id": "library-services-for-students#3",
+   "hash": "6031f879ff750609"
+  },
+  {
+   "id": "library-services-for-students#4",
+   "hash": "927c1d55de229e81"
+  },
+  {
+   "id": "library-services-for-students#5",
+   "hash": "f0bac7a659fbba6b"
+  },
+  {
+   "id": "library-services#1",
+   "hash": "f7992c3fb10115ed"
+  },
+  {
+   "id": "library-study-spaces#1",
+   "hash": "b67085575edad515"
+  },
+  {
+   "id": "library-study-spaces#2",
+   "hash": "c3dcf18ad5c0417a"
+  },
+  {
+   "id": "library-study-spaces#3",
+   "hash": "a2b25069955903e7"
+  },
+  {
+   "id": "night-safety-escort#1",
+   "hash": "7c3950d1b6c17a14"
+  },
+  {
+   "id": "orientation-soar#1",
+   "hash": "e877f8bfdc95ff90"
+  },
+  {
+   "id": "orientation-soar#2",
+   "hash": "69bc8aeed7699c56"
+  },
+  {
+   "id": "parking-permit-fees#1",
+   "hash": "11e90abaedef0ba2"
+  },
+  {
+   "id": "parking-permit-fees#2",
+   "hash": "9ec482367d8bd6cc"
+  },
+  {
+   "id": "parking-permit-information#1",
+   "hash": "c4350f1204a5d9d2"
+  },
+  {
+   "id": "parking-permit-information#2",
+   "hash": "8b45a0c29dbfe1e4"
+  },
+  {
+   "id": "parking-permit-information#3",
+   "hash": "ce8e574527ea0884"
+  },
+  {
+   "id": "parking-permit-information#4",
+   "hash": "8a387933d2511989"
+  },
+  {
+   "id": "parking-permit-information#5",
+   "hash": "0eec5b82946ecb3f"
+  },
+  {
+   "id": "parking-permit-information#6",
+   "hash": "6b70df0d8a636e17"
+  },
+  {
+   "id": "parking-permit-information#7",
+   "hash": "633d6d881ab6b992"
+  },
+  {
+   "id": "parking-permit-information#8",
+   "hash": "17b4baed2aea9515"
+  },
+  {
+   "id": "parking-permit-information#9",
+   "hash": "417ba90234b8e778"
+  },
+  {
+   "id": "parking-permit-information#10",
+   "hash": "af2ae25fa0677ec6"
+  },
+  {
+   "id": "parking-permit-information#11",
+   "hash": "2dafcd04529da049"
+  },
+  {
+   "id": "parking-permit-information#12",
+   "hash": "3741ab8e3bf44a87"
+  },
+  {
+   "id": "parking-permit-information#13",
+   "hash": "d96719a4ad4d93a3"
+  },
+  {
+   "id": "parking-permit-information#14",
+   "hash": "dcbc96b702c5f767"
+  },
+  {
+   "id": "parking-permit-information#15",
+   "hash": "de7b169e2f8a5293"
+  },
+  {
+   "id": "parking-permit-information#16",
+   "hash": "bfebacccb3673e94"
+  },
+  {
+   "id": "parking-permit-information#17",
+   "hash": "08c5d182a3c092e9"
+  },
+  {
+   "id": "parking-permit-information#18",
+   "hash": "d3e3fdf5a42ca3b6"
+  },
+  {
+   "id": "parking-shuttle#1",
+   "hash": "a0c4cef6d7e1ab6e"
+  },
+  {
+   "id": "parking-shuttle#2",
+   "hash": "72691bb66a8ddf7e"
+  },
+  {
+   "id": "parking-shuttle#3",
+   "hash": "010201dd42f4c425"
+  },
+  {
+   "id": "permission-to-add#1",
+   "hash": "58404384b47a385a"
+  },
+  {
+   "id": "permission-to-add#2",
+   "hash": "c458b07ca949c414"
+  },
+  {
+   "id": "permission-to-add#3",
+   "hash": "e74aa3e73524accb"
+  },
+  {
+   "id": "permission-to-add#4",
+   "hash": "6c29682b1ee392cd"
+  },
+  {
+   "id": "permission-to-add#5",
+   "hash": "f8d24f72f175a2d8"
+  },
+  {
+   "id": "permission-to-add#6",
+   "hash": "adc41fa9aed91c37"
+  },
+  {
+   "id": "permission-to-add#7",
+   "hash": "ff2b8b5d1cbca6a3"
+  },
+  {
+   "id": "permission-to-add#8",
+   "hash": "51acbe5db6dd153c"
+  },
+  {
+   "id": "srwc-membership#1",
+   "hash": "0c1b732dd2390f5a"
+  },
+  {
+   "id": "srwc-membership#2",
+   "hash": "0acbc0a08b215c7e"
+  },
+  {
+   "id": "srwc-membership#3",
+   "hash": "0830b3af0c2c6e9a"
+  },
+  {
+   "id": "srwc-membership#4",
+   "hash": "6ff33eb93465269f"
+  },
+  {
+   "id": "srwc-membership#5",
+   "hash": "116438870211323c"
+  },
+  {
+   "id": "srwc-membership#6",
+   "hash": "d28b96014dca6d91"
+  },
+  {
+   "id": "srwc-membership#7",
+   "hash": "7ca3c5ef278f80c9"
+  },
+  {
+   "id": "srwc-membership#8",
+   "hash": "dac2a3928fb062d4"
+  },
+  {
+   "id": "student-health-services#1",
+   "hash": "db6baceac170b02e"
+  },
+  {
+   "id": "supplemental-instruction#1",
+   "hash": "14802d5e1a85dd02"
+  },
+  {
+   "id": "supplemental-instruction#2",
+   "hash": "6829488db46585a0"
+  },
+  {
+   "id": "technology-for-students#1",
+   "hash": "fb0330f69604b3d5"
+  },
+  {
+   "id": "technology-for-students#2",
+   "hash": "67a6e3c78cc81fc4"
+  },
+  {
+   "id": "technology-for-students#3",
+   "hash": "bc933cf372150d56"
+  },
+  {
+   "id": "technology-help-desk#1",
+   "hash": "099b98ebec1efb44"
+  },
+  {
+   "id": "transcripts#1",
+   "hash": "7831f641e4f0fb81"
+  },
+  {
+   "id": "transcripts#2",
+   "hash": "a61e081003592b5c"
+  },
+  {
+   "id": "transcripts#3",
+   "hash": "05cd2efca565372c"
+  },
+  {
+   "id": "transcripts#4",
+   "hash": "6e3e3511357fa772"
+  },
+  {
+   "id": "transcripts#5",
+   "hash": "d139890a93cff5e0"
+  },
+  {
+   "id": "transcripts#6",
+   "hash": "3ad7de5e1ff81269"
+  },
+  {
+   "id": "transcripts#7",
+   "hash": "b972e79b44c71216"
+  },
+  {
+   "id": "transcripts#8",
+   "hash": "0a92638c3130e4c2"
+  },
+  {
+   "id": "transcripts#9",
+   "hash": "a44792f8bc9cc7b3"
+  },
+  {
+   "id": "transcripts#10",
+   "hash": "6cf63d09a3c6719c"
+  },
+  {
+   "id": "transcripts#11",
+   "hash": "4305f86314a81ed0"
+  },
+  {
+   "id": "tuition-payments#1",
+   "hash": "6ae9fed12ea0981a"
+  },
+  {
+   "id": "tuition-payments#2",
+   "hash": "421805f3f42b364d"
+  },
+  {
+   "id": "tuition-payments#3",
+   "hash": "850a0e7bad5eeb57"
+  },
+  {
+   "id": "tuition-payments#4",
+   "hash": "0c041a70a39d9633"
+  },
+  {
+   "id": "tuition-payments#5",
+   "hash": "fdfd41a65b24b2ec"
+  },
+  {
+   "id": "tuition-payments#6",
+   "hash": "4c8b252132b92cf2"
+  },
+  {
+   "id": "tuition-payments#7",
+   "hash": "29e474b4fd9cde5b"
+  },
+  {
+   "id": "tuition-payments#8",
+   "hash": "007b0fa94a501b3a"
+  },
+  {
+   "id": "tuition-payments#9",
+   "hash": "d0cd0de1be703ac4"
+  },
+  {
+   "id": "tuition-payments#10",
+   "hash": "2c75da25f04851c3"
+  },
+  {
+   "id": "tuition-payments#11",
+   "hash": "dda54e8d2d98a848"
+  },
+  {
+   "id": "tuition-payments#12",
+   "hash": "9828d4b1752c22a4"
+  },
+  {
+   "id": "tuition-payments#13",
+   "hash": "2cab50173bf044b9"
+  },
+  {
+   "id": "tutoring#1",
+   "hash": "9a3db073046246f8"
+  },
+  {
+   "id": "tutoring#2",
+   "hash": "5d4290f57030896e"
+  },
+  {
+   "id": "university-police#1",
+   "hash": "c61b8850a494a591"
+  },
+  {
+   "id": "university-police#2",
+   "hash": "73ca284ea9a43b9d"
+  },
+  {
+   "id": "using-academics#1",
+   "hash": "c0ec365c8b522008"
+  },
+  {
+   "id": "using-academics#2",
+   "hash": "bc65033e1e6fc1cb"
+  },
+  {
+   "id": "using-academics#3",
+   "hash": "0f338aa0b38ee440"
+  },
+  {
+   "id": "using-academics#4",
+   "hash": "c4a143367e939faa"
+  },
+  {
+   "id": "using-academics#5",
+   "hash": "1f61bb854efc1bc0"
+  },
+  {
+   "id": "using-academics#6",
+   "hash": "5f9c1928ba070806"
+  },
+  {
+   "id": "using-academics#7",
+   "hash": "fa77657f02509306"
+  },
+  {
+   "id": "using-academics#8",
+   "hash": "b911d85a06ab80e5"
+  },
+  {
+   "id": "using-academics#9",
+   "hash": "e965bf7bea7c5972"
+  },
+  {
+   "id": "using-academics#10",
+   "hash": "b0c0a86dbc7d151b"
+  },
+  {
+   "id": "using-academics#11",
+   "hash": "ad1176c04a3e52c3"
+  },
+  {
+   "id": "using-academics#12",
+   "hash": "19a88b4cf14acceb"
+  },
+  {
+   "id": "using-academics#13",
+   "hash": "9928c489447b4148"
+  },
+  {
+   "id": "using-academics#14",
+   "hash": "df55a54eb0b1211f"
+  },
+  {
+   "id": "using-academics#15",
+   "hash": "3e1fa70dd2abe05a"
+  },
+  {
+   "id": "using-academics#16",
+   "hash": "850fc049fa8f0d1c"
+  },
+  {
+   "id": "using-academics#17",
+   "hash": "1ccb933baab61a3e"
+  },
+  {
+   "id": "using-academics#18",
+   "hash": "2e496c1b339a331c"
+  },
+  {
+   "id": "using-academics#19",
+   "hash": "98afcbc4ca375b2e"
+  },
+  {
+   "id": "using-academics#20",
+   "hash": "4685a6ce62e2a249"
+  },
+  {
+   "id": "using-academics#21",
+   "hash": "e0abc64ce2c75d55"
+  },
+  {
+   "id": "using-academics#22",
+   "hash": "b8f0782d6312e493"
+  },
+  {
+   "id": "using-academics#23",
+   "hash": "6189cdcfdff3f172"
+  },
+  {
+   "id": "using-academics#24",
+   "hash": "d23b6be81253bd38"
+  },
+  {
+   "id": "using-academics#25",
+   "hash": "0ac14f72d8784a86"
+  },
+  {
+   "id": "using-academics#26",
+   "hash": "d5fa1775a3acc22b"
+  },
+  {
+   "id": "using-academics#27",
+   "hash": "a77c1cbe77684ea0"
+  },
+  {
+   "id": "using-academics#28",
+   "hash": "624b8674979a017b"
+  },
+  {
+   "id": "writing-center#1",
+   "hash": "b53af1e23529361a"
+  },
+  {
+   "id": "writing-center#2",
+   "hash": "3d4de6e96a304102"
+  },
+  {
+   "id": "writing-center#3",
+   "hash": "d38d5e0e1345f5f0"
+  },
+  {
+   "id": "writing-center#4",
+   "hash": "8483c2252f681fb2"
+  },
+  {
+   "id": "writing-center#5",
+   "hash": "541885b3c8af6c3f"
+  },
+  {
+   "id": "writing-center#6",
+   "hash": "ac6a9d44c1a37a8c"
+  }
+ ]
+}
