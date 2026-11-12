@@ -38,6 +38,7 @@ type Expect = {
   httpStatus?: number;
   correctedQuestion?: string | null; // pattern the typo-fixed question must match; null = nothing should be fixed
   minExamples?: number; // chat replies: at least this many example-question buttons
+  maxAnswerChars?: number; // the answer must be at most this long (e.g. a referral, not a written essay)
 };
 
 type Test = {
@@ -118,6 +119,9 @@ function check(test: Test, result: ApiResult): string[] {
   }
   if (expect.minExamples && (body.examples?.length ?? 0) < expect.minExamples) {
     problems.push(`expected at least ${expect.minExamples} example question(s), got ${body.examples?.length ?? 0}`);
+  }
+  if (expect.maxAnswerChars && (body.answer ?? "").length > expect.maxAnswerChars) {
+    problems.push(`answer is ${(body.answer ?? "").length} characters, expected at most ${expect.maxAnswerChars}`);
   }
   if (expect.minSources && (body.sources?.length ?? 0) < expect.minSources) {
     problems.push(`expected at least ${expect.minSources} source(s), got ${body.sources?.length ?? 0}`);

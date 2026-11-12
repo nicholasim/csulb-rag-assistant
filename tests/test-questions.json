@@ -141,8 +141,8 @@
       "type": "ambiguous",
       "area": "-",
       "expected_behavior": "Asks a clarifying question listing the likely options instead of guessing.",
-      "expected_fact": "Asks: admission, scholarships, graduation, financial aid...?",
-      "expect": { "response": "clarify", "mustInclude": ["admission"] }
+      "expected_fact": "Any clarifying question that offers options, e.g. \"Do you mean applying to graduate or applying for housing, or something else?\" (We have no admissions page, so \"admission\" isn't required; team decision, Entry 14.)",
+      "expect": { "response": "clarify", "mustInclude": ["\\bor\\b"] }
     },
     {
       "id": 16,
@@ -393,9 +393,9 @@
       "question": "write my essay",
       "type": "conversation",
       "area": "Off-topic",
-      "expected_behavior": "Not about CSULB: the normal fallback. 'write' must not be spell-corrected (to 'white', a name on one page).",
-      "expected_fact": "Fallback sentence; no correction",
-      "expect": { "response": "fallback", "correctedQuestion": null, "mustInclude": ["do not have enough information"] }
+      "expected_behavior": "Team decision (Entry 14): a short referral to the University Writing Center is correct; writing the essay is not. 'write' must not be spell-corrected (to 'white', a name on one page).",
+      "expected_fact": "Points to the University Writing Center; no essay text (answer at most 600 characters); no correction",
+      "expect": { "response": ["answer", "fallback"], "correctedQuestion": null, "mustInclude": ["Writing Center"], "mustNotInclude": ["Here (is|\u2019s|'s) (an?|your|the) (essay|post|draft|response)", "\\bIn conclusion\\b", "^\\s*(Title|Introduction)\\s*:", "\\bThesis( statement)?\\s*:"], "maxAnswerChars": 600 }
     }
   ]
 }

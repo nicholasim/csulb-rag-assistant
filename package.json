@@ -10,7 +10,8 @@
     "fetch-sources": "tsx scripts/fetch-sources.ts",
     "screenshots": "tsx scripts/take-screenshots.ts",
     "test:questions": "tsx scripts/run-tests.ts",
-    "test:stop-edit": "tsx scripts/test-stop-edit.ts"
+    "test:stop-edit": "tsx scripts/test-stop-edit.ts",
+    "english-words": "tsx scripts/build-english-words.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -40,6 +41,7 @@
     "tsx": "^4.23.15",
     "turndown": "^7.2.5",
     "turndown-plugin-gfm": "^1.0.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wordlist-english": "^1.2.1"
   }
 }

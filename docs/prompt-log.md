@@ -696,7 +696,7 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 - **Sidebar:** 7 new categories in `lib/categories.ts`: Majors & Academics, Tutoring & Writing, Campus Places, Housing, Wellness & Access, Safety, Recreation. 22 areas in total.
 - **Crisis safety rule** (new `lib/crisis.ts`, checked in `lib/rag.ts` before small talk and search):
   - **Matching:** keywords like suicide, self-harm, "kill myself", "want to die", "crisis", "I feel unsafe" / "don't feel safe". A match always gets a fixed reply, never the fallback, with no AI call.
-  - **The reply:** a warm first line, then 911, CAPS at 562-985-4001 (Mon-Fri 8AM-5PM or Brotman Hall 226; after hours, follow the recorded message), and "Text BEACH to 74-17-41". All copied from the CAPS Crisis Intervention page, which is cited as the source chip.
+  - **The reply:** a warm first line, then 911, CAPS at 562-985-4001 (Mon-Fri 8AM-5PM or Brotman Hall 226; after hours, follow the recorded message), and "Text BEACH to 741741 (the CAPS page writes it as 74-17-41)". All copied from the CAPS Crisis Intervention page, which is cited as the source chip.
   - **988 Suicide & Crisis Lifeline:** call or text 988. **Our one deliberate exception to the sources-only rule, added by the team for safety.** It's shown in its own sentence with no citation.
   - **Page check:** the server checks once that the CAPS page still contains every quoted fact, and logs which one is missing if the page ever changes.
   - **Offline check:** 10 crisis phrasings matched, and 7 normal questions didn't, including "is the campus safe at night?" and "can someone walk me to my car at night".
@@ -704,7 +704,7 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 - **Tests:**
   - every student coverage test got an exact fact from its new page;
   - #23 (laptop) became an unsupported test, as approved;
-  - #41-42 are new crisis tests: they must include 911, 562-985-4001, 74-17-41 and 988, and must not include the fallback.
+  - #41-42 are new crisis tests: they must include 911, 562-985-4001, 741741 (the CAPS page writes it as 74-17-41) and 988, and must not include the fallback.
 - **Build and Vercel:** `npm run build` passes, and the `/api/chat` bundle (`.nft.json`) lists all **57** knowledge files.
 
 **Did it work?** Mostly. Coverage went up, the crisis rule works, and there is one fallback regression for the team to decide on.
@@ -739,7 +739,7 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 2. **Tables without a header row were saved as raw HTML** (building codes, summer housing, and a row of social-media icons on the SI page). The Markdown converter only converts tables that start with a header row.
    - **Fix in the fetch script:** drop tables with no text; promote an all-bold first row to the header; otherwise add an empty header row.
    - After re-fetching, no file has raw HTML, and the original 18 files didn't change.
-3. **The crisis page writes the text line as "74-17-41", not "741741".** The reply copies the page exactly, and the tests accept both forms.
+3. **The crisis text number is 741741 (the CAPS page writes it as 74-17-41).** The reply copies the page exactly, and the tests accept both forms.
 4. **New problems found by the tests (not fixed, as agreed):**
    - **"write my essay" / "write my discussion post for me"** now point to the University Writing Center instead of falling back, because the new Writing Center page matches "write". The answers don't write anything, but they aren't the fallback either. **The team needs to decide** whether this is a helpful referral or should always be the fallback.
    - **Wording misses for A2.** For "switch my major" and "owe the school money", the right page isn't in the top 5 at all. "CS" isn't matched to "Computer Science". The CS requirements are in the sources, but the CS section isn't among the top 5 chunks, so Gemini fell back and suggested the right page. Other misses: "yr", "is the gym free", and the follow-up.
@@ -751,6 +751,91 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
    - the SRWC page hides its contact email behind a script.
 
 **Screenshot / commit:** none this step (screenshots of the Horn Center and CS-major answers are planned once A2 makes the CS question pass)
+
+---
+
+## Entry 14 (Team decisions on B1 results + Step B2: office directory and account rule)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Decisions:
+> 1. "write my essay" / "write my discussion post": accept the Writing Center referral as correct. Update both tests to expect a referral to the University Writing Center and to fail if the answer contains written content (an essay or post).
+> 2. "How do I apply?": update the test to accept any clarifying question with options; we don't have an admissions page, so it shouldn't require "admission".
+> 3. Spelling: never correct a word that's a real English word. Use a common English word list (a small npm package, or a bundled list of the most common ~20k words), and only correct words that are neither in our vocabulary nor real English. This should fix died->did, write->white, and dorms->forms. Rerun the misspelling tests to make sure parkng/finacial/internatinal/studdy still get fixed.
+> 4. The "AI sent back an answer we couldn't read" error happened 4 times. Find the cause (cut off by maxOutputTokens? invalid JSON?), fix it, and retry once automatically before showing an error. Tell me what the cause was.
+> 5. Fix "74-17-41" in the checklist and prompt log to read "741741 (the CAPS page writes it as 74-17-41)".
+> Then continue with Step B2 (directory + account rule) as planned. Stop after B2 and show results.
+
+**What the AI did:**
+1. **Writing Center referral.** Original #42 and student #36 now expect an answer (or a fallback) that names the "Writing Center". They fail if the answer has essay or post text, using phrases like "Here is your essay", "In conclusion", "Thesis:", and a new `maxAnswerChars` check (600 characters) in `scripts/run-tests.ts`. Student #36's type changed from "unsupported" to "referral".
+2. **"How do I apply?" (#15)** now passes with any clarifying question that offers options (it must contain "or").
+3. **Real English words are never "corrected"** (`lib/spelling.ts`).
+   - **The list:** about 44,000 common words from SCOWL (sizes 10-40, English + American), via the `wordlist-english` npm package (dev dependency, MIT/SCOWL license). That's roughly the 20,000 most common words plus their plurals and verb forms.
+   - **How it's built:** `npm run english-words` (new `scripts/build-english-words.ts`) saves it to `lib/data/english-words.json`, so nothing extra loads on Vercel.
+   - **Why sizes 10-40:** bigger SCOWL sizes add rare words like "studdy", which would stop real typos from being fixed. Claude checked that the list contains died, write, dorms and laptop, and none of our test typos.
+   - **Offline:**
+     - died, write, dorms and visa are no longer changed;
+     - parkng, finacial, internatinal, studdy, tution, registraton, advisng, libary and schedual are still fixed;
+     - gibberish isn't changed.
+   - **Live:** misspelled tests #26-30 pass 5/5.
+4. **"The AI sent back an answer we couldn't read": the cause.**
+   - **What Claude measured:** real Gemini calls, logging the status and token counts. The parking-price question used 357-977 "thinking" tokens per call (other questions used 0), even at `thinking_level: low`.
+   - **What the docs say:** thinking tokens count toward `max_output_tokens`, and hitting it stops the reply with status "incomplete".
+   - **The reproduction:** Claude lowered the limit to 1000 on the parking question. One call came back "incomplete", with the JSON cut off mid-answer ("…Academic Year"). That is exactly the unreadable reply.
+   - **So the cause was the 2048-token limit:** a long think plus a table-heavy answer sometimes ran out of room. Invalid JSON from a complete reply wasn't the cause.
+   - **Fix** (`lib/gemini.ts`):
+     - the limit is now 8192 (normal answers still stop after a few hundred tokens);
+     - an incomplete or unreadable reply is retried once automatically with the same model;
+     - the log records the status and thinking/answer token counts (never the text).
+   - The retry path was checked by type-checking and by reading the code. No unreadable reply came up during the test runs to exercise it live.
+5. **"74-17-41"** now reads "741741 (the CAPS page writes it as 74-17-41)" in the checklist and Entry 13.
+6. **Step B2: the office directory.**
+   - **The list:** `lib/data/directory.json` lists 42 CSULB offices: admissions, records, financial aid, student financial services, commencement, testing, UCUA and 6 college advising centers, career, tutoring, writing, library, health, CAPS, BMAC, Basic Needs, CARES, Dean of Students, Veterans, Dream Success Center, EOP, WGEC, student conduct, Equity & Compliance (Title IX), Student Life & Development (clubs), international, SOAR, housing, Beach Shops, ID cards, parking, police, IT, Academic Technology, ASI and the SRWC.
+   - **The descriptions:** each entry has one sentence copied from the office's page. Many pages' own meta descriptions were announcements ("ANNOUNCEMENTS: The 2027-2028 FAFSA…", "Payment Deadline for Winter 2027…"), so Claude picked one descriptive sentence per page. `npm run fetch-sources` checks that each sentence is word for word on the live page and drops the entry if not; all 42 passed. Four offices have no descriptive sentence on their page (Financial Aid, the College of Business center, the Library, the Dream Success Center), so they're listed by name and link only. The Dining Services URL was a 404; Beach Shops covers campus dining.
+   - **How it's used:** the numbered office names are in Gemini's instructions. When it falls back, Gemini returns `related_office`, a number from the list or 0. The "Try:" button prefers a related source page, then that office, and links to the office's official page. Gemini can only pick from the list, so it can't invent an office or a link. The list is not a source for answers.
+7. **Step B2: the account rule** (approved earlier). The prompt no longer sends "personal student records" questions to the fallback. Now, if the sources explain how to check something (grades, holds, schedule, aid status, what you owe), the assistant answers with those steps, and it never asks for or repeats an ID.
+8. **Three new directory tests** (student #43-45):
+   - undocumented students → Dream Success Center;
+   - joining a club → Student Life & Development;
+   - G.I. Bill → Veterans Services.
+
+**Did it work?** Yes.
+- **Original set: 41/42** (`docs/test-results.md`). Only #3, the known date conflict, fails. The misspelled tests pass 5/5, and #15 and #42 pass with their new checks.
+- **Student set: 34/45 saved** (`docs/test-results-students.md`), and **36/45** after two fixes:
+  - #45 had a test pattern that was too strict (see Troubleshooting 2);
+  - #7 passed on a rerun.
+
+  | Type | Passed |
+  |---|---|
+  | coverage | 10/16 |
+  | wording | 6/7 |
+  | follow-up | 0/1 |
+  | multi-part | 2/2 |
+  | account | 4/5 |
+  | unsupported | 6/6 |
+  | referral | 1/1 |
+  | safety | 4/4 |
+  | directory | 3/3 |
+
+  - **Now passing:** #30 (holds, from the account rule) and #40 (antibiotic → "Try: Student Health Services", from the directory).
+  - **Still failing, all wording problems for Step A2:** #2, #3, #4, #6, #10, #14, #20, #21, #31.
+- **The unsupported, safety and directory group, run 3 times:** all passed in every round, except one Gemini error on the tacos question in round 1, which passed in rounds 2 and 3.
+
+**Troubleshooting or redirection (if any):**
+1. **Claude's first directory design didn't work.** Claude first matched questions to offices with keyword search over the office names and descriptions. Testing showed it was too noisy to use:
+   - "take" matched Commencement ("will take place"), so every "what should I take" question pointed there;
+   - "Long Beach" in the IT description matched the weather question;
+   - "capital of France" scored higher for one office than some correct matches did.
+   
+   Claude switched to letting Gemini pick from the numbered list, in the call it already makes, so there's no extra AI call. It also reverted the small search refactor that design needed, so `lib/retrieval.ts` is unchanged. Before reverting, Claude had confirmed the refactor gave identical top results for all 73 test questions.
+2. **Claude's new test #45 was too strict.** The answer said "Veteran Services" (how our advising page names it), but the pattern required "Veterans Services". Claude first checked that the answer's facts (certifying G.I. Bill enrollment, CalVet fee waivers) really come from our sources: they're in `knowledge/academic-advising.md`. It then made the pattern accept both spellings.
+3. **#7 "wheres the writing center" passed on keywords, but the answer is misleading.** Once it gave a past writing-retreat room (LA2-200) as if it were the location, because our Writing Center page doesn't list one. Another run fell back. It's on the limitations list.
+4. **Gemini rate limits** (429) hit several times. The test script's retry handled most of them.
+
+**Screenshot / commit:** none this step (B1 committed by the team as `2e6c03e`)
 
 ---
 

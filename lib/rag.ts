@@ -16,6 +16,7 @@ import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
 import { crisisReply, isCrisisMessage } from "./crisis";
+import { officeByNumber } from "./directory";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -358,12 +359,15 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // 5. Shape the response.
   if (reply.type === "fallback") {
+    // Where to send the student instead, best first: the campus maps page for map questions,
+    // then the related page from our sources, then the right office from the office list
+    // (lib/directory.ts), or no button if nothing fits.
     const related = results[reply.related_source - 1]?.chunk;
     const suggestion = isMapQuestion(searchText)
       ? MAP_SUGGESTION
       : related
         ? { title: related.title, url: related.url }
-        : null;
+        : officeByNumber(reply.related_office);
     return fallback(suggestion, model, correctedQuestion);
   }
 

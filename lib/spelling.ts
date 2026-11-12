@@ -4,8 +4,10 @@
  * Our search (retrieval.ts) matches exact words, so one typo can make it miss everything.
  * The idea, in plain English:
  *   1. Make a list of every word that appears in our CSULB pages (the "vocabulary").
- *   2. For each word in the question that is NOT in that list, find the vocabulary word that is
- *      closest to it: the fewest typos away ("edit distance").
+ *   2. For each word in the question that is NOT in that list AND is not a real English word,
+ *      find the vocabulary word that is closest to it: the fewest typos away ("edit distance").
+ *      (Real words are never changed: "died" is not a typo of "did", even if "died" isn't on
+ *      any of our pages. The English list is lib/data/english-words.json.)
  *   3. Swap it in only if it's close enough AND there's exactly one best match.
  *
  * Because we only ever swap in words from our own pages, and only for small typos, a question
@@ -14,6 +16,10 @@
 import { loadChunks } from "./knowledge";
 import { STOP_WORDS, SYNONYMS, tokenize } from "./retrieval";
 import { isSocialWord } from "./small-talk";
+import englishWords from "./data/english-words.json";
+
+// About 44,000 common English words (SCOWL sizes 10-40; see scripts/build-english-words.ts).
+const ENGLISH = new Set<string>(englishWords.words);
 
 const MIN_LENGTH = 4; // words shorter than this are left alone ("bok" could be "book" or "box")
 
@@ -127,7 +133,7 @@ export type SpellingResult = {
   changes: { from: string; to: string }[]; // what we changed, e.g. [{ from: "parkng", to: "parking" }]
 };
 
-/** Fix the typos in a question. Words we know, short words, numbers, stopwords, and greetings are left alone. */
+/** Fix the typos in a question. Words we know, real English words, short words, numbers, stopwords, and greetings are left alone. */
 export function correctSpelling(question: string): SpellingResult {
   const vocab = getVocabulary();
   const changes: SpellingResult["changes"] = [];
@@ -140,6 +146,8 @@ export function correctSpelling(question: string): SpellingResult {
     if (isSocialWord(word)) return original;
     // Known word, or a plural/singular of one ("permits" -> "permit")? Leave it.
     if (vocab.has(word) || tokenize(word).some((w) => vocab.has(w))) return original;
+    // A real English word that just isn't on our pages ("died", "write", "dorms")? Leave it too.
+    if (ENGLISH.has(word)) return original;
 
     const fix = closestWord(word);
     if (!fix) return original;

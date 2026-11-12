@@ -5,6 +5,7 @@
  * environment variable at request time and is never logged or sent to the browser.
  */
 import { GoogleGenAI } from "@google/genai";
+import { numberedOfficeList } from "./directory";
 
 export const FALLBACK_SENTENCE = "I do not have enough information in the provided CSULB sources.";
 export const CAMPUS_MAP_URL = "https://www.csulb.edu/maps";
@@ -13,9 +14,15 @@ export const CAMPUS_MAP_URL = "https://www.csulb.edu/maps";
 const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 // If the main model is busy or rate-limited, we try this one once. Override with GEMINI_BACKUP_MODEL.
 const DEFAULT_BACKUP_MODEL = "gemini-3.8-flash";
+// The most tokens Gemini may produce, INCLUDING its hidden "thinking". Our answers are short
+// (about 100-200 tokens), but thinking alone can use about 1,000 tokens on table-heavy questions
+// like parking prices. At the old limit of 2048, a long think sometimes cut the JSON reply off
+// mid-answer ("The AI sent back an answer we couldn't read"; prompt log Entry 14).
+// 8192 leaves plenty of room; normal answers still stop on their own after a few hundred tokens.
+const MAX_OUTPUT_TOKENS = 8192;
 
 // The rules Gemini must follow. This is the most important part of keeping answers grounded.
-const SYSTEM_PROMPT = `You are the CSULB Services Assistant. You help Cal State Long Beach students find information about university services.
+export const SYSTEM_PROMPT = `You are the CSULB Services Assistant. You help Cal State Long Beach students find information about university services.
 
 GROUNDING RULES
 - Answer ONLY from the numbered SOURCES in the message. Never use outside knowledge, even if you think you know the answer.
@@ -33,9 +40,9 @@ WHEN TO USE EACH RESPONSE TYPE
 - "clarify": the question is too vague to answer because it could mean several different services (for example "How do I apply?" could mean admission, scholarships, graduation, or financial aid). Ask ONE short clarifying question that lists the likely options, like: "Do you mean admission, scholarships, graduation, financial aid, or something else?" Do not answer yet.
 - "fallback": the sources do not actually answer the question. This includes:
   * places or things off campus (for example restaurants near campus). A source about something on campus does not answer a question about what is near or off campus;
-  * opinions or rankings (for example "best professor"), personal student records, or anything the sources don't cover;
+  * opinions or rankings (for example "best professor"), or anything the sources don't cover;
   * sources that are only loosely related (sharing a few words is not enough).
-  For "fallback", set answer to exactly: "${FALLBACK_SENTENCE}" and set related_source to the number of the source from the CSULB office or department that would handle this kind of question, or 0 if none of the sources fit.
+  For "fallback", set answer to exactly: "${FALLBACK_SENTENCE}". Set related_source to the number of the source from the CSULB office or department that would handle this kind of question, or 0 if none of the sources fit. Also set related_office to the number of the office in the CSULB OFFICE LIST below that handles this kind of question (for example a health question -> Student Health Services, a loan question -> Financial Aid and Scholarships), or 0 if no office fits (for example questions that aren't about CSULB, or about another university).
 
 SPECIAL CASES
 - Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
@@ -43,17 +50,21 @@ SPECIAL CASES
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
 - Do not give medical, legal, or financial advice. You may describe which CSULB services exist and how to contact them.
 - Never ask for personal information (student ID, SSN, birth date, grades, health details). If a student shares some, don't repeat it.
+- Questions about the student's own record (my grades, my holds, my schedule, my financial aid status, what I owe): you can't see anyone's records, but if the sources explain how to check it (for example in the MyCSULB Student Center), use type "answer" and give those steps. Never ask for or repeat their student ID or other personal details. Use "fallback" only if the sources don't explain how to check it.
 
 LENGTH AND SHAPE (for "answer")
 - 2 to 4 sentences. Start with the direct answer. Then add ONE useful related detail and ONE next step, but only if the sources have them.
   Shape: "[Direct answer, e.g. the price or date asked about]. [One related detail, e.g. a yearly price or another term]. [Next step, e.g. where or how to do it, with its link]. [n]"
   (This is only a shape. Take every fact from the SOURCES, never from this example.)
 - Use a short bullet list only when the student asks for several items (like hours for several services, or a list of names). Introduce it with one sentence and cite that sentence.
-- Friendly and plain. Include helpful links from the sources as Markdown links.`;
+- Friendly and plain. Include helpful links from the sources as Markdown links.
+
+CSULB OFFICE LIST (only for choosing related_office in a fallback; this is NOT a source, never use it to answer)
+${numberedOfficeList()}`;
 
 // Gemini must reply in this JSON shape, so our code can tell answers, clarifying
 // questions, and fallbacks apart without guessing from the text.
-const RESPONSE_SCHEMA = {
+export const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
     type: {
@@ -69,14 +80,19 @@ const RESPONSE_SCHEMA = {
       type: "integer",
       description: "Only for fallback: the number of the most related CSULB department source, or 0 if none. Use 0 for answer and clarify.",
     },
+    related_office: {
+      type: "integer",
+      description: "Only for fallback: the number of the office in the CSULB OFFICE LIST that handles this kind of question, or 0 if none fits. Use 0 for answer and clarify.",
+    },
   },
-  required: ["type", "answer", "related_source"],
+  required: ["type", "answer", "related_source", "related_office"],
 };
 
 export type GeminiReply = {
   type: "answer" | "clarify" | "fallback";
   answer: string;
   related_source: number;
+  related_office: number;
 };
 
 /** A problem we can explain to the student in friendly words. */
@@ -119,16 +135,15 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
         system_instruction: SYSTEM_PROMPT,
         input,
         response_format: { type: "text", mime_type: "application/json", schema: RESPONSE_SCHEMA },
-        generation_config: { thinking_level: "low", max_output_tokens: 2048 },
+        generation_config: { thinking_level: "low", max_output_tokens: MAX_OUTPUT_TOKENS },
         store: false, // privacy: don't keep students' questions on Google's servers
       },
       { maxRetries, timeout },
     );
 
-  let outputText: string | undefined;
   let usedModel = mainModel;
+  let interaction;
   try {
-    let interaction;
     try {
       // No retries on the main model: if it's busy, switching to the backup is faster.
       interaction = await callModel(mainModel, 0, 20_000);
@@ -145,20 +160,47 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       // seeing "try again", instead of about 60 with retries.
       interaction = await callModel(backupModel, 0, 15_000);
     }
-    outputText = interaction.output_text ?? undefined;
   } catch (err) {
     throw toFriendlyError(err);
   }
 
-  try {
-    const reply = JSON.parse(outputText ?? "") as GeminiReply;
-    if (!["answer", "clarify", "fallback"].includes(reply.type) || typeof reply.answer !== "string") {
-      throw new Error("unexpected shape");
+  let reply = readReply(interaction);
+  if (!reply) {
+    // The reply was cut off or wasn't valid JSON. Ask the same model once more before giving up.
+    // (Each try is a fresh answer, so a second try usually works.)
+    console.warn(`[gemini] unreadable reply from ${usedModel} (${replyStats(interaction)}), retrying once`);
+    try {
+      interaction = await callModel(usedModel, 0, 20_000);
+    } catch (err) {
+      throw toFriendlyError(err);
     }
-    return { reply, model: usedModel };
-  } catch {
-    throw new FriendlyError("bad_ai_response", "The AI sent back an answer we couldn't read. Please try asking again.", 502);
+    reply = readReply(interaction);
+    if (!reply) {
+      console.error(`[gemini] unreadable reply again from ${usedModel} (${replyStats(interaction)})`);
+      throw new FriendlyError("bad_ai_response", "The AI sent back an answer we couldn't read. Please try asking again.", 502);
+    }
   }
+  return { reply, model: usedModel };
+}
+
+type Interaction = { output_text?: string | null; status?: string; usage?: { total_output_tokens?: number; total_thought_tokens?: number } };
+
+/** Gemini's JSON reply, or null if it was cut off (status "incomplete") or isn't the shape we asked for. */
+function readReply(interaction: Interaction): GeminiReply | null {
+  if (interaction.status === "incomplete") return null;
+  try {
+    const reply = JSON.parse(interaction.output_text ?? "") as GeminiReply;
+    if (!["answer", "clarify", "fallback"].includes(reply.type) || typeof reply.answer !== "string") return null;
+    return reply;
+  } catch {
+    return null;
+  }
+}
+
+/** For the server log: why a reply was unreadable. Token counts only, never the text. */
+function replyStats(interaction: Interaction) {
+  const usage = interaction.usage ?? {};
+  return `status=${interaction.status ?? "unknown"}, thinking=${usage.total_thought_tokens ?? "?"} tokens, answer=${usage.total_output_tokens ?? "?"} tokens`;
 }
 
 /** The HTTP status code on a Gemini error (0 if there isn't one, e.g. a network failure). */
