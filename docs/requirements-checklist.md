@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after the financial aid fix, basic conversation, the full 42-test run, and the Vercel readiness check (prompt log Entry 11)
+**Last updated:** 2026-11-12, after the coverage/wording plan and Step 0: the 40-question "real student" test set and its baseline (prompt log Entry 12)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -91,6 +91,10 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Castor/Guzman/Garris", the exact fallback sentence). `tests/test-questions.json` + `scripts/run-tests.ts`; every expected fact was confirmed to appear word for word in `knowledge/`.
 - [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest full run (`docs/test-results.md`), and again 4 of 4 with spelling correction on (Entry 10), plus the misspelled study-room and gibberish questions.
 - [x] **Test results recorded as a table** (question, type, expected, actual, pass/fail, model) in `docs/test-results.md`, regenerated each run.
+- [ ] **"Real student" coverage test set (40 questions, messy wording).** Partly: `tests/student-questions.json` written, and the baseline was measured (Entry 12):
+  - **16/40 pass:** coverage 1/17, wording 5/7, follow-up 1/1, multi-part 2/2, account 0/5, unsupported 6/6, safety 1/2. Results are in `docs/test-results-students-baseline.md`.
+  - **Run it with:** `TESTS_FILE=tests/student-questions.json RESULTS_FILE=docs/test-results-students.md npm run test:questions`.
+  - **Left to do:** Steps B1 (about 35 new pages), B2 (department directory + account-question rule) and A2 (query rewriting), measuring after each. Coverage tests get exact facts as their pages are added.
 - [ ] **All tests passing.** 41 of 42 in the latest full run (Entry 11, against the production build). The Entry 8 fixes are confirmed (#6, #7, #13 now pass). The only failure is #3, the date conflict, which is a known limitation by team decision.
 - [x] **Known source quirks and limitations**, to explain on the testing / limitations slide (team decisions, Entries 4 and 8):
   - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table). **Limitation:** our default model (`gemini-3.5-flash-lite`) usually reports only Feb. 3 instead of showing both and saying to confirm (test #3).
@@ -99,6 +103,9 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - Spelling correction only fixes small typos, and only to words that appear in our pages. A real word one letter away from a page word with the same first letter could still be "corrected" by mistake; the fallback cutoff and Gemini (which sees the original wording) are the safety nets.
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
   - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
+  - **Spelling correction can change a real word:** "F-1 visa" was searched as "F-1 via" (student test #27, Entry 12).
+  - **A backup-model timeout shows "Something went wrong"** instead of the "Gemini is busy" message, and the test script doesn't retry it (Entry 12). Reported, not fixed yet.
+  - **The BM25 no-AI cutoff can't separate supported from unsupported questions.** Their scores overlap (unsupported 3.4-11.8, answerable 3.45-24.6), so Gemini's grounding prompt is the main guard against answering unsupported questions (Entry 12).
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

@@ -582,4 +582,66 @@ An offline check, with no AI, also confirmed that **none of the 22 existing test
 
 ---
 
+## Entry 12 (Coverage and wording plan + Step 0: the "real student" test set and baseline)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code, plan mode, then normal mode)
+
+**Prompt (two parts):**
+> Goal: the assistant should answer the large majority of questions a CSULB undergrad might ask, however they word it, and for anything it can't answer, point to the right CSULB office. Right now it fails on things like "What is the Horn Center?" and "What are the requirements to declare a CS major?"
+>
+> Plan (don't build yet) two upgrades: A. Understanding any wording (query rewriting with one cheap Gemini call; hybrid search with BM25 + Gemini embeddings, precomputed and committed). B. Coverage (expand from 18 pages to the pages that answer common student questions, official csulb.edu / asicsulb.org / catalog only; a department directory so fallbacks can always point to the right office; account questions should explain how to check in MyCSULB). In the plan, tell me how many pages and which, the extra Gemini calls per question and what that means on the free tier, how you'll keep fallback at 100%, how long it'll take, and anything that makes it harder to explain in our presentation. Write a 40-question "real student" test set first so we can measure before and after.
+>
+> *(Our reply to the plan:)* Approved with these changes: 1. Order: Step 0 -> B1 -> B2 -> A2 (query rewriting). Skip A1 (embeddings) for now. After A2, show me which student-test failures are still wording problems, and we'll decide on embeddings then. 2. Trim B1 to about 35 pages: keep the CS catalog page and the declaring/changing major pages, but skip catalog pages for the other 5 majors, student clubs, veteran services, and Dream Success Center. Show me the final URL list before fetching. 3. Approved: the account-question rule. 4. Since the no-AI gate will be BM25-only without embeddings, calibrate its threshold from the test data and show me the numbers. 5. Stop after each step as planned, update the prompt log and checklist, and remind me to commit. Start with Step 0.
+
+**What the AI did:**
+- **The plan** (saved outside the repo; the team's changes are listed above). Key points:
+  - **Order:** coverage before wording, so every upgrade can be measured on its own (baseline -> +pages -> +directory -> +query rewriting).
+  - **Gemini calls:** about 2 generate calls per question instead of 1, now that embeddings are skipped.
+  - **Fallback:** four layers (the no-AI gate, a rewriter that can't add facts, the unchanged grounding prompt, and repeated test runs of the unsupported group).
+  - **Time:** about 14-18 hours of work in 5 stops.
+  - **Presentation risks:** more AI steps, less repeatable runs, more free-tier calls, more pages to keep current.
+- **Free-tier check:** Claude re-read Google's rate-limit docs. They still publish no fixed free-tier limits for our models, only "check AI Studio". Both embedding models were also confirmed: `gemini-embedding-001` (with retrieval task types) and `gemini-embedding-2`.
+- **Step 0: `tests/student-questions.json`, 40 questions worded the way students type.** The two examples from our prompt are included, plus slang ("wat r the help desk hrs"), a follow-up, two-part questions, account questions, 6 unsupported and 2 safety questions.
+  - Questions about topics we already cover have an exact fact copied from `knowledge/` (e.g. `$518`, "Engineering Student Success Center", "Nov. 2").
+  - Questions about pages we don't have yet start with keyword checks. Each gets an exact fact when its page is added.
+- **`scripts/run-tests.ts`** gained three options:
+  - `TESTS_FILE=` to pick which question set runs;
+  - `RESULTS_FILE=` to pick where results are saved;
+  - an optional `history` field, so a test can be a follow-up.
+- **Baseline run** against the production build: `docs/test-results-students-baseline.md`.
+
+**Did it work?** The baseline was measured. As expected, most coverage questions fail. **16 of 40 passed** in the full run:
+
+| Type | Passed |
+|---|---|
+| coverage | 1/17 |
+| wording | 5/7 |
+| follow-up | 1/1 |
+| multi-part | 2/2 |
+| account | 0/5 |
+| unsupported | 6/6 |
+| safety | 1/2 |
+
+A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see the notes below). All 6 unsupported questions fell back.
+
+**Troubleshooting or redirection (if any):**
+1. **#1 (Horn Center) is a false pass.** The answer starts "The provided sources do not describe the Horn Center as a whole" and only mentions the Horn Center Lobby as a study space. The keyword check was too loose. It gets the exact-fact check in Step B1, when the Horn Center page is added.
+2. **#27 found a spelling-correction bug:** "im on an F-1 **visa**" was searched as "F-1 **via**". "visa" isn't in our pages, and "via" is one letter away with the same first letter. Gemini then fell back. **Not fixed yet** (the team decides), but query rewriting in Step A2 should cover it, and adding a few international-student words to the vocabulary would too.
+3. **#5 and #20 got an error, not an answer.** The main model returned 503 (overloaded), then the backup model timed out.
+   - **A small error-message bug:** when the backup times out, the app shows "Something went wrong while writing the answer" (`ai_error`) instead of the "Gemini is busy" message. The test script also doesn't retry it, because it only retries "busy" errors.
+   - **Also:** the production server's log shows minified error names (`type=oa`), which aren't useful. Both are Gemini-logic changes, so they're reported here and not fixed.
+   - A rerun of just #5 and #20 (results not saved) answered #5 correctly. #20 got the same 503 + timeout again, even though its search results are right (top match: the parking permit page, score 8.1).
+4. **Calibrating the no-AI gate (team decision 4).** Claude listed BM25 top scores for every question in both sets, offline with no AI calls.
+   - **Unsupported questions** score 3.4 to 11.8, for example "best pizza near campus" 11.8 and "weather tomorrow" 9.6.
+   - **Answerable questions** score 3.45 to 24.6, and "what are my grades" scores 3.45.
+   - **The ranges overlap almost completely**, so no BM25 cutoff can separate them. Only empty matches (gibberish, "write my essay") are stopped without AI. The real protection for unsupported questions is Gemini's grounding prompt, which fell back on all of them in the baseline.
+   - The full calibration table comes after Step B1, because new pages change the scores.
+5. **Port 3000 was already in use** by a Next.js server Claude didn't start this session. Claude left it alone and ran the production build on port 3100.
+
+**Screenshot / commit:** none (test data and results only)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

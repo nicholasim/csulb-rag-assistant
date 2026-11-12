@@ -9,7 +9,10 @@
  *   APP_URL   where the app is running (default http://localhost:3000)
  *   DELAY_MS  pause between questions that call Gemini, to stay under rate limits (default 5000)
  *   RETRY_WAIT_MS  if Gemini is rate-limited or overloaded, wait this long and retry once (default 30000)
- *   ONLY      run just these test numbers, e.g. ONLY=26,27,28 (prints results, doesn't overwrite docs/test-results.md)
+ *   ONLY      run just these test numbers, e.g. ONLY=26,27,28 (prints results, doesn't overwrite the results file)
+ *   TESTS_FILE    which question set to run (default tests/test-questions.json;
+ *                 the "real student" set is tests/student-questions.json)
+ *   RESULTS_FILE  where to save the results table (default docs/test-results.md)
  *
  * The "missing API key" test can't use the running app (it has a key), so it calls the real
  * /api/chat route code directly inside this script, where GEMINI_API_KEY is removed first.
@@ -22,8 +25,8 @@ const RETRY_WAIT_MS = Number(process.env.RETRY_WAIT_MS ?? 30000);
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null;
 // Error codes from our API that mean "Gemini is busy right now", not "the app is broken".
 const BUSY_ERRORS = ["rate_limited", "ai_unavailable"];
-const TESTS_FILE = "tests/test-questions.json";
-const RESULTS_FILE = "docs/test-results.md";
+const TESTS_FILE = process.env.TESTS_FILE ?? "tests/test-questions.json";
+const RESULTS_FILE = process.env.RESULTS_FILE ?? "docs/test-results.md";
 
 type Expect = {
   response: string | string[]; // "answer" | "clarify" | "fallback" | "error"
@@ -46,6 +49,8 @@ type Test = {
   expected_behavior: string;
   expected_fact: string;
   runWithoutApiKey?: boolean;
+  // Earlier messages in the chat, for follow-up questions like "what about for a year?"
+  history?: { role: "user" | "assistant"; content: string }[];
   expect: Expect;
 };
 
@@ -66,11 +71,11 @@ type ApiResult = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Send one question to the running app's /api/chat. */
-async function askApp(question: string): Promise<ApiResult> {
+async function askApp(question: string, history: Test["history"] = []): Promise<ApiResult> {
   const res = await fetch(`${APP_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, history }),
     signal: AbortSignal.timeout(90_000),
   });
   return { httpStatus: res.status, body: await res.json() };
@@ -168,7 +173,7 @@ async function main() {
 
     const run = async (): Promise<ApiResult> => {
       try {
-        return test.runWithoutApiKey ? await askWithoutApiKey(question) : await askApp(question);
+        return test.runWithoutApiKey ? await askWithoutApiKey(question) : await askApp(question, test.history);
       } catch (err) {
         return { httpStatus: 0, body: { error: { code: "request_failed", message: (err as Error).message } } };
       }
@@ -196,8 +201,9 @@ async function main() {
       answer: result.body.answer ?? result.body.error?.message ?? "",
     };
     rows.push(row);
-    const shortQ = question.length > 60 ? `${question.slice(0, 57)}...` : question || "(empty)";
-    console.log(`${row.passed ? "PASS" : "FAIL"}  #${String(test.id).padStart(2)}  ${test.type.padEnd(11)} ${shortQ}`);
+    const shortQ = (test.history?.length ? "(follow-up) " : "") + question;
+    const shortQShown = shortQ.length > 60 ? `${shortQ.slice(0, 57)}...` : shortQ || "(empty)";
+    console.log(`${row.passed ? "PASS" : "FAIL"}  #${String(test.id).padStart(2)}  ${test.type.padEnd(11)} ${shortQShown}`);
     if (!row.passed) console.log(`        -> ${problems.join("; ")}`);
     if (ONLY) console.log(`        ${row.summary}  [${model}]`);
   }
@@ -213,18 +219,19 @@ async function main() {
   const models = [...new Set(rows.map((r) => r.model.replace(" (retried once)", "")).filter((m) => m.startsWith("gemini")))].join(", ") || "none";
 
   const lines = [
-    "# Test Results: CSULB Services RAG Assistant",
+    `# Test Results: CSULB Services RAG Assistant (${TESTS_FILE})`,
     "",
     `Run on ${new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })} (Pacific) with \`npm run test:questions\`, against ${APP_URL}.`,
     "",
     `**${passed} of ${rows.length} passed** (${byType}). Gemini models that answered: ${models}.`,
     "",
-    "Each test is checked automatically: the response type (answer / clarify / fallback / error), facts that must appear, and text that must not appear. The checks are listed in `tests/test-questions.json`. Test #25 calls the real `/api/chat` route code inside the test script with `GEMINI_API_KEY` removed, because the running app has a key. If Gemini is rate-limited or overloaded, the script waits ${RETRY_WAIT_MS / 1000} seconds and retries once; those rows say \"(retried once)\" in the Model column.",
+    `Each test is checked automatically: the response type (answer / clarify / fallback / error), facts that must appear, and text that must not appear. The checks are listed in \`${TESTS_FILE}\`.${tests.some((t) => t.runWithoutApiKey) ? " The missing-API-key test calls the real \`/api/chat\` route code inside the test script with \`GEMINI_API_KEY\` removed, because the running app has a key." : ""} If Gemini is rate-limited or overloaded, the script waits ${RETRY_WAIT_MS / 1000} seconds and retries once; those rows say \"(retried once)\" in the Model column.`,
     "",
     "| # | Question | Type | Expected behavior | Expected fact | Actual | Result | Model |",
     "|---|---|---|---|---|---|---|---|",
     ...rows.map((r) => {
-      const q = r.question.length > 80 ? `${r.question.slice(0, 77)}... (${r.question.length} chars)` : r.question || "(empty)";
+      const followUp = r.test.history?.length ? `(after: "${r.test.history.filter((m) => m.role === "user").map((m) => m.content).join(" / ")}") ` : "";
+      const q = followUp + (r.question.length > 80 ? `${r.question.slice(0, 77)}... (${r.question.length} chars)` : r.question || "(empty)");
       return `| ${r.test.id} | ${cell(q)} | ${r.test.type} | ${cell(r.test.expected_behavior)} | ${cell(r.test.expected_fact)} | ${cell(r.summary)} | ${r.passed ? "PASS" : "**FAIL**"} | ${cell(r.model)} |`;
     }),
   ];
