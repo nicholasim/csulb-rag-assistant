@@ -119,48 +119,54 @@ const SOURCES: Source[] = [
 // ---- Office directory (Step B2, prompt log Entry 14) ----
 // One entry per CSULB office: its name, its official page, and one sentence copied word for word
 // from that page (empty when the page has no descriptive sentence, e.g. only announcements).
-// buildDirectory() checks each sentence really is on the live page before saving it.
+// phone/email (optional) were picked by hand from the office's page or our knowledge files; we
+// don't extract them automatically because pages also list other offices' numbers.
+// buildDirectory() checks every sentence, phone, and email really is on the office's live page
+// (or, for contacts, in knowledge/) before saving it, so nothing is invented.
+// keywords (optional) are OUR search hints for offices whose page has no matchable description
+// ("undocumented" -> Dream Success Center). They're only used to match a question to an office
+// (office embeddings, Gemini's office list) and are never shown to students as facts (Entry 18).
 // Used to point fallbacks to the right office (lib/directory.ts); not a source Gemini cites.
-const DIRECTORY: { name: string; url: string; description: string }[] = [
+const DIRECTORY: { name: string; url: string; description: string; phone?: string; email?: string; keywords?: string[] }[] = [
   { name: "Admissions", url: "https://www.csulb.edu/admissions", description: "Each applicant to CSULB is considered with great care." },
-  { name: "Enrollment Services", url: "https://www.csulb.edu/enrollment-services", description: "Current students can use our site for easy-to-follow information regarding class registration, degree progress and advising, filing to graduate and various other resources." },
-  { name: "Student Records (Office of the Registrar)", url: "https://www.csulb.edu/student-records", description: "Plus, navigate the left menu for more services offered by Student Records--including guides on how to use your Academic Requirements Report (ARR), access planning tools (Degree Planner), order transcripts, and more." },
-  { name: "Financial Aid and Scholarships", url: "https://www.csulb.edu/financial-aid-and-scholarships", description: "" },
-  { name: "Student Financial Services (tuition and fee payments)", url: "https://www.csulb.edu/financial-management/student-financial-services", description: "Your payment due date is available on your MyCSULB Student Center." },
+  { name: "Enrollment Services", url: "https://www.csulb.edu/enrollment-services", description: "Current students can use our site for easy-to-follow information regarding class registration, degree progress and advising, filing to graduate and various other resources." , phone: "562.985.5471" },
+  { name: "Student Records (Office of the Registrar)", url: "https://www.csulb.edu/student-records", description: "Plus, navigate the left menu for more services offered by Student Records--including guides on how to use your Academic Requirements Report (ARR), access planning tools (Degree Planner), order transcripts, and more." , phone: "562.985.5471" },
+  { name: "Financial Aid and Scholarships", url: "https://www.csulb.edu/financial-aid-and-scholarships", description: "" , phone: "562.985.5471"  },
+  { name: "Student Financial Services (tuition and fee payments)", url: "https://www.csulb.edu/financial-management/student-financial-services", description: "Your payment due date is available on your MyCSULB Student Center." , email: "cashiers@csulb.edu" },
   { name: "Commencement", url: "https://www.csulb.edu/commencement", description: "Your Commencement celebration will take place at Angel Stadium in Anaheim, Tuesday, May 18 through Friday, May 21, 2027." },
-  { name: "Testing Department", url: "https://www.csulb.edu/student-affairs/testing-department", description: "Offers proctoring services for an allotted fee for anyone needing to take a paper or computer-based test for another university, college or agency." },
-  { name: "University Center for Undergraduate Advising (UCUA)", url: "https://www.csulb.edu/undergraduate-advising/university-center-for-undergraduate-advising-ucua", description: "The University Center for Undergraduate Advising (UCUA) is the primary advising center for" },
-  { name: "College of Business Center for Student Success", url: "https://www.csulb.edu/college-of-business/center-for-student-success", description: "" },
+  { name: "Testing Department", url: "https://www.csulb.edu/student-affairs/testing-department", description: "Offers proctoring services for an allotted fee for anyone needing to take a paper or computer-based test for another university, college or agency." , phone: "562.985.4007", email: "testing@csulb.edu" },
+  { name: "University Center for Undergraduate Advising (UCUA)", url: "https://www.csulb.edu/undergraduate-advising/university-center-for-undergraduate-advising-ucua", description: "The University Center for Undergraduate Advising (UCUA) is the primary advising center for" , email: "aa-advising@csulb.edu" },
+  { name: "College of Business Center for Student Success", url: "https://www.csulb.edu/college-of-business/center-for-student-success", description: "" , phone: "(562) 985-4514", email: "cob-css@csulb.edu" , keywords: ["business major advising", "accounting", "finance", "marketing", "management", "information systems", "College of Business"] },
   { name: "Engineering Student Success Center (ESSC)", url: "https://www.csulb.edu/college-of-engineering/undergraduate-advising", description: "The Engineering Student Success Center (ESSC) Academic Advising Office serves the College of Engineering (COE) and is committed to helping students graduate in a timely manner with a highly-valued degree from California State University Long Beach." },
   { name: "College of Education Student Success and Advising Center", url: "https://www.csulb.edu/college-of-education/student-success-and-advising-center", description: "The College of Education Student Success and Advising Center utilizes a Generalist/Specialist model for drop-in advising." },
   { name: "College of Health and Human Services Academic Advising Center", url: "https://www.csulb.edu/college-of-health-human-services/chhs-academic-advising", description: "The College of Health & Human Services (CHHS) Academic Advising Center provides both general education and major academic advising" },
-  { name: "College of Liberal Arts Advising Center (ATLAS)", url: "https://www.csulb.edu/college-of-liberal-arts/atlas", description: "Welcome to the College of Liberal Arts Advising Center: ATLAS!" },
+  { name: "College of Liberal Arts Advising Center (ATLAS)", url: "https://www.csulb.edu/college-of-liberal-arts/atlas", description: "Welcome to the College of Liberal Arts Advising Center: ATLAS!" , phone: "(562) 985-7804" },
   { name: "College of Natural Sciences and Mathematics Academic Advising Center", url: "https://web.csulb.edu/colleges/cnsm/advising/", description: "CNSM declared majors can contact their major advisor for questions and drop-in hours." },
-  { name: "Career Development Center", url: "https://www.csulb.edu/career-development-center", description: "The CSULB Career Development Center empowers students to become effective leaders of their personal career journeys." },
-  { name: "The Learning Center (tutoring)", url: "https://www.csulb.edu/academic-affairs/undergraduate-studies/the-learning-center", description: "Schedule an appointment and see hours for Tutoring, Academic Coaching, and Conversation Lab" },
-  { name: "University Writing Center", url: "https://www.csulb.edu/university-writing-center", description: "The University Writing Center is a campus-wide writing support service for all currently enrolled CSULB students." },
-  { name: "University Library", url: "https://www.csulb.edu/university-library", description: "" },
-  { name: "Student Health Services", url: "https://www.csulb.edu/student-affairs/student-health-services", description: "Student Health Services is your campus health clinic, here to support and serve you on campus and virtually." },
-  { name: "Counseling and Psychological Services (CAPS)", url: "https://www.csulb.edu/student-affairs/counseling-and-psychological-services", description: "Counseling and Psychological Services (CAPS) provides support for students facing personal challenges and mental health concerns." },
-  { name: "Bob Murphy Access Center (BMAC)", url: "https://www.csulb.edu/student-affairs/bob-murphy-access-center", description: "The Bob Murphy Access Center (BMAC) is a department under CSULB Student Affairs that provides educational access for students with disabilities by working with campus and community partners to provide accommodations, resources, and assistive technology." },
-  { name: "Basic Needs Program", url: "https://www.csulb.edu/student-affairs/basic-needs", description: "From food and housing security to financial wellness support, we are here to help you navigate college life with confidence and peace of mind." },
-  { name: "CARES Team", url: "https://www.csulb.edu/student-affairs/cares", description: "Crisis Assistance & Resource Education Support (CARES) helps students navigate challenges, connect with resources, and stay on track academically and personally." },
+  { name: "Career Development Center", url: "https://www.csulb.edu/career-development-center", description: "The CSULB Career Development Center empowers students to become effective leaders of their personal career journeys." , phone: "(562) 985-4151" },
+  { name: "The Learning Center (tutoring)", url: "https://www.csulb.edu/academic-affairs/undergraduate-studies/the-learning-center", description: "Schedule an appointment and see hours for Tutoring, Academic Coaching, and Conversation Lab" , email: "TLC-info@csulb.edu" },
+  { name: "University Writing Center", url: "https://www.csulb.edu/university-writing-center", description: "The University Writing Center is a campus-wide writing support service for all currently enrolled CSULB students." , phone: "(562) 985 5162", email: "UWC@csulb.edu" },
+  { name: "University Library", url: "https://www.csulb.edu/university-library", description: ""  },
+  { name: "Student Health Services", url: "https://www.csulb.edu/student-affairs/student-health-services", description: "Student Health Services is your campus health clinic, here to support and serve you on campus and virtually." , phone: "562.985.4771" },
+  { name: "Counseling and Psychological Services (CAPS)", url: "https://www.csulb.edu/student-affairs/counseling-and-psychological-services", description: "Counseling and Psychological Services (CAPS) provides support for students facing personal challenges and mental health concerns." , phone: "562-985-4001" },
+  { name: "Bob Murphy Access Center (BMAC)", url: "https://www.csulb.edu/student-affairs/bob-murphy-access-center", description: "The Bob Murphy Access Center (BMAC) is a department under CSULB Student Affairs that provides educational access for students with disabilities by working with campus and community partners to provide accommodations, resources, and assistive technology." , phone: "562.985.5401", email: "bmac@csulb.edu" },
+  { name: "Basic Needs Program", url: "https://www.csulb.edu/student-affairs/basic-needs", description: "From food and housing security to financial wellness support, we are here to help you navigate college life with confidence and peace of mind." , phone: "562-985-2038", email: "supportingstudents@csulb.edu" },
+  { name: "CARES Team", url: "https://www.csulb.edu/student-affairs/cares", description: "Crisis Assistance & Resource Education Support (CARES) helps students navigate challenges, connect with resources, and stay on track academically and personally." , email: "cares@csulb.edu" },
   { name: "Dean of Students", url: "https://www.csulb.edu/student-affairs/dean-of-students", description: "Our team provides support and advocacy for all of our students, in collaboration with faculty and staff across the university." },
   { name: "Veterans Services", url: "https://www.csulb.edu/student-affairs/veterans-services", description: "We help students access the educational benefits they earned by serving in the United States armed forces." },
-  { name: "Dream Success Center", url: "https://www.csulb.edu/student-affairs/dream-success-center", description: "" },
-  { name: "Educational Opportunity Program (EOP)", url: "https://www.csulb.edu/student-affairs/educational-opportunity-program", description: "The Educational Opportunity Program (EOP) at CSULB is dedicated to serving first-generation, historically low-income students by providing access and equity to higher education." },
-  { name: "Women's and Gender Equity Center", url: "https://www.csulb.edu/student-affairs/womens-gender-equity-center", description: "aims to foster women's and gender equity among individuals of diverse identities and expressions" },
+  { name: "Dream Success Center", url: "https://www.csulb.edu/student-affairs/dream-success-center", description: "" , keywords: ["undocumented", "DACA", "AB 540", "Dream Act", "CA Dream Act"] },
+  { name: "Educational Opportunity Program (EOP)", url: "https://www.csulb.edu/student-affairs/educational-opportunity-program", description: "The Educational Opportunity Program (EOP) at CSULB is dedicated to serving first-generation, historically low-income students by providing access and equity to higher education." , phone: "562.985.5637", email: "eop@csulb.edu" },
+  { name: "Women's and Gender Equity Center", url: "https://www.csulb.edu/student-affairs/womens-gender-equity-center", description: "aims to foster women's and gender equity among individuals of diverse identities and expressions" , phone: "562.985.8576", email: "WGEC@csulb.edu" },
   { name: "Student Conduct and Ethical Development", url: "https://www.csulb.edu/student-affairs/student-conduct-and-ethical-development", description: "The Office of Student Conduct and Ethical Development investigates campus-related complaints and charges against students involving violations of campus regulations." },
-  { name: "Office of Equity & Compliance (Title IX and civil rights)", url: "https://www.csulb.edu/equity-compliance", description: "To report an incident to the OEC, please complete the online reporting form." },
+  { name: "Office of Equity & Compliance (Title IX and civil rights)", url: "https://www.csulb.edu/equity-compliance", description: "To report an incident to the OEC, please complete the online reporting form." , email: "OEC@csulb.edu" },
   { name: "Student Life & Development (clubs and organizations)", url: "https://www.csulb.edu/student-affairs/student-life-development", description: "CSULB has more than 300 recognized student organizations, representing 12 diverse categories." },
-  { name: "Center for International Education (international students)", url: "https://www.csulb.edu/international", description: "The Center for International Education is a one-stop hub for international programs at CSULB comprised of three distinct areas: International Enrollment Management (IEM), International Students and Scholars (ISS), and Study Abroad." },
-  { name: "Student Orientation, Advising, and Registration (SOAR)", url: "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration", description: "All new first-time/first-year and transfer students are required to complete SOAR, as it is a mandatory program for all incoming students." },
+  { name: "Center for International Education (international students)", url: "https://www.csulb.edu/international", description: "The Center for International Education is a one-stop hub for international programs at CSULB comprised of three distinct areas: International Enrollment Management (IEM), International Students and Scholars (ISS), and Study Abroad." , email: "cie-student@csulb.edu" },
+  { name: "Student Orientation, Advising, and Registration (SOAR)", url: "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration", description: "All new first-time/first-year and transfer students are required to complete SOAR, as it is a mandatory program for all incoming students." , phone: "562.985.5515" },
   { name: "Housing & Residential Life", url: "https://www.csulb.edu/student-affairs/university-housing-residential-life", description: "CSULB's housing options offer students a convenient and supportive living environment." },
-  { name: "Beach Shops (bookstore and campus dining)", url: "https://www.csulb.edu/beach-shops", description: "Comprised of the University Bookstore, Campus Dining Services and Convenience Stores, and Residential Dining Services, Beach Shops operates locations providing goods and services to students, staff and faculty and creating an inclusive learning environment." },
-  { name: "ID Card Services", url: "https://www.csulb.edu/beach-shops/get-your-id", description: "You must be registered for at least one class for the current or upcoming semester to obtain your ID Card" },
+  { name: "Beach Shops (bookstore and campus dining)", url: "https://www.csulb.edu/beach-shops", description: "Comprised of the University Bookstore, Campus Dining Services and Convenience Stores, and Residential Dining Services, Beach Shops operates locations providing goods and services to students, staff and faculty and creating an inclusive learning environment." , phone: "562.985.5093" },
+  { name: "ID Card Services", url: "https://www.csulb.edu/beach-shops/get-your-id", description: "You must be registered for at least one class for the current or upcoming semester to obtain your ID Card" , phone: "(562) 985-7388", email: "IDCard@csulb.edu" },
   { name: "Parking & Transportation Services", url: "https://www.csulb.edu/parking-and-transportation-services", description: "CSULB uses a completely paperless permitting system." },
-  { name: "University Police", url: "https://www.csulb.edu/university-police", description: "It is the Mission of the California State University Long Beach Police Department to safeguard the lives and property of the campus community that we serve." },
-  { name: "Division of Information Technology (Technology Help Desk)", url: "https://www.csulb.edu/information-technology", description: "is CSU Long Beach's enterprise technology organization and is responsible for providing high-quality, reliable, and secure information and technology services" },
+  { name: "University Police", url: "https://www.csulb.edu/university-police", description: "It is the Mission of the California State University Long Beach Police Department to safeguard the lives and property of the campus community that we serve." , phone: "562.985.4101" },
+  { name: "Division of Information Technology (Technology Help Desk)", url: "https://www.csulb.edu/information-technology", description: "is CSU Long Beach's enterprise technology organization and is responsible for providing high-quality, reliable, and secure information and technology services" , phone: "562.985.4959", email: "helpdesk@csulb.edu" },
   { name: "Academic Technology Services (Horn Center, computer labs, software)", url: "https://www.csulb.edu/academic-technology-services", description: "Academic Technology Services (ATS) leads the CSULB campus in leveraging technology that effectively supports and inspires instruction, online and in-person learning environments, business processes, and student learning." },
   { name: "Associated Students, Inc. (ASI)", url: "https://www.asicsulb.org/", description: "Associated Students, Inc. is a nonprofit membership association and auxiliary organization of California State University, Long Beach." },
   { name: "Student Recreation and Wellness Center (SRWC)", url: "https://asirecreation.org/", description: "The Student Recreation and Wellness Center (SRWC) is a 126,500-square-foot, two-story, state-of-the-art recreation facility" },
@@ -274,13 +280,14 @@ async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main" }:
   return { title, markdown };
 }
 
-/** Page text for checking directory sentences: the main content plus the page's meta description. */
+/** Page text for checking directory sentences and contacts: main content, sidebar, and meta description. */
 async function pageText(url: string) {
   const $ = cheerio.load(await download(url));
   const meta = $('meta[name="description"]').attr("content") ?? "";
   $("script, style, noscript, nav").remove();
   const main = $("main").length ? $("main") : $("body");
-  return normalize(`${main.text()} ${meta}`);
+  // csulb.edu pages keep contact details in a sidebar next to <main> (the same one our knowledge files include).
+  return normalize(`${main.text()} ${$("aside.sidebars").text()} ${meta}`);
 }
 
 /** Collapse spaces and use straight quotes, so a copied sentence matches the page text. */
@@ -294,14 +301,28 @@ function normalize(text: string) {
  * out and reported, so the directory never contains text that isn't on the office's own page.
  */
 async function buildDirectory(today: string) {
+  // Our knowledge files, for checking contacts that appear there instead of on the office's home page.
+  const { readdir, readFile } = await import("node:fs/promises");
+  const knowledgeText = normalize(
+    (await Promise.all((await readdir(OUTPUT_DIR)).map((f) => readFile(path.join(OUTPUT_DIR, f), "utf8")))).join(" "),
+  );
   const offices = [];
   for (const office of DIRECTORY) {
     try {
-      if (office.description && !(await pageText(office.url)).includes(normalize(office.description))) {
+      const page = await pageText(office.url);
+      if (office.description && !page.includes(normalize(office.description))) {
         throw new Error("description not found word for word on the page");
       }
-      if (!office.description) await download(office.url); // still check the page loads
-      offices.push(office);
+      // Keep a phone/email only if it's on the office's page or in our knowledge files.
+      const entry: { name: string; url: string; description: string; phone?: string; email?: string; keywords?: string[] } = { name: office.name, url: office.url, description: office.description };
+      for (const field of ["phone", "email"] as const) {
+        const value = office[field];
+        if (!value) continue;
+        if (page.includes(value) || knowledgeText.includes(value)) entry[field] = value;
+        else console.error(`WARN  directory: ${office.name}: ${field} ${value} not found, left out`);
+      }
+      if (office.keywords?.length) entry.keywords = office.keywords; // matching hints, not facts: not checked against the page
+      offices.push(entry);
       console.log(`OK    directory: ${office.name}`);
     } catch (err) {
       console.error(`FAIL  directory: ${office.name}: ${(err as Error).message}`);

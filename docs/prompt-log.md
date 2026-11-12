@@ -956,4 +956,111 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 17 (No dead-end fallbacks: "Who can help" card)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> New rule from our team: a student should never get a dead-end fallback. Every fallback must point them to a real place to get help. Don't run any live Gemini answer tests (our generate quota is used up until midnight); offline checks are fine, and the embedding model has its own quota.
+> 1. Every fallback shows a "Who can help" card: the office name, its one-line description from the directory, the official link, and any phone/email that's in our sources (never invented).
+> 2. How to pick the office, in order: a. the office Gemini picks (related_office), if any; b. otherwise, the closest directory office by meaning [...] Only use it if the similarity clears a threshold you pick from our test questions; c. otherwise, a general default [...] Tell me which one you'd use and why.
+> 3. This also applies to no-AI fallbacks, which skip Gemini today.
+> 4. Exception: clearly off-campus or non-CSULB questions ("capital of France", "best pizza near campus") shouldn't point to a random office. Instead, say what the assistant can help with and show 3 example questions.
+> 5. Keep the exact fallback sentence and the "Request this topic" button.
+> 6. Update the fallback tests so every unsupported CSULB-related question must include a "Who can help" office, and off-topic ones must not.
+> Check it offline with npm run explain-style output for all unsupported test questions, showing which office each would get. Update the prompt log and checklist, and stop.
+
+**What the AI did:**
+- **Phone and email for each office** (`scripts/fetch-sources.ts` → `lib/data/directory.json`).
+  - **Automatic extraction was wrong too often.** Claude first tried pulling the first phone/email link from each office page. Admissions would have shown the Title IX office's email, Student Health "9.1.1", and CARES the police line.
+  - **So Claude picked them by hand,** one phone and/or email per office from what's on its page. `npm run fetch-sources` keeps a contact only if it appears word for word on the office's page (main content or sidebar) or in `knowledge/`.
+  - **Result:** 25 of 42 offices have a verified phone and/or email (19 phones, 14 emails). The EOP email wasn't found, so it was left out. The rest show only the name, description and link.
+- **Office embeddings.** `npm run embeddings` now embeds two sets: knowledge chunks, and each office's "name: description" (`data/office-embeddings.*`, 42 vectors). It re-embedded only what changed: the 2 chunks from CAPS and CARES pages CSULB updated today, plus the 42 new offices.
+- **How the office is picked** (new `lib/help-office.ts`), in this order:
+  1. Gemini's `related_office`;
+  2. the closest office by meaning, compared with the question's vectors that search already made (no extra call), if similarity ≥ **0.63**;
+  3. **Dean of Students.**
+- **Why Dean of Students is the default:** its own page says *"When you don't know where to go with a question, start with the Dean of Students team - We promise we will help you identify the department/person who has the answers to your questions."* Claude also considered CARES, which is for crisis and case support, and Enrollment Services, which only covers records and registration; neither is a general "start here" office.
+- **Choosing the 0.63 threshold** from the test questions:
+  - **Right offices scored 0.51-0.72.** Examples: harassment → Title IX office 0.723; Veterans 0.669; Library 0.644; ID Card Services 0.644; Student Health 0.51-0.54.
+  - **Wrong offices scored 0.58-0.66.** Examples: "best professor" → College of Business center 0.620; "undocumented" → Basic Needs 0.656, when it should be the Dream Success Center, whose page has no description to embed.
+  - **Off-topic questions reached 0.596.**
+  - **There's no clean gap,** so Claude chose precision: a wrong office is worse than the general one. At 0.63, Library, Veterans, the Title IX office, ID cards and Financial Aid get through, and so does the known wrong pick (undocumented → Basic Needs). Everything below goes to Dean of Students.
+- **Off-topic questions** (no office; instead the sentence "I can answer questions about CSULB student services…" plus 3 example questions):
+  - **When Gemini is asked:** a new `about_csulb` field in Gemini's reply. It's false for general knowledge, weather, other universities and places off campus.
+  - **When Gemini is skipped (no-AI fallbacks):** off-topic if the closest knowledge chunk by meaning is below **0.6** and there's no strong office match. France scored 0.505 and gibberish 0.590; real CSULB questions in our tests scored 0.60+.
+  - The strong-office check was added after Claude found that "harassment" alone (0.590) would otherwise get examples instead of the Title IX office.
+  - **If meaning search is unavailable,** a no-AI fallback gets Dean of Students, the safe direction.
+- **The fallback sentence, the "Try:" related page and "Request this topic" are all unchanged.** The new card is in `components/chat/assistant-message.tsx`. It shows "Who can help", the office name linked to its official page, the one-line description, and tel:/mailto: links. Nothing in it is written by the AI.
+- **Tests.** New `helpOffice` check in `scripts/run-tests.ts`: if the reply is a fallback, true means it must show an office, and false means no office and 3 example questions.
+  - **Must show an office (18 tests):** original #18-22, #29 and #42; student #23, #35, #36, #39, #40 and #43-48.
+  - **Must not (7 tests):** original #17 (tacos), #30 (gibberish) and #41 (France); student #33 (France), #34 (pizza), #37 (weather) and #38 (UCLA).
+- **`npm run explain`** now ends with a "Who can help" preview.
+
+**Did it work?** Offline, yes. Live Gemini runs were not done (daily quota).
+- **The preview for all 25 fallback-check questions** (no rewrite, since that needs the generate quota):
+  - **Not reaching Gemini:** France ×2 and gibberish → example questions, which is correct.
+  - **Reaching Gemini:** the office comes from Gemini's pick first. If Gemini picks none, the backup is the Library for the study room questions, Financial Aid for #22, Veterans for #45, Basic Needs for #43 (a known wrong pick), and Dean of Students for the rest. So **every CSULB question gets an office.**
+  - **What can't be checked offline:** tacos, pizza, weather and UCLA reach Gemini, so whether they get example questions depends on Gemini answering `about_csulb: false`. That's checked in the next live run.
+- **Through the real app** (only questions that never reach Gemini's answer step; the rewrite attempt was just rate-limited):
+  - original #30 and #41 pass (example questions, no office);
+  - "undocumented" → Dean of Students;
+  - "harassment" → Office of Equity & Compliance with OEC@csulb.edu.
+- **Screenshots** (desktop and mobile; no console errors, no sideways scrolling):
+  - `docs/screenshots/*-12-fallback-who-can-help.png`: harassment;
+  - `docs/screenshots/*-13-fallback-not-csulb.png`: France.
+- `npm run build` passes, and the Vercel bundle includes `office-embeddings.*`.
+
+**Troubleshooting or redirection (if any):**
+1. **Automatic contact extraction picked other offices' details** (above). It was replaced with hand-picked contacts that the fetch script verifies.
+2. **The contact check first read only each page's main content,** so 7 real contacts in page sidebars were dropped. It now also reads the sidebar, the same part our knowledge files include.
+3. **"harassment" would have been called off-topic** on the no-AI path. Fixed by letting a strong office match win first.
+4. **CSULB updated two pages today** (new CAPS quick links and a CARES self-referral link). They were picked up by the re-fetch and re-embedded; nothing else changed.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-12-fallback-who-can-help.png`, `{desktop,mobile}-13-fallback-not-csulb.png`
+
+---
+
+## Entry 18 (Search keywords for offices with no matchable description)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> For offices whose pages have no matchable description, add a short list of search keywords to directory.json (used only for matching the office, never shown as facts). Start with the Dream Success Center: undocumented, DACA, AB 540, Dream Act, CA Dream Act. Check the others that are listed by name only (Financial Aid, College of Business center, Library) and add keywords if they need them. Re-run the office matching offline and show me the 25 fallback questions again. No live tests.
+
+**What the AI did:**
+- **New optional `keywords` field** for directory entries in `scripts/fetch-sources.ts`, saved to `lib/data/directory.json`.
+  - These are our own matching hints, not page text, so the fetch script doesn't check them against the page.
+  - **Where they're used:** in the text embedded for each office ("name: description. Handles: …", `lib/embeddings-store.ts`), and in Gemini's numbered office list, so Gemini can pick the office too.
+  - **Never shown to students:** the "Who can help" card shows only the name, description, link and verified contacts.
+- **Dream Success Center:** undocumented, DACA, AB 540, Dream Act, CA Dream Act.
+- **The other name-only offices**, tested with keywords and then without:
+  - **College of Business center: kept.** Keywords: business major advising, accounting, finance, marketing, management, information systems, College of Business. By name alone it was wrongly the top match for "best professor for CECS 326" (0.620). With keywords it isn't.
+  - **Library and Financial Aid: removed.** Keywords made them *worse*. Study room fell from 0.644 to 0.616, and the private-loan question from 0.609 to 0.552. Their names already match well, and the extra words diluted that. So they don't need keywords.
+- `npm run embeddings` re-embedded only the changed offices.
+
+**Did it work?** Yes, offline (no live tests, as asked).
+- **Changes from Entry 17's preview:**
+  - "I'm undocumented, is there support for me?" now goes to the **Dream Success Center (0.723)** instead of Basic Needs;
+  - the single word "undocumented" (a no-AI fallback) → Dream Success Center;
+  - "DACA renewal help" → Dream Success Center;
+  - "AB 540 affidavit" → Dream Success Center;
+  - "best professor" no longer matches the College of Business center.
+- **The 25 fallback questions:**
+  - **Above the 0.63 threshold, all correct:** Library ×2 (study room), Financial Aid (#22), Dream Success Center (#43), Veterans (#45).
+  - **Everything else about CSULB → Dean of Students** (if Gemini doesn't pick an office first).
+  - **France ×2 and gibberish → example questions.**
+  - **No wrong office is shown anymore.**
+
+**Troubleshooting or redirection (if any):**
+1. **Claude first added keywords to all four name-only offices.** Re-running the match showed that hurt Library and Financial Aid (above), so Claude removed theirs. Only offices whose matching was actually wrong got keywords.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

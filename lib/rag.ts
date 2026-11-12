@@ -18,7 +18,9 @@ import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
 import { crisisReply, isCrisisMessage } from "./crisis";
-import { officeByNumber } from "./directory";
+import { officeAt } from "./directory";
+import { EXAMPLE_QUESTIONS } from "./categories";
+import { MIN_OFFICE_SIMILARITY, OFF_TOPIC_SIMILARITY, pickHelpOffice, rankOfficesByMeaning, type HelpOffice } from "./help-office";
 import { removePersonalDetails, rewriteQuestion } from "./rewrite";
 import { mergeRankings } from "./rank-merge";
 import { vectorSearch } from "./vector-search";
@@ -49,7 +51,11 @@ export type ChatResponse = {
   model: string | null; // which Gemini model wrote the reply (null = no AI was needed)
   correctedQuestion: string | null; // the question with typos fixed, if we fixed any ("Showing results for: ...")
   searchQueries?: string[]; // what we actually searched with (rewritten queries + the question), personal details removed
-  examples?: string[]; // chat replies only: example questions shown as buttons
+  examples?: string[]; // example questions shown as buttons (chat replies, and off-topic fallbacks)
+  // Fallbacks only: the office that can help (never a dead end; lib/help-office.ts), or null when
+  // the question isn't about CSULB at all (offTopic), which shows example questions instead.
+  helpOffice?: HelpOffice | null;
+  offTopic?: boolean;
 };
 
 /** Is the student asking for a map or how to get around? */
@@ -295,11 +301,26 @@ function buildInput(question: string, correctedQuestion: string | null, searchQu
 }
 
 /** The fallback reply, plus a link to look at instead when we have one. */
-function fallback(suggestion: ChatResponse["suggestion"], model: string | null, correctedQuestion: string | null, searchQueries: string[]): ChatResponse {
+/**
+ * The fallback reply. It always keeps the exact fallback sentence, and it's never a dead end:
+ * - about CSULB: a "Who can help" office (lib/help-office.ts), plus a related page if we have one;
+ * - not about CSULB ("capital of France"): no office, but what we can help with and 3 example questions.
+ */
+function fallback(
+  where: { suggestion: ChatResponse["suggestion"]; helpOffice: HelpOffice | null },
+  model: string | null,
+  correctedQuestion: string | null,
+  searchQueries: string[],
+): ChatResponse {
+  const { suggestion, helpOffice } = where;
   const answer = suggestion
     ? `${FALLBACK_SENTENCE} You may find help on this CSULB page: [${suggestion.title}](${suggestion.url})`
     : FALLBACK_SENTENCE;
-  return { type: "fallback", answer, sources: [], suggestion, model, correctedQuestion, searchQueries };
+  const offTopic = !helpOffice;
+  return {
+    type: "fallback", answer, sources: [], suggestion, model, correctedQuestion, searchQueries,
+    helpOffice, offTopic, examples: offTopic ? EXAMPLE_QUESTIONS.slice(0, 3) : undefined,
+  };
 }
 
 const RESULTS_PER_QUERY = 10; // how deep each search list goes before merging
@@ -316,14 +337,14 @@ const MIN_SIMILARITY = Infinity;
  */
 async function retrieve(queries: string[]) {
   const keywordLists = queries.map((q) => search(q, RESULTS_PER_QUERY));
-  const meaningLists = await vectorSearch(queries, RESULTS_PER_QUERY); // [] if unavailable
+  const { lists: meaningLists, queryVectors } = await vectorSearch(queries, RESULTS_PER_QUERY); // empty if unavailable
   const bestScore = Math.max(0, ...keywordLists.map((list) => list[0]?.score ?? 0));
   const bestSimilarity = Math.max(0, ...meaningLists.map((list) => list[0]?.similarity ?? 0));
   const results = mergeRankings(
     [...keywordLists.map((list) => list.map((r) => r.chunk)), ...meaningLists.map((list) => list.map((r) => r.chunk))],
     TOP_K,
   );
-  return { results, matched: bestScore >= MIN_SCORE || bestSimilarity >= MIN_SIMILARITY };
+  return { results, matched: bestScore >= MIN_SCORE || bestSimilarity >= MIN_SIMILARITY, queryVectors, bestSimilarity };
 }
 
 const MAP_SUGGESTION = { title: "CSULB Campus Maps", url: CAMPUS_MAP_URL };
@@ -377,20 +398,34 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   //    can't hide an obvious match. Personal details (IDs, emails, phone numbers) are removed first.
   const rewritten = await rewriteQuestion(smallTalk.rest, history);
   const searchQueries = [...new Set([searchText, ...(rewritten ?? [])].map(removePersonalDetails).filter(Boolean))];
-  let { results, matched } = await retrieve(searchQueries);
+  let { results, matched, queryVectors, bestSimilarity } = await retrieve(searchQueries);
 
   // If the rewrite failed, a follow-up like "the second one" matches nothing on its own,
   // so if the search is weak we search again together with the previous question (the old way).
   const lastUserQuestion = [...history].reverse().find((m) => m.role === "user")?.content;
   if (!rewritten && !matched && lastUserQuestion) {
     const retryQuery = removePersonalDetails(`${correctSpelling(lastUserQuestion).corrected} ${searchText}`);
-    ({ results, matched } = await retrieve([retryQuery]));
+    ({ results, matched, queryVectors, bestSimilarity } = await retrieve([retryQuery]));
     searchQueries.push(retryQuery);
   }
 
-  // 3. Nothing matched well enough: fall back without calling the AI.
+  // 3. Nothing matched well enough: fall back without calling the AI. If even the closest chunk
+  //    is far from the question's meaning, it isn't about CSULB ("capital of France"): no office.
+  //    Otherwise point to the office closest in meaning, or Dean of Students.
   if (!matched) {
-    return fallback(isMapQuestion(searchText) ? MAP_SUGGESTION : null, null, correctedQuestion, searchQueries);
+    // (A strong office match wins first: "harassment" alone matches few page words but clearly
+    //  belongs to the Title IX office.)
+    const strongOffice = (rankOfficesByMeaning(queryVectors, 1)[0]?.similarity ?? 0) >= MIN_OFFICE_SIMILARITY;
+    const offTopic = queryVectors.length > 0 && !strongOffice && bestSimilarity < OFF_TOPIC_SIMILARITY;
+    return fallback(
+      {
+        suggestion: !offTopic && isMapQuestion(searchText) ? MAP_SUGGESTION : null,
+        helpOffice: offTopic ? null : pickHelpOffice(null, queryVectors),
+      },
+      null,
+      correctedQuestion,
+      searchQueries,
+    );
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
@@ -398,16 +433,16 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // 5. Shape the response.
   if (reply.type === "fallback") {
-    // Where to send the student instead, best first: the campus maps page for map questions,
-    // then the related page from our sources, then the right office from the office list
-    // (lib/directory.ts), or no button if nothing fits.
+    // Not about CSULB at all (Gemini's about_csulb): no office, show what we can help with.
+    if (reply.about_csulb === false) {
+      return fallback({ suggestion: null, helpOffice: null }, model, correctedQuestion, searchQueries);
+    }
+    // About CSULB: a related page if we have one (the campus maps page for map questions), and
+    // always a "Who can help" office: Gemini's pick, else the closest by meaning, else the default.
     const related = results[reply.related_source - 1]?.chunk;
-    const suggestion = isMapQuestion(searchText)
-      ? MAP_SUGGESTION
-      : related
-        ? { title: related.title, url: related.url }
-        : officeByNumber(reply.related_office);
-    return fallback(suggestion, model, correctedQuestion, searchQueries);
+    const suggestion = isMapQuestion(searchText) ? MAP_SUGGESTION : related ? { title: related.title, url: related.url } : null;
+    const helpOffice = pickHelpOffice(officeAt(reply.related_office), queryVectors);
+    return fallback({ suggestion, helpOffice }, model, correctedQuestion, searchQueries);
   }
 
   // Double-check contact details against the sources before showing anything.

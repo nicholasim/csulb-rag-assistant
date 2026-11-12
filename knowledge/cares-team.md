@@ -33,10 +33,11 @@ Referrals are not disciplinary; they are simply about care and connection. A CAR
 **Phone:** 562-985-2038
 **Email:** [cares@csulb.edu](mailto:cares@csulb.edu)
 
-[REFER A STUDENT TO CARES TEAM](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=1)
+[REFER A STUDENT TO CARES](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=1)
 
-**We monitor referrals during business hours M-F 8 a.m. - 5 p.m.** 
+[Submit a Self-Referral to CARES](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=6)
 
+**We monitor referrals during business hours M-F 8 a.m. - 5 p.m.**
 If this is an emergency, please call **9.1.1.** or University Police **562.985.4101**.
 
 ### Fall/Spring Drop-In Office Hours with Staff

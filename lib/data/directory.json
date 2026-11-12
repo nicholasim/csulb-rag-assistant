@@ -9,22 +9,26 @@
     {
       "name": "Enrollment Services",
       "url": "https://www.csulb.edu/enrollment-services",
-      "description": "Current students can use our site for easy-to-follow information regarding class registration, degree progress and advising, filing to graduate and various other resources."
+      "description": "Current students can use our site for easy-to-follow information regarding class registration, degree progress and advising, filing to graduate and various other resources.",
+      "phone": "562.985.5471"
     },
     {
       "name": "Student Records (Office of the Registrar)",
       "url": "https://www.csulb.edu/student-records",
-      "description": "Plus, navigate the left menu for more services offered by Student Records--including guides on how to use your Academic Requirements Report (ARR), access planning tools (Degree Planner), order transcripts, and more."
+      "description": "Plus, navigate the left menu for more services offered by Student Records--including guides on how to use your Academic Requirements Report (ARR), access planning tools (Degree Planner), order transcripts, and more.",
+      "phone": "562.985.5471"
     },
     {
       "name": "Financial Aid and Scholarships",
       "url": "https://www.csulb.edu/financial-aid-and-scholarships",
-      "description": ""
+      "description": "",
+      "phone": "562.985.5471"
     },
     {
       "name": "Student Financial Services (tuition and fee payments)",
       "url": "https://www.csulb.edu/financial-management/student-financial-services",
-      "description": "Your payment due date is available on your MyCSULB Student Center."
+      "description": "Your payment due date is available on your MyCSULB Student Center.",
+      "email": "cashiers@csulb.edu"
     },
     {
       "name": "Commencement",
@@ -34,17 +38,31 @@
     {
       "name": "Testing Department",
       "url": "https://www.csulb.edu/student-affairs/testing-department",
-      "description": "Offers proctoring services for an allotted fee for anyone needing to take a paper or computer-based test for another university, college or agency."
+      "description": "Offers proctoring services for an allotted fee for anyone needing to take a paper or computer-based test for another university, college or agency.",
+      "phone": "562.985.4007",
+      "email": "testing@csulb.edu"
     },
     {
       "name": "University Center for Undergraduate Advising (UCUA)",
       "url": "https://www.csulb.edu/undergraduate-advising/university-center-for-undergraduate-advising-ucua",
-      "description": "The University Center for Undergraduate Advising (UCUA) is the primary advising center for"
+      "description": "The University Center for Undergraduate Advising (UCUA) is the primary advising center for",
+      "email": "aa-advising@csulb.edu"
     },
     {
       "name": "College of Business Center for Student Success",
       "url": "https://www.csulb.edu/college-of-business/center-for-student-success",
-      "description": ""
+      "description": "",
+      "phone": "(562) 985-4514",
+      "email": "cob-css@csulb.edu",
+      "keywords": [
+        "business major advising",
+        "accounting",
+        "finance",
+        "marketing",
+        "management",
+        "information systems",
+        "College of Business"
+      ]
     },
     {
       "name": "Engineering Student Success Center (ESSC)",
@@ -64,7 +82,8 @@
     {
       "name": "College of Liberal Arts Advising Center (ATLAS)",
       "url": "https://www.csulb.edu/college-of-liberal-arts/atlas",
-      "description": "Welcome to the College of Liberal Arts Advising Center: ATLAS!"
+      "description": "Welcome to the College of Liberal Arts Advising Center: ATLAS!",
+      "phone": "(562) 985-7804"
     },
     {
       "name": "College of Natural Sciences and Mathematics Academic Advising Center",
@@ -74,17 +93,21 @@
     {
       "name": "Career Development Center",
       "url": "https://www.csulb.edu/career-development-center",
-      "description": "The CSULB Career Development Center empowers students to become effective leaders of their personal career journeys."
+      "description": "The CSULB Career Development Center empowers students to become effective leaders of their personal career journeys.",
+      "phone": "(562) 985-4151"
     },
     {
       "name": "The Learning Center (tutoring)",
       "url": "https://www.csulb.edu/academic-affairs/undergraduate-studies/the-learning-center",
-      "description": "Schedule an appointment and see hours for Tutoring, Academic Coaching, and Conversation Lab"
+      "description": "Schedule an appointment and see hours for Tutoring, Academic Coaching, and Conversation Lab",
+      "email": "TLC-info@csulb.edu"
     },
     {
       "name": "University Writing Center",
       "url": "https://www.csulb.edu/university-writing-center",
-      "description": "The University Writing Center is a campus-wide writing support service for all currently enrolled CSULB students."
+      "description": "The University Writing Center is a campus-wide writing support service for all currently enrolled CSULB students.",
+      "phone": "(562) 985 5162",
+      "email": "UWC@csulb.edu"
     },
     {
       "name": "University Library",
@@ -94,27 +117,34 @@
     {
       "name": "Student Health Services",
       "url": "https://www.csulb.edu/student-affairs/student-health-services",
-      "description": "Student Health Services is your campus health clinic, here to support and serve you on campus and virtually."
+      "description": "Student Health Services is your campus health clinic, here to support and serve you on campus and virtually.",
+      "phone": "562.985.4771"
     },
     {
       "name": "Counseling and Psychological Services (CAPS)",
       "url": "https://www.csulb.edu/student-affairs/counseling-and-psychological-services",
-      "description": "Counseling and Psychological Services (CAPS) provides support for students facing personal challenges and mental health concerns."
+      "description": "Counseling and Psychological Services (CAPS) provides support for students facing personal challenges and mental health concerns.",
+      "phone": "562-985-4001"
     },
     {
       "name": "Bob Murphy Access Center (BMAC)",
       "url": "https://www.csulb.edu/student-affairs/bob-murphy-access-center",
-      "description": "The Bob Murphy Access Center (BMAC) is a department under CSULB Student Affairs that provides educational access for students with disabilities by working with campus and community partners to provide accommodations, resources, and assistive technology."
+      "description": "The Bob Murphy Access Center (BMAC) is a department under CSULB Student Affairs that provides educational access for students with disabilities by working with campus and community partners to provide accommodations, resources, and assistive technology.",
+      "phone": "562.985.5401",
+      "email": "bmac@csulb.edu"
     },
     {
       "name": "Basic Needs Program",
       "url": "https://www.csulb.edu/student-affairs/basic-needs",
-      "description": "From food and housing security to financial wellness support, we are here to help you navigate college life with confidence and peace of mind."
+      "description": "From food and housing security to financial wellness support, we are here to help you navigate college life with confidence and peace of mind.",
+      "phone": "562-985-2038",
+      "email": "supportingstudents@csulb.edu"
     },
     {
       "name": "CARES Team",
       "url": "https://www.csulb.edu/student-affairs/cares",
-      "description": "Crisis Assistance & Resource Education Support (CARES) helps students navigate challenges, connect with resources, and stay on track academically and personally."
+      "description": "Crisis Assistance & Resource Education Support (CARES) helps students navigate challenges, connect with resources, and stay on track academically and personally.",
+      "email": "cares@csulb.edu"
     },
     {
       "name": "Dean of Students",
@@ -129,17 +159,27 @@
     {
       "name": "Dream Success Center",
       "url": "https://www.csulb.edu/student-affairs/dream-success-center",
-      "description": ""
+      "description": "",
+      "keywords": [
+        "undocumented",
+        "DACA",
+        "AB 540",
+        "Dream Act",
+        "CA Dream Act"
+      ]
     },
     {
       "name": "Educational Opportunity Program (EOP)",
       "url": "https://www.csulb.edu/student-affairs/educational-opportunity-program",
-      "description": "The Educational Opportunity Program (EOP) at CSULB is dedicated to serving first-generation, historically low-income students by providing access and equity to higher education."
+      "description": "The Educational Opportunity Program (EOP) at CSULB is dedicated to serving first-generation, historically low-income students by providing access and equity to higher education.",
+      "phone": "562.985.5637"
     },
     {
       "name": "Women's and Gender Equity Center",
       "url": "https://www.csulb.edu/student-affairs/womens-gender-equity-center",
-      "description": "aims to foster women's and gender equity among individuals of diverse identities and expressions"
+      "description": "aims to foster women's and gender equity among individuals of diverse identities and expressions",
+      "phone": "562.985.8576",
+      "email": "WGEC@csulb.edu"
     },
     {
       "name": "Student Conduct and Ethical Development",
@@ -149,7 +189,8 @@
     {
       "name": "Office of Equity & Compliance (Title IX and civil rights)",
       "url": "https://www.csulb.edu/equity-compliance",
-      "description": "To report an incident to the OEC, please complete the online reporting form."
+      "description": "To report an incident to the OEC, please complete the online reporting form.",
+      "email": "OEC@csulb.edu"
     },
     {
       "name": "Student Life & Development (clubs and organizations)",
@@ -159,12 +200,14 @@
     {
       "name": "Center for International Education (international students)",
       "url": "https://www.csulb.edu/international",
-      "description": "The Center for International Education is a one-stop hub for international programs at CSULB comprised of three distinct areas: International Enrollment Management (IEM), International Students and Scholars (ISS), and Study Abroad."
+      "description": "The Center for International Education is a one-stop hub for international programs at CSULB comprised of three distinct areas: International Enrollment Management (IEM), International Students and Scholars (ISS), and Study Abroad.",
+      "email": "cie-student@csulb.edu"
     },
     {
       "name": "Student Orientation, Advising, and Registration (SOAR)",
       "url": "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration",
-      "description": "All new first-time/first-year and transfer students are required to complete SOAR, as it is a mandatory program for all incoming students."
+      "description": "All new first-time/first-year and transfer students are required to complete SOAR, as it is a mandatory program for all incoming students.",
+      "phone": "562.985.5515"
     },
     {
       "name": "Housing & Residential Life",
@@ -174,12 +217,15 @@
     {
       "name": "Beach Shops (bookstore and campus dining)",
       "url": "https://www.csulb.edu/beach-shops",
-      "description": "Comprised of the University Bookstore, Campus Dining Services and Convenience Stores, and Residential Dining Services, Beach Shops operates locations providing goods and services to students, staff and faculty and creating an inclusive learning environment."
+      "description": "Comprised of the University Bookstore, Campus Dining Services and Convenience Stores, and Residential Dining Services, Beach Shops operates locations providing goods and services to students, staff and faculty and creating an inclusive learning environment.",
+      "phone": "562.985.5093"
     },
     {
       "name": "ID Card Services",
       "url": "https://www.csulb.edu/beach-shops/get-your-id",
-      "description": "You must be registered for at least one class for the current or upcoming semester to obtain your ID Card"
+      "description": "You must be registered for at least one class for the current or upcoming semester to obtain your ID Card",
+      "phone": "(562) 985-7388",
+      "email": "IDCard@csulb.edu"
     },
     {
       "name": "Parking & Transportation Services",
@@ -189,12 +235,15 @@
     {
       "name": "University Police",
       "url": "https://www.csulb.edu/university-police",
-      "description": "It is the Mission of the California State University Long Beach Police Department to safeguard the lives and property of the campus community that we serve."
+      "description": "It is the Mission of the California State University Long Beach Police Department to safeguard the lives and property of the campus community that we serve.",
+      "phone": "562.985.4101"
     },
     {
       "name": "Division of Information Technology (Technology Help Desk)",
       "url": "https://www.csulb.edu/information-technology",
-      "description": "is CSU Long Beach's enterprise technology organization and is responsible for providing high-quality, reliable, and secure information and technology services"
+      "description": "is CSU Long Beach's enterprise technology organization and is responsible for providing high-quality, reliable, and secure information and technology services",
+      "phone": "562.985.4959",
+      "email": "helpdesk@csulb.edu"
     },
     {
       "name": "Academic Technology Services (Horn Center, computer labs, software)",

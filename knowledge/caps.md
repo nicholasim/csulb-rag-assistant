@@ -15,6 +15,20 @@ The mission of Counseling and Psychological Services (CAPS) is to support our st
 
 **CAPS is accredited by the International Association of Counseling Services (IACS).** 
 
+* * *
+
+## Quick Links
+
+[Make an Appointment](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/contact-us-faq "Contact Us & FAQ")
+
+[Rising Tides](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/rising-tides "Rising Tides")
+
+[Drop-In Spaces](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/drop-spaces "Drop-in Spaces")
+
+[After Hours or Emergency Services](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/after-hours-or-crisis-services "After Hours or Crisis Services")
+
+* * *
+
 ## _In Need of Support?_
 
 _The Crisis Assistance & Resource Education Support (CARES) team helps students navigate challenges, connect with resources, and stay on track academically and personally._

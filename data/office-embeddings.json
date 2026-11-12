@@ -1,0 +1,174 @@
+{
+ "model": "gemini-embedding-001",
+ "dimensions": 768,
+ "chunks": [
+  {
+   "id": "https://www.csulb.edu/admissions",
+   "hash": "9f3866519cd988fa"
+  },
+  {
+   "id": "https://www.csulb.edu/enrollment-services",
+   "hash": "e0a61980f2ddbabd"
+  },
+  {
+   "id": "https://www.csulb.edu/student-records",
+   "hash": "94c8822e196c89ee"
+  },
+  {
+   "id": "https://www.csulb.edu/financial-aid-and-scholarships",
+   "hash": "1b97dd4e638d3dab"
+  },
+  {
+   "id": "https://www.csulb.edu/financial-management/student-financial-services",
+   "hash": "a9628545359649e3"
+  },
+  {
+   "id": "https://www.csulb.edu/commencement",
+   "hash": "c46d47044d711df1"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/testing-department",
+   "hash": "408cc983076de076"
+  },
+  {
+   "id": "https://www.csulb.edu/undergraduate-advising/university-center-for-undergraduate-advising-ucua",
+   "hash": "f11096e051dbac3b"
+  },
+  {
+   "id": "https://www.csulb.edu/college-of-business/center-for-student-success",
+   "hash": "d25aca64c7cfcb43"
+  },
+  {
+   "id": "https://www.csulb.edu/college-of-engineering/undergraduate-advising",
+   "hash": "7ea9d02cbe67f142"
+  },
+  {
+   "id": "https://www.csulb.edu/college-of-education/student-success-and-advising-center",
+   "hash": "e9794af60fa76edb"
+  },
+  {
+   "id": "https://www.csulb.edu/college-of-health-human-services/chhs-academic-advising",
+   "hash": "9999ed5133db9ab0"
+  },
+  {
+   "id": "https://www.csulb.edu/college-of-liberal-arts/atlas",
+   "hash": "add03d8a4aaca3a1"
+  },
+  {
+   "id": "https://web.csulb.edu/colleges/cnsm/advising/",
+   "hash": "cf98cc5713c80535"
+  },
+  {
+   "id": "https://www.csulb.edu/career-development-center",
+   "hash": "ec52e183facca033"
+  },
+  {
+   "id": "https://www.csulb.edu/academic-affairs/undergraduate-studies/the-learning-center",
+   "hash": "a04a3dba56e5a3f1"
+  },
+  {
+   "id": "https://www.csulb.edu/university-writing-center",
+   "hash": "9726cda28c95c96f"
+  },
+  {
+   "id": "https://www.csulb.edu/university-library",
+   "hash": "0a1694f0cb36d9dc"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/student-health-services",
+   "hash": "199b4109836d74e2"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/counseling-and-psychological-services",
+   "hash": "13c21194140e2dcc"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/bob-murphy-access-center",
+   "hash": "2bec93cdce50dfcd"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/basic-needs",
+   "hash": "38b973ff2a63fe82"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/cares",
+   "hash": "5485f0ab1e08f825"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/dean-of-students",
+   "hash": "4f1c2e43a2c74698"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/veterans-services",
+   "hash": "7cf59824c9882f51"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/dream-success-center",
+   "hash": "f409936b58969ee5"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/educational-opportunity-program",
+   "hash": "a7c95f0ce8def27c"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/womens-gender-equity-center",
+   "hash": "3b9c83dfa4d33952"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/student-conduct-and-ethical-development",
+   "hash": "b5fe06708a73d5cb"
+  },
+  {
+   "id": "https://www.csulb.edu/equity-compliance",
+   "hash": "02374f205b9f66b9"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/student-life-development",
+   "hash": "89943accd1ca6275"
+  },
+  {
+   "id": "https://www.csulb.edu/international",
+   "hash": "8b431b938c2de3e6"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration",
+   "hash": "e98932e79d220980"
+  },
+  {
+   "id": "https://www.csulb.edu/student-affairs/university-housing-residential-life",
+   "hash": "f53eaa115bc29198"
+  },
+  {
+   "id": "https://www.csulb.edu/beach-shops",
+   "hash": "7b0566dfe1d46fb1"
+  },
+  {
+   "id": "https://www.csulb.edu/beach-shops/get-your-id",
+   "hash": "af21b889958be727"
+  },
+  {
+   "id": "https://www.csulb.edu/parking-and-transportation-services",
+   "hash": "a0eb57c893035199"
+  },
+  {
+   "id": "https://www.csulb.edu/university-police",
+   "hash": "bee22d45cefa6797"
+  },
+  {
+   "id": "https://www.csulb.edu/information-technology",
+   "hash": "8d802bcd8093332f"
+  },
+  {
+   "id": "https://www.csulb.edu/academic-technology-services",
+   "hash": "36b671822181cc68"
+  },
+  {
+   "id": "https://www.asicsulb.org/",
+   "hash": "ddee68346602b62c"
+  },
+  {
+   "id": "https://asirecreation.org/",
+   "hash": "97fac42336db3190"
+  }
+ ]
+}

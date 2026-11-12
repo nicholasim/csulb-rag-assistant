@@ -61,13 +61,15 @@ function load(): Loaded {
 export type VectorResult = { chunk: Chunk; similarity: number };
 
 /**
- * For each query, the `limit` chunks closest in meaning (similarity from -1 to 1; higher is closer).
- * Returns [] (and the app keeps going with keyword search) if anything goes wrong.
+ * For each query, the `limit` chunks closest in meaning (similarity from -1 to 1; higher is closer),
+ * plus the query vectors themselves (so the "Who can help" office can be picked without another call).
+ * Returns empty lists (and the app keeps going with keyword search) if anything goes wrong.
  */
-export async function vectorSearch(queries: string[], limit = 10): Promise<VectorResult[][]> {
+export async function vectorSearch(queries: string[], limit = 10): Promise<{ lists: VectorResult[][]; queryVectors: Float32Array[] }> {
+  const none = { lists: [], queryVectors: [] };
   const data = load();
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!data || !apiKey || queries.length === 0) return [];
+  if (!data || !apiKey || queries.length === 0) return none;
   try {
     // One request embeds all of this question's queries together.
     const response = await new GoogleGenAI({ apiKey }).models.embedContent({
@@ -77,17 +79,23 @@ export async function vectorSearch(queries: string[], limit = 10): Promise<Vecto
     });
     const embeddings = response.embeddings ?? [];
     if (embeddings.length !== queries.length) throw new Error("wrong number of vectors");
-    return embeddings.map((e) => {
-      const query = normalize(e.values ?? []);
-      const scored = data.chunks.map((chunk, i) => {
-        let dot = 0; // both vectors have length 1, so the dot product is the cosine similarity
-        for (let d = 0; d < DIMENSIONS; d++) dot += query[d] * data.vectors[i * DIMENSIONS + d];
-        return { chunk, similarity: dot };
-      });
-      return scored.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
-    });
+    const queryVectors = embeddings.map((e) => normalize(e.values ?? []));
+    const lists = queryVectors.map((query) =>
+      data.chunks
+        .map((chunk, i) => ({ chunk, similarity: dot(query, data.vectors, i) }))
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit),
+    );
+    return { lists, queryVectors };
   } catch (err) {
     console.warn(`[vectors] skipped (${errorKind(err)}); using keyword search only`);
-    return [];
+    return none;
   }
+}
+
+/** Cosine similarity between a query vector and row `row` of a vector table (both have length 1). */
+export function dot(query: Float32Array, table: Float32Array, row: number) {
+  let sum = 0;
+  for (let d = 0; d < DIMENSIONS; d++) sum += query[d] * table[row * DIMENSIONS + d];
+  return sum;
 }

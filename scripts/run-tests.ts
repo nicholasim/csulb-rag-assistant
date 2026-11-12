@@ -40,6 +40,9 @@ type Expect = {
   minExamples?: number; // chat replies: at least this many example-question buttons
   maxAnswerChars?: number; // the answer must be at most this long (e.g. a referral, not a written essay)
   searchQueriesMustNotInclude?: string[]; // patterns that must never appear in the queries we searched with (e.g. a student ID)
+  // If the reply is a fallback: true = it must show a "Who can help" office (a CSULB question);
+  // false = it must NOT show one (not about CSULB), and shows example questions instead.
+  helpOffice?: boolean;
 };
 
 type Test = {
@@ -67,6 +70,8 @@ type ApiResult = {
     correctedQuestion?: string | null;
     searchQueries?: string[];
     examples?: string[];
+    helpOffice?: { name: string; url: string } | null;
+    offTopic?: boolean;
     error?: { code: string; message: string };
   };
 };
@@ -125,6 +130,11 @@ function check(test: Test, result: ApiResult): string[] {
   if (expect.maxAnswerChars && (body.answer ?? "").length > expect.maxAnswerChars) {
     problems.push(`answer is ${(body.answer ?? "").length} characters, expected at most ${expect.maxAnswerChars}`);
   }
+  if (expect.helpOffice !== undefined && body.type === "fallback") {
+    if (expect.helpOffice && !body.helpOffice) problems.push(`expected a "Who can help" office, got none`);
+    if (!expect.helpOffice && body.helpOffice) problems.push(`expected no office for a non-CSULB question, got "${body.helpOffice.name}"`);
+    if (!expect.helpOffice && (body.examples?.length ?? 0) < 3) problems.push(`expected 3 example questions for a non-CSULB question, got ${body.examples?.length ?? 0}`);
+  }
   for (const pattern of expect.searchQueriesMustNotInclude ?? []) {
     if ((body.searchQueries ?? []).some((q) => new RegExp(pattern, "i").test(q))) problems.push(`search queries should not contain /${pattern}/`);
   }
@@ -133,7 +143,7 @@ function check(test: Test, result: ApiResult): string[] {
   }
 
   // What we search: the answer text plus the titles of its sources and suggested page.
-  const haystack = [body.answer ?? "", body.suggestion?.title ?? "", ...(body.sources ?? []).map((s) => s.title)].join("\n");
+  const haystack = [body.answer ?? "", body.suggestion?.title ?? "", body.helpOffice?.name ?? "", ...(body.sources ?? []).map((s) => s.title)].join("\n");
   const matches = (pattern: string) => new RegExp(pattern, "i").test(haystack);
 
   for (const pattern of expect.mustInclude ?? []) {
@@ -156,7 +166,8 @@ function summarize(result: ApiResult) {
   const sources = body.sources?.length ? ` (${body.sources.length} source${body.sources.length > 1 ? "s" : ""})` : "";
   const searched = body.searchQueries?.length ? body.searchQueries : body.correctedQuestion ? [body.correctedQuestion] : [];
   const corrected = searched.length ? `[searched: ${searched.map((q) => `"${q}"`).join(" + ")}] ` : "";
-  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}`;
+  const help = body.type === "fallback" ? (body.helpOffice ? ` [Who can help: ${body.helpOffice.name}]` : body.offTopic ? " [not about CSULB: example questions]" : "") : "";
+  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}`;
 }
 
 const cell = (text: string) => text.replace(/\|/g, "\\|").replace(/\n/g, " ");

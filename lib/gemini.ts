@@ -42,7 +42,7 @@ WHEN TO USE EACH RESPONSE TYPE
   * places or things off campus (for example restaurants near campus). A source about something on campus does not answer a question about what is near or off campus;
   * opinions or rankings (for example "best professor"), or anything the sources don't cover;
   * sources that are only loosely related (sharing a few words is not enough).
-  For "fallback", set answer to exactly: "${FALLBACK_SENTENCE}". Set related_source to the number of the source from the CSULB office or department that would handle this kind of question, or 0 if none of the sources fit. Also set related_office to the number of the office in the CSULB OFFICE LIST below that handles this kind of question (for example a health question -> Student Health Services, a loan question -> Financial Aid and Scholarships), or 0 if no office fits (for example questions that aren't about CSULB, or about another university).
+  For "fallback", set answer to exactly: "${FALLBACK_SENTENCE}". Set related_source to the number of the source from the CSULB office or department that would handle this kind of question, or 0 if none of the sources fit. Also set related_office to the number of the office in the CSULB OFFICE LIST below that handles this kind of question (for example a health question -> Student Health Services, a loan question -> Financial Aid and Scholarships), or 0 if no office fits (for example questions that aren't about CSULB, or about another university). And set about_csulb: true if the question is about CSULB, its campus, or being a CSULB student (even if the sources can't answer it, like "best professor for CECS 326" or "how do I reserve a study room"); false if it isn't (general knowledge like "capital of France", weather, other universities, or places off campus like restaurants near campus).
 
 SPECIAL CASES
 - Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
@@ -85,8 +85,12 @@ export const RESPONSE_SCHEMA = {
       type: "integer",
       description: "Only for fallback: the number of the office in the CSULB OFFICE LIST that handles this kind of question, or 0 if none fits. Use 0 for answer and clarify.",
     },
+    about_csulb: {
+      type: "boolean",
+      description: "true if the question is about CSULB, its campus, or being a CSULB student; false for general knowledge, weather, other universities, or places off campus. Use true for answer and clarify.",
+    },
   },
-  required: ["type", "answer", "related_source", "related_office"],
+  required: ["type", "answer", "related_source", "related_office", "about_csulb"],
 };
 
 export type GeminiReply = {
@@ -94,6 +98,7 @@ export type GeminiReply = {
   answer: string;
   related_source: number;
   related_office: number;
+  about_csulb: boolean;
 };
 
 /** A problem we can explain to the student in friendly words. */

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircleIcon, CheckIcon, ExternalLinkIcon, InfoIcon, MessageCircleQuestionIcon, RotateCwIcon, SendIcon } from "lucide-react";
+import { AlertCircleIcon, CheckIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Message, MessageContent } from "@/components/ui/message";
 import { Spinner } from "@/components/ui/spinner";
 import type { ChatResponse } from "@/lib/rag";
+import type { HelpOffice } from "@/lib/help-office";
 import { AnswerText } from "./answer-text";
 import { SourceChips } from "./source-chips";
 
@@ -72,7 +73,7 @@ export function AssistantMessage({
         {turn.state === "error" && <ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} />}
         {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} />}
         {turn.state === "done" && turn.response.type === "clarify" && <ClarifyState response={turn.response} onAsk={onAsk} />}
-        {turn.state === "done" && turn.response.type === "fallback" && <FallbackState question={turn.question} response={turn.response} />}
+        {turn.state === "done" && turn.response.type === "fallback" && <FallbackState question={turn.question} response={turn.response} onAsk={onAsk} />}
         {turn.state === "done" && turn.response.type === "chat" && <ChatState response={turn.response} onAsk={onAsk} />}
       </MessageContent>
     </Message>
@@ -155,9 +156,10 @@ function ClarifyState({ response, onAsk }: { response: ChatResponse; onAsk: (q: 
   );
 }
 
-function FallbackState({ question, response }: { question: string; response: ChatResponse }) {
+function FallbackState({ question, response, onAsk }: { question: string; response: ChatResponse; onAsk: (q: string) => void }) {
   // Show only the fixed fallback sentence here; the suggested page becomes a button below.
   const sentence = response.answer.split(" You may find help")[0];
+  const examples = response.offTopic ? (response.examples ?? []) : [];
   return (
     <Bubble variant="muted" className="max-w-full sm:max-w-[90%]">
       <BubbleContent className="flex flex-col gap-3 rounded-xl px-4 py-3">
@@ -165,6 +167,23 @@ function FallbackState({ question, response }: { question: string; response: Cha
           <InfoIcon aria-hidden className="mt-1.5 size-4 shrink-0 text-muted-foreground" />
           <span>{sentence}</span>
         </p>
+        {/* Never a dead end: a CSULB question gets the office that can help; anything else gets
+            what we can help with and a few example questions. */}
+        {response.helpOffice && <WhoCanHelp office={response.helpOffice} />}
+        {examples.length > 0 && (
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm">
+              I can answer questions about CSULB student services, like parking, financial aid, advising, and registration. Try one of these:
+            </p>
+            <div className="flex flex-col items-start gap-2" role="group" aria-label="Example questions">
+              {examples.map((example) => (
+                <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 whitespace-normal bg-background py-1.5 text-left" onClick={() => onAsk(example)}>
+                  {example}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {response.suggestion && (
             <Button
@@ -182,6 +201,38 @@ function FallbackState({ question, response }: { question: string; response: Cha
         </div>
       </BubbleContent>
     </Bubble>
+  );
+}
+
+/** "Who can help": the office's name (linked to its official page), its one-line description, and
+ *  the phone/email we verified on its page. Nothing here is written by the AI. */
+function WhoCanHelp({ office }: { office: HelpOffice }) {
+  return (
+    <section aria-label="Who can help" className="flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5">
+      <h3 className="text-xs font-semibold text-muted-foreground">Who can help</h3>
+      <a href={office.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-medium underline underline-offset-4">
+        {office.name}
+        <ExternalLinkIcon aria-hidden className="size-3.5 shrink-0" />
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+      {office.description && <p className="text-sm text-muted-foreground">{office.description}</p>}
+      {(office.phone || office.email) && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {office.phone && (
+            <a href={`tel:${office.phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 underline underline-offset-4">
+              <PhoneIcon aria-hidden className="size-3.5 shrink-0" />
+              {office.phone}
+            </a>
+          )}
+          {office.email && (
+            <a href={`mailto:${office.email}`} className="flex items-center gap-1.5 underline underline-offset-4">
+              <MailIcon aria-hidden className="size-3.5 shrink-0" />
+              {office.email}
+            </a>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 
