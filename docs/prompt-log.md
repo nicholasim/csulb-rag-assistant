@@ -91,4 +91,80 @@ The first version of the script produced bad output that Claude caught by readin
 
 ---
 
+## Entry 3 (Phase 2: Retrieval, fallback, and the Gemini API route)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Start Phase 2: retrieval, fallback logic, and the Gemini API route. Follow the original plan, plus:
+>
+> - When sources conflict (like the Feb 2 vs Feb 3 Spring drop date), show both and tell the student to confirm with the office.
+> - For map or "how do I get around campus" questions, point students to https://www.csulb.edu/maps.
+> - Advising entries usually link to a "Contact & Location" page instead of a phone number. In that case, name the right advising center and give the link. Never make up a phone number or email.
+> - Fallback answers should suggest the most related department page when one exists in the knowledge base.
+> - Before calling Gemini, check that GEMINI_API_KEY exists, and return a friendly error if it doesn't.
+>
+> Test it from the terminal (not the UI yet) with at least these, and show me the actual output for each:
+> 1. "How much is a semester student parking permit?" (should answer with source)
+> 2. "Who are the international student advisors?" (should answer with names)
+> 3. "How do I apply?" (should ask a clarifying question)
+> 4. "Where are the nearest taco spots near campus?" (should fall back, even though Playa Tacos is on campus)
+> 5. "Who is the best professor for CECS 326?" (should fall back)
+> 6. "How do I reserve a group study room?" (should fall back)
+>
+> If any of those don't behave as expected, tell me what happened before you fix it. Then update the prompt log and stop before Phase 3.
+
+**What the AI did:**
+Built the back end of the RAG flow (question -> retrieve -> AI answer -> answer + source):
+- `lib/knowledge.ts`: loads the 17 knowledge files and cuts them into 92 chunks of about 150-300 words, split at headings. Big tables are split between rows, repeating the header row in each piece.
+- `lib/retrieval.ts`: BM25 keyword search that finds the top 5 chunks for a question. It drops filler words ("how", "the", "csulb"), treats plurals like singulars ("tacos" = "taco"), and has a short synonym list ("how much" also searches "price" and "fee").
+- `lib/gemini.ts`: the strict system prompt and the Gemini call (official `@google/genai` SDK, Interactions API). Gemini must reply in a fixed JSON format labeled `answer`, `clarify`, or `fallback`, so the code knows which kind of reply it got. Model: `gemini-3.8-flash`, changeable with `GEMINI_MODEL`. `store: false` keeps students' questions from being saved on Google's servers.
+- `lib/rag.ts`: the full pipeline:
+  - check the input (empty, over 500 characters);
+  - retrieve the top chunks;
+  - if the best match scores under 3.0 (only one common word matched), reply with the exact fallback sentence without calling the AI;
+  - otherwise ask Gemini with only those chunks;
+  - double-check every email, phone number, and link against the sources;
+  - return the answer plus the cited sources (title, url, short excerpt).
+- `app/api/chat/route.ts`: the `POST /api/chat` endpoint. Every problem becomes a friendly JSON error, never a crash or stack trace.
+- `next.config.ts`: tells Vercel to include the `knowledge/` files when deploying.
+
+Final test results (from the terminal, against the running app):
+| # | Question | Expected | Result |
+|---|---|---|---|
+| 1 | How much is a semester student parking permit? | answer + source | "$259 [1, 5]" with chips for the Fee Schedule and Permit Information pages. PASS |
+| 2 | Who are the international student advisors? | names | Ignacio Castor, Tammy Guzman, Angela Garris with emails, phone 562-985-2919 [2]. PASS |
+| 3 | How do I apply? | clarifying question | "Do you mean admission, scholarships, graduation, financial aid, or something else?" PASS |
+| 4 | Where are the nearest taco spots near campus? | fallback | Exact fallback sentence + link to the Eat and Shop page. PASS |
+| 5 | Who is the best professor for CECS 326? | fallback | Exact fallback sentence (no related department). PASS |
+| 6 | How do I reserve a group study room? | fallback | Exact fallback sentence + link to University Library Services. PASS |
+
+Also checked:
+- Advising question: named the Computer Science advising center and gave its Contact & Location link, no made-up number.
+- Map question: pointed to csulb.edu/maps.
+- Error cases: empty question, 639-character question, malformed request, and missing API key all return friendly messages.
+
+**Did it work?** Partly. All 6 required questions pass, but only after fixing several problems (below), and the conflicting-dates rule only works some of the time.
+
+**Troubleshooting or redirection (if any):**
+1. **Gemini was overloaded, so the first test run failed completely.** Questions 1-3 returned friendly errors after about 9-37 seconds each. Claude checked the server log and made a direct test call. The cause was Google's servers: `503 gemini-3.8-flash is currently experiencing high demand`. Our API key was fine. The SDK's automatic retries made students wait about 34 seconds, and one retry also hit a Node.js bug that showed up as a confusing "connection error".
+   **Fix:** if the main model is overloaded (503), rate-limited (429), erroring, or times out, the app switches right away to a backup model (`gemini-3.5-flash-lite`, changeable with `GEMINI_BACKUP_MODEL`). No long retries. Answers now take 1-4 seconds.
+2. **The AI made up an email address.** On the backup model, question 2 showed `angela.garris@csulb.edu`, but the link behind it was `mailto:angela.gizzis@csulb.edu`, an address that doesn't exist.
+   **Fix:** added a safety check in `lib/rag.ts`. Every email, phone number, and link in an answer must appear word for word in the retrieved sources. Anything that doesn't is removed, and the student sees a note to check the source page. Tested on the exact bad answer: the wrong address was removed and the correct one kept.
+3. **Question 5 hit the free-tier rate limit (429)** after many test calls. The student-facing message worked ("too many questions right now, please wait a minute"), but the test never ran. The backup-model fix above now also covers 429.
+4. **Retrieval missed the price table.** For "How much is a semester student parking permit?", the chunks with the actual prices weren't in the top 10. Pages that repeat "parking" and "permit" outranked them, and "how much" didn't match "Price". Fixed by adding synonyms and counting section headings twice. The price tables now rank #1 and #5.
+5. **Source excerpts showed the wrong line.** The parking chip quoted a sentence about sponsored students instead of the $259 row. Later, citation markers like "[1, 5]" were counted as matching numbers. Date excerpts were also cut off before the date. Fixed by picking the source line that shares the most facts (especially numbers) with the sentence citing it, and by shortening long table descriptions so the dates still show.
+6. **Conflicting dates (not fully fixed).** "What is the last day to drop a class without a W in Spring 2027?" answered only Feb. 3. Retrieval had found the Feb. 2 chunk (ranked #2); the backup model just didn't connect the two dates. Added a more explicit rule with an example to the system prompt. "When is the add/drop deadline for spring?" now shows both dates and says to confirm with Enrollment Services, but the "without a W" wording still gets only Feb. 3. Retest when `gemini-3.8-flash` is available again.
+
+**Notes for later phases:**
+- Optional settings for `.env.local` and Vercel: `GEMINI_MODEL` (main model, default `gemini-3.8-flash`) and `GEMINI_BACKUP_MODEL` (default `gemini-3.5-flash-lite`). `gemini-4-carbon` isn't usable on our free tier (its limit is 0).
+- The API accepts an optional `history` (the last few chat messages), so a follow-up like "graduation" after "How do I apply?" can be understood. The Phase 3 UI should send it.
+- Phase 4: add the conflicting-date questions to the test file, and spread the tests out in time to avoid free-tier rate limits.
+
+**Screenshot / commit:**
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

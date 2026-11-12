@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The chat API reads the knowledge/ Markdown files at runtime. This makes sure
+  // Vercel copies them into the deployed server code.
+  outputFileTracingIncludes: {
+    "/api/chat": ["./knowledge/**/*.md"],
+  },
   experimental: {
     agentFeedback: true,
   },
