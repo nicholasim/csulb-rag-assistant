@@ -48,6 +48,8 @@ const SOURCES: Source[] = [
   { slug: "international-student-advising", category: "International Students", url: "https://www.csulb.edu/international/current-students/meet-an-advisor" },
   // Added: names and contact info for the international student advisors.
   { slug: "international-staff-contacts", category: "International Students", url: "https://www.csulb.edu/international/staff-contacts" },
+  // Added: one of the brief's ten core service areas that had no source.
+  { slug: "basic-needs", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/basic-needs" },
   // Added: brief features that had no source.
   { slug: "day-1-textbook-access", category: "Bookstore", url: "https://www.csulb.edu/beach-shops/day-1-textbook-access" },
   { slug: "orientation-soar", category: "Orientation", url: "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration" },

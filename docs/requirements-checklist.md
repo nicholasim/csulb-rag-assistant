@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after Phase 2 (commit `00cae20`)
+**Last updated:** 2026-11-11, after Phase 3: chat UI (prompt log Entry 5)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -10,36 +10,36 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 
 ## 1. Prototype (assignment: Required Prototype Capabilities)
 
-- [ ] **Browser-based chat / Q&A interface.** Planned for Phase 3.
-- [x] **Knowledge base with at least 5 official CSULB sources.** 17 pages in `knowledge/`, copied word for word from csulb.edu and asicsulb.org by `scripts/fetch-sources.ts` (commits `8df0c0a`, `dcd1b5b`).
-- [x] **Sources cover multiple student-service areas.** 13 categories: Enrollment, Financial Aid, Tuition, Academic Advising, Parking & Transportation, Career, Library, Tech Help Desk, Health, Food, International, Bookstore, Orientation (`knowledge/*.md` headers).
+- [x] **Browser-based chat / Q&A interface.** `app/page.tsx` + `components/chat/` (Phase 3, Entry 5). Screenshots in `docs/screenshots/`.
+- [x] **Knowledge base with at least 5 official CSULB sources.** 18 pages in `knowledge/`, copied word for word from csulb.edu and asicsulb.org by `scripts/fetch-sources.ts` (commits `8df0c0a`, `dcd1b5b`; Basic Needs added in Entry 4).
+- [x] **Sources cover multiple student-service areas.** 14 categories: Enrollment, Financial Aid, Tuition, Academic Advising, Parking & Transportation, Career, Library, Tech Help Desk, Health, Food, Basic Student Support, International, Bookstore, Orientation (`knowledge/*.md` headers).
 - [x] **Retrieval happens before the AI generates an answer.** `lib/rag.ts` step 2 (BM25 search in `lib/retrieval.ts`) runs before `askGemini` (commit `00cae20`).
 - [x] **Retrieved passages are given to the LLM as context.** `buildInput()` in `lib/rag.ts`; Gemini is told to use only those sources (`lib/gemini.ts`, commit `00cae20`).
-- [ ] **Source name, citation, or excerpt shown to the user.** Partly: the API returns `sources` (title, url, excerpt) and the answers use [1] citations (commit `00cae20`). The source chips in the UI are planned for Phase 3.
-- [ ] **Clear "not enough information" fallback.** Partly: the API returns exactly "I do not have enough information in the provided CSULB sources." (`lib/gemini.ts` `FALLBACK_SENTENCE`; tested in prompt log Entry 3). It still needs to be shown in the UI (Phase 3).
+- [x] **Source name, citation, or excerpt shown to the user.** Gold [1] citation tabs in the answer, plus numbered source chips that open the excerpt and a "View on csulb.edu" link (`components/chat/answer-text.tsx`, `source-chips.tsx`; `docs/screenshots/*-02-answer-with-source.png`).
+- [x] **Clear "not enough information" fallback.** Exact sentence from `lib/gemini.ts` `FALLBACK_SENTENCE`, shown in a calm gray card with the related department page as a button (`docs/screenshots/*-04-fallback.png`).
 - [ ] **At least 10 test questions: answerable, ambiguous, and unsupported.** Partly: 6 were tested by hand from the terminal (prompt log Entry 3). `tests/test-questions.json` (12+ questions) and the test script are planned for Phase 4.
-- [ ] **At least one meaningful error or invalid-case demo.** Partly: the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (`app/api/chat/route.ts`, `lib/gemini.ts`; tested in Entry 3). It still needs to be demo-able in the UI (Phases 3 and 4).
+- [ ] **At least one meaningful error or invalid-case demo.** Partly: the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
 - [x] **API key not in source code or GitHub.** The key lives only in `.env.local`, which git ignores (`.gitignore` line 34). A scan of every commit found no key. The key is read only on the server, in `lib/gemini.ts`, and is never logged.
 - [ ] **Deployed web app (Vercel) for the live demo.** Not started. `next.config.ts` already bundles `knowledge/` for Vercel (commit `00cae20`). `GEMINI_API_KEY` must be added in the Vercel project settings.
 
 ## 2. Prompt log (assignment: Vibe Coding Expectations)
 
-- [ ] **At least 5 meaningful prompt iterations.** Partly: 3 so far (`docs/prompt-log.md` Entries 1-3).
+- [x] **At least 5 meaningful prompt iterations.** 5 so far (`docs/prompt-log.md` Entries 1-5).
 - [x] **At least 2 cases where the AI's solution didn't work, and how we fixed or redirected it.** Entry 3: Gemini overload (fixed with a backup model) and an invented email address (fixed with a contact-detail check), plus four more. Entry 2: our redirection on the incomplete Advising page and the swapped map source.
 - [ ] **"Who" filled in on every entry.** Team to fill in.
-- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`).
+- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-5 not committed yet).
 
 ## 3. Design brief features
 
 ### Chat experience
-- [ ] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). Phase 3.
-- [ ] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). Phase 3. The category names already exist in the `knowledge/` headers.
-- [ ] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). Partly: the API provides the data (commit `00cae20`); UI in Phase 3.
-- [ ] **Loading state, mobile-friendly layout, CSULB black and gold look.** Phase 3.
-- [ ] **Follow-up after a clarifying question works** (e.g., "How do I apply?" then "graduation"). Partly: the API accepts `history` (`lib/rag.ts`). The UI needs to send it (Phase 3), and it hasn't been tested yet.
+- [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5).
+- [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
+- [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`.
+- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`).
+- [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
 
 ### Answer behavior
-- [x] **Clarifying question for ambiguous asks** ("How do I apply?" -> "Do you mean admission, scholarships, graduation, financial aid, or something else?"). Rule in `lib/gemini.ts`; passed test 3 in Entry 3.
+- [x] **Clarifying question for ambiguous asks** ("How do I apply?" -> "Do you mean admission, scholarships, graduation, financial aid, or something else?"). Rule in `lib/gemini.ts`; passed test 3 in Entry 3. The UI shows the options as buttons.
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services).
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
@@ -47,9 +47,15 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [ ] **No medical, legal, or financial advice.** Partly: rule in the system prompt (`lib/gemini.ts`). Not tested yet; add a test question in Phase 4.
 - [ ] **Never asks for personal information.** Partly: rule in the system prompt (`lib/gemini.ts`). Not tested yet; add a test question in Phase 4.
 
+### Accessibility
+- [x] **Keyboard navigation and visible focus.** Tab moves through the sidebar, examples, and input in order with a visible focus ring; Enter sends (checked with Playwright, Entry 5).
+- [x] **Labels for screen readers.** Every button has a label (including the icon-only send and menu buttons), new messages are announced (`role="log"`), links that open a new tab say so, and decorative icons are hidden from screen readers.
+- [x] **Contrast and motion.** Gold is used only behind black text (11:1); gold-colored text uses dark gold `#7A5600` (6.5:1); secondary text is `#52525B` (7.7:1). The loading animation stops for people who prefer reduced motion.
+
 ### Privacy (brief: Privacy & Appropriate Use)
 - [x] **Index only public, official university information.** `knowledge/` holds only the approved public CSULB/ASI pages.
-- [x] **Don't store student data; keep logs anonymous.** `store: false` on every Gemini call (`lib/gemini.ts`). Server logs record only error types and status codes, never the question text.
+- [x] **Don't store student data; keep logs anonymous.** `store: false` on every Gemini call (`lib/gemini.ts`). Server logs record only error types and status codes, never the question text. The one exception is "Request this topic", which the student clicks on purpose: it logs only the question text, with no IP and no other details.
+- [x] **Footer note:** "Answers come only from official CSULB web pages. Don't enter personal information." shown under the input box.
 
 ### Service-area coverage (brief: Main Features, the ten core areas)
 - [x] Academic Advising: `knowledge/academic-advising.md` (all 45 centers)
@@ -61,12 +67,12 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] Parking & Transportation: `knowledge/parking-permit-fees.md`, `parking-permit-information.md`, `parking-shuttle.md`
 - [x] Technology Help Desk: `knowledge/technology-help-desk.md`
 - [x] Food Services: `knowledge/food-services.md`
-- [ ] **Basic Student Support.** No dedicated source yet; Basic Needs is only mentioned in passing on the food and parking pages. Decide: add a source (e.g., the CSULB Basic Needs page) or drop it from the list.
+- [x] Basic Student Support: `knowledge/basic-needs.md` (official Basic Needs page, added in Entry 4)
 - Extra areas from our user stories: Tuition / Payments, International Students, Bookstore (Day 1), Orientation (SOAR) are covered. Instructor ratings are intentionally unanswerable.
 
-### Brief items that need a team decision
-- [ ] **"Option to write a claim"** (brief: Handling Unsupported Questions). Not planned yet. Decide whether to build it (e.g., a "Suggest this question" button) or remove it from the brief and slides.
-- [ ] **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Not planned. It conflicts with "official sources only". Decide whether to drop it or describe it as future work.
+### Brief items decided by the team (Entry 4)
+- [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
+- **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Decision: **not built; future work.** It conflicts with our official-sources-only rule. Mention it on the "next steps" slide.
 
 ## 4. Accuracy
 
@@ -75,7 +81,11 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [ ] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Ignacio Castor", the exact fallback sentence). Phase 4.
 - [ ] **100% of unsupported test questions get the fallback** (brief: Success Measures). Partly: 3 of 3 passed in the manual test (Entry 3); the full suite comes in Phase 4.
 - [ ] **Test results recorded as a table** (question, type, expected, actual, pass/fail) for the presentation. Phase 4.
-- [ ] **Known source quirks handled or explained:** the Feb. 2 vs Feb. 3 drop date, the Motorcycle permit price ($129 -> $140 despite the fee freeze), and outdated Spring 2026 dates on the Day 1 page.
+- [x] **Known source quirks kept as-is (team decision, Entry 4)**, to explain on the testing / limitations slide:
+  - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table).
+  - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
+  - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
+  - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)
 

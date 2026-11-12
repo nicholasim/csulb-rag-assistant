@@ -167,4 +167,114 @@ Also checked:
 
 ---
 
+## Entry 4 (Requirements checklist and team decisions)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Create docs/requirements-checklist.md from the assignment PDF and our design brief. List every requirement as a checkbox, grouped like this: Prototype, Prompt log, Design brief features, Accuracy, Presentation. Mark what's already done with a note on where (file or commit). From now on, update this checklist at the end of every phase, along with the prompt log.
+>
+> (Follow-up) Decisions on the four checklist items:
+> 1. Add the official CSULB Basic Needs page as a source (category: Basic Student Support). Re-run fetch-sources and check the new file.
+> 2. Build a simple version of "write a claim": on fallback answers, show a "Request this topic" button. When clicked, log the question text only (no IP or personal info) on the server with console.log so it shows up in Vercel logs, and tell the student "Thanks, we'll consider adding this topic." No database. Build the button as part of Phase 3.
+> 3. "Student experiences and reviews": don't build it. Mark it as future work in the checklist, because it conflicts with our official-sources-only rule.
+> 4. Source quirks: keep them as-is and mark them in the checklist for our testing/limitations slide.
+
+**What the AI did:**
+- Created `docs/requirements-checklist.md`. Every requirement from the assignment and the design brief is a checkbox, and done items point to a file or commit.
+- While building it, Claude scanned every commit for the API key. None found: `.env.local` has never been committed.
+- Claude flagged four brief items that needed a team decision:
+  - Basic Student Support had no source.
+  - "Write a claim" wasn't planned.
+  - "Student reviews" conflicts with using official sources only.
+  - Some source quirks needed a decision.
+- After our decisions, added the official Basic Needs page (https://www.csulb.edu/student-affairs/basic-needs) to `scripts/fetch-sources.ts` and re-ran it. The new `knowledge/basic-needs.md` (351 words) has the office location, email, phone, hours, eligibility questions, and resource links. Questions about food or housing help now retrieve it.
+- The re-run also showed that none of the other 17 pages had changed since they were first fetched.
+- Updated the checklist with all four decisions. The knowledge base now has 18 sources in 14 categories.
+
+**Did it work?** Yes.
+
+**Troubleshooting or redirection (if any):**
+- **Redirection from us:** we made the four decisions Claude asked about. We added Basic Needs, chose a simple "Request this topic" button instead of a database, dropped student reviews, and kept the source quirks for the limitations slide.
+- **Something to watch:** the Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the page's Referral Form. The system prompt already forbids asking for personal information. To be tested in Phase 4.
+
+**Screenshot / commit:**
+
+---
+
+## Entry 5 (Phase 3: Chat UI)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Start Phase 3: the chat UI. Don't change the retrieval or Gemini logic unless something is broken. If it is, tell me first.
+>
+> Goal: it should look like a polished, trustworthy CSULB student tool. Use the frontend-design, ui-ux-pro-max, and shadcn skills.
+>
+> Layout (from our brief):
+> - Sidebar with the service categories. Clicking one drops a good starter question for that category into the input. On mobile the sidebar becomes a slide-out menu.
+> - Welcome screen with a short greeting and 4-6 clickable example questions. Only use questions we've verified work (permit price, international advisors, Day 1 Textbooks, SOAR orientation, add/drop deadline, Technology Help Desk hours).
+> - Chat stream with a sticky input box at the bottom, Enter to send, and a character counter near the 500 limit.
+>
+> Answers:
+> - Render basic formatting (bold, lists, links).
+> - [1], [2] citations in the text should match numbered source chips under the answer. Clicking a chip expands the excerpt and shows a "View on csulb.edu" link.
+> - Make each response type visually distinct: normal answer, clarifying question (if it lists options, show them as clickable buttons), fallback (calm and helpful, with the suggested department link as a button), and error (friendly, with a retry button).
+> - Loading state while waiting (typing dots or a skeleton).
+>
+> Style:
+> - CSULB black and gold, plenty of white space, readable font sizes, good contrast. Clean and modern, not flashy.
+> - A small footer note: "Answers come only from official CSULB web pages. Don't enter personal information."
+> - Accessible: keyboard navigation, focus states, alt text and aria labels.
+>
+> When it's built, use Playwright to take screenshots (desktop and mobile) of: the welcome screen, a normal answer with an expanded source chip, the "How do I apply?" clarifying question, a fallback, and an error. Save them to docs/screenshots/ and show me. Then update the prompt log and checklist, and stop so I can give design feedback.
+
+**What the AI did:**
+- Used the three design skills:
+  - ui-ux-pro-max suggested an "AI-native chat" style and a pre-delivery checklist. Claude replaced its default purple palette with our CSULB black and gold.
+  - frontend-design: a short design plan, checked against generic "AI-looking" defaults.
+  - shadcn: set up shadcn/ui and used its chat components (MessageScroller, Message, Bubble, Sheet, InputGroup, Alert).
+- **Look:**
+  - CSULB black sidebar, white chat area, gold (`#F2B000`) used only as a fill behind black text so contrast stays high, and dark gold `#7A5600` for links.
+  - Typeface: Public Sans, designed for public-service websites.
+  - The distinctive element is the gold citation tabs: a [1] in the answer is a small gold tab that opens the matching numbered source chip.
+- **Built:**
+  - Sidebar with 15 service categories (all 14 knowledge-base areas plus Campus Maps). Clicking one fills a starter question into the box without sending it. On mobile it becomes a slide-out menu.
+  - Welcome screen with the 6 example questions. Claude tested Day 1, SOAR, and Tech Help Desk hours end to end first, since they hadn't been tested before; all three gave cited answers.
+  - Chat stream with a sticky input. Enter sends and Shift+Enter adds a line. A counter appears at 400+ characters and over 500 it turns red and blocks sending.
+  - Five visually distinct reply types:
+    - **Answer:** formatted text with gold citation tabs and numbered source chips. A chip opens the quote and a "View on csulb.edu" button.
+    - **Clarifying question:** pale gold card with the options as buttons. Clicking one sends it as a follow-up.
+    - **Fallback:** calm gray card with the exact fallback sentence, a "Try: [department page]" button, and "Request this topic".
+    - **Error:** friendly red notice with a "Try again" button.
+    - **Loading:** gold typing dots with "Checking official CSULB pages…".
+  - "Request this topic" (team decision from Entry 4): `app/api/request-topic/route.ts` logs only the question text, e.g. `[topic-request] "Where are the nearest taco spots near campus?"`, with no IP and no database. The student sees "Thanks, we'll consider adding this topic."
+  - The chat sends the last few messages as `history`, so clicking "Graduation" after "How do I apply?" gets a real graduation answer. This is the first time that feature was tested.
+  - Accessibility: every button has a label, focus rings are visible, Tab moves through the sidebar, examples, and input in order, new messages are announced to screen readers, links that open new tabs say so, and the loading animation turns off for people who prefer reduced motion.
+- `scripts/take-screenshots.ts` (`npm run screenshots`) takes 13 screenshots, saved in `docs/screenshots/`. It covers desktop and mobile versions of the welcome screen, mobile menu, answer with source, clarifying question, fallback (before and after "Request this topic"), and error. A separate check saved `desktop-06-clarify-follow-up.png`.
+- The error screenshot uses a simulated Gemini rate-limit response, because a real outage can't be triggered on demand. Everything else in it is the real app.
+- Retrieval and Gemini logic were not changed. The only edit to `lib/rag.ts` moved the 500-character limit into `lib/limits.ts` so the browser and server share it.
+
+**Did it work?** Yes, after the fixes below. All screenshots show the intended states with real Gemini answers (except the simulated error).
+
+**Troubleshooting or redirection (if any):**
+Claude reviewed its own first round of screenshots and found these problems:
+1. **Gray, faded input box.** The shadcn `InputGroup` fades the whole box when anything inside it is disabled, and the send button was disabled while empty. That made the placeholder hard to read. Fixed by marking the button `aria-disabled` instead and blocking empty sends in code.
+2. **Clarifying question looked like the fallback.** Both were gray, because the "tinted" bubble color is computed from our black primary color. Fixed by adding a pale gold `accent` variant to the Bubble component.
+3. **The mobile menu looked broken (washed-out).** Claude debugged it with a browser console capture and found the menu was fine: the screenshot was taken mid-animation. Fixed the script to wait for the animation to finish.
+4. **A "1 Issue" badge** in the corner came from a hydration warning caused by Playwright hiding the text cursor, not by our app. Fixed in the screenshot script (`caret: "initial"`). Next.js's dev-only "N" badge was also hidden (`devIndicators: false`) so it doesn't cover the footer.
+5. **Smaller fixes:** the error's "Try again" button moved under the message so long messages aren't squeezed on phones, and a shorter placeholder keeps the mobile input from being too tall.
+
+**Open design questions for the team:**
+- Should source excerpts from tables show the column names? E.g. "Student Semester | $250 | $259 | $259 | $259" could read "FY23/24: $250 … FY26/27: $259". That would change the excerpt code in `lib/rag.ts`, so Claude didn't change it without asking.
+- The error notice uses red text for the whole message. Keep it, or soften it to black text with only a red icon?
+
+**Screenshot / commit:** `docs/screenshots/` (13 + 1 files)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

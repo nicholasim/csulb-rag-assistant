@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/chat": ["./knowledge/**/*.md"],
   },
+  // Hide the small "N" development badge so it doesn't cover the page in screenshots.
+  // (It never appears in the deployed app.)
+  devIndicators: false,
   experimental: {
     agentFeedback: true,
   },

@@ -10,8 +10,10 @@
 import type { Chunk } from "./knowledge";
 import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
+import { MAX_QUESTION_LENGTH } from "./limits";
 
-export const MAX_QUESTION_LENGTH = 500;
+export { MAX_QUESTION_LENGTH };
+
 const TOP_K = 5; // how many chunks to give Gemini
 // If the best chunk scores below this, the question matched almost nothing in our sources
 // (usually just one common word), so we skip the AI and reply with the fallback.
