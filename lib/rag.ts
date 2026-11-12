@@ -1,7 +1,8 @@
 /**
  * rag.ts: the whole RAG flow in one place:
  *
- *   question -> 1. check the input, and fix typos for searching (spelling.ts)
+ *   question -> 1. check the input; reply to small talk ("hi", "thanks") right away (small-talk.ts);
+ *                  fix typos for searching (spelling.ts)
  *            -> 2. retrieve the best-matching CSULB chunks (retrieval.ts)
  *            -> 3. nothing matches well? reply with the fallback, no AI needed
  *            -> 4. otherwise ask Gemini, giving it ONLY those chunks (gemini.ts)
@@ -12,6 +13,7 @@ import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
 import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
+import { detectSmallTalk, smallTalkReply } from "./small-talk";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -32,12 +34,13 @@ export type Source = {
 };
 
 export type ChatResponse = {
-  type: "answer" | "clarify" | "fallback";
+  type: "answer" | "clarify" | "fallback" | "chat"; // chat = a reply to small talk, no AI and no sources
   answer: string;
   sources: Source[]; // sources cited in the answer
   suggestion: { title: string; url: string } | null; // for fallbacks: where to look instead
   model: string | null; // which Gemini model wrote the reply (null = no AI was needed)
   correctedQuestion: string | null; // the question with typos fixed, if we fixed any ("Showing results for: ...")
+  examples?: string[]; // chat replies only: example questions shown as buttons
 };
 
 /** Is the student asking for a map or how to get around? */
@@ -310,9 +313,18 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     .filter((m): m is ChatMessage => (m?.role === "user" || m?.role === "assistant") && typeof m?.content === "string")
     .slice(-6);
 
+  // Small talk ("hi", "thanks", "what can you do?") gets a fixed friendly reply: no search, no AI.
+  // A greeting plus a real question ("hi, how much is parking?") continues below,
+  // searching with just the question part ("how much is parking?").
+  const smallTalk = detectSmallTalk(question);
+  if (smallTalk.kind) {
+    const { answer, examples } = smallTalkReply(smallTalk.kind);
+    return { type: "chat", answer, sources: [], suggestion: null, model: null, correctedQuestion: null, examples };
+  }
+
   // Fix typos ("parkng" -> "parking") so the word-matching search can find the right pages.
   // We search with the fixed question; Gemini sees both versions (see buildInput).
-  const spelling = correctSpelling(question);
+  const spelling = correctSpelling(smallTalk.rest);
   const searchText = spelling.corrected;
   const correctedQuestion = spelling.changes.length ? searchText : null;
 

@@ -73,6 +73,7 @@ export function AssistantMessage({
         {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} />}
         {turn.state === "done" && turn.response.type === "clarify" && <ClarifyState response={turn.response} onAsk={onAsk} />}
         {turn.state === "done" && turn.response.type === "fallback" && <FallbackState question={turn.question} response={turn.response} />}
+        {turn.state === "done" && turn.response.type === "chat" && <ChatState response={turn.response} onAsk={onAsk} />}
       </MessageContent>
     </Message>
   );
@@ -107,6 +108,25 @@ function AnswerState({ turn, response }: { turn: AssistantTurn; response: ChatRe
         onToggle={(id) => setOpenId((current) => (current === id ? null : id))}
         messageId={turn.id}
       />
+    </>
+  );
+}
+
+/** A reply to small talk ("hi", "what can you do?"): looks like an answer, but has no sources. */
+function ChatState({ response, onAsk }: { response: ChatResponse; onAsk: (q: string) => void }) {
+  const examples = response.examples ?? [];
+  return (
+    <>
+      <AnswerText text={response.answer} citableIds={[]} onCite={() => {}} />
+      {examples.length > 0 && (
+        <div className="flex flex-col items-start gap-2" role="group" aria-label="Example questions">
+          {examples.map((example) => (
+            <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 whitespace-normal py-1.5 text-left" onClick={() => onAsk(example)}>
+              {example}
+            </Button>
+          ))}
+        </div>
+      )}
     </>
   );
 }

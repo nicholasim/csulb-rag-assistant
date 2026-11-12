@@ -13,6 +13,7 @@
  */
 import { loadChunks } from "./knowledge";
 import { STOP_WORDS, SYNONYMS, tokenize } from "./retrieval";
+import { isSocialWord } from "./small-talk";
 
 const MIN_LENGTH = 4; // words shorter than this are left alone ("bok" could be "book" or "box")
 
@@ -21,28 +22,36 @@ function maxTypos(word: string) {
   return word.length >= 8 ? 2 : 1;
 }
 
-let vocabulary: Set<string> | null = null;
+// A word must appear at least this many times in our pages to be used as a correction.
+// Words that appear only once are usually a person's name: "write" must not become "white"
+// (a staff member's last name). Real targets appear more often ("parking" 119 times, "tuition" 4).
+const MIN_TIMES_SEEN = 2;
 
-/** Every word in the knowledge base (titles, headings, and page text), plus our synonym list. */
-function getVocabulary(): Set<string> {
+let vocabulary: Map<string, number> | null = null;
+
+/**
+ * Every word in the knowledge base (titles, headings, and page text), plus our synonym list,
+ * with how many times each one appears.
+ */
+function getVocabulary(): Map<string, number> {
   if (vocabulary) return vocabulary;
-  const words = new Set<string>();
+  const words = new Map<string, number>();
+  const add = (word: string, times = 1) => words.set(word, (words.get(word) ?? 0) + times);
   for (const chunk of loadChunks()) {
     const text = `${chunk.title} ${chunk.category} ${chunk.heading} ${chunk.text}`
       .toLowerCase()
       .replace(/\]\([^)]*\)/g, "]") // skip link addresses, they're not words students type
       .replace(/https?:\/\/\S+/g, " ");
     for (const word of text.split(/[^a-z0-9]+/)) {
-      if (word) words.add(word);
+      if (word) add(word);
     }
   }
   // Also the singular forms our search uses ("tacos" -> "taco"), so "taco" counts as known.
-  for (const word of [...words]) {
-    for (const w of tokenize(word)) words.add(w);
+  for (const [word, times] of [...words]) {
+    for (const w of tokenize(word)) if (w !== word) add(w, times);
   }
   for (const [word, related] of Object.entries(SYNONYMS)) {
-    words.add(word);
-    for (const r of related) words.add(r);
+    for (const w of [word, ...related]) add(w, MIN_TIMES_SEEN); // our own synonyms always count
   }
   vocabulary = words;
   return words;
@@ -89,7 +98,8 @@ function closestWord(word: string): string | null {
   let best: string | null = null;
   let bestDistance = limit + 1;
   let tie = false;
-  for (const candidate of getVocabulary()) {
+  for (const [candidate, timesSeen] of getVocabulary()) {
+    if (timesSeen < MIN_TIMES_SEEN) continue; // too rare in our pages (see MIN_TIMES_SEEN)
     if (/\d/.test(candidate)) continue; // never turn a word into a code like "d1ta"
     // Same first letter only. People rarely mistype the first letter, and this stops real
     // words we don't cover from becoming words we do: "good" -> "food", "dorms" -> "forms".
@@ -111,7 +121,7 @@ export type SpellingResult = {
   changes: { from: string; to: string }[]; // what we changed, e.g. [{ from: "parkng", to: "parking" }]
 };
 
-/** Fix the typos in a question. Words we know, short words, numbers, and stopwords are left alone. */
+/** Fix the typos in a question. Words we know, short words, numbers, stopwords, and greetings are left alone. */
 export function correctSpelling(question: string): SpellingResult {
   const vocab = getVocabulary();
   const changes: SpellingResult["changes"] = [];
@@ -120,6 +130,8 @@ export function correctSpelling(question: string): SpellingResult {
   const corrected = question.replace(/[A-Za-z0-9]+/g, (original) => {
     const word = original.toLowerCase();
     if (word.length < MIN_LENGTH || /\d/.test(word) || STOP_WORDS.has(word)) return original;
+    // Greetings and thanks, typos included ("helo", "thanx"), are never "corrected" into other words.
+    if (isSocialWord(word)) return original;
     // Known word, or a plural/singular of one ("permits" -> "permit")? Leave it.
     if (vocab.has(word) || tokenize(word).some((w) => vocab.has(w))) return original;
 

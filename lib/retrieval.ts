@@ -40,6 +40,7 @@ export const SYNONYMS: Record<string, string[]> = {
   food: ["eat", "dining"],
   grocery: ["food", "pantry"], // "groceries" becomes "grocery" after plural trimming
   pantry: ["food"],
+  statu: ["pending"], // "status" becomes "statu" after plural trimming; the To Do List page says "pending", not "status"
   advisor: ["advising"],
   advising: ["advisor"],
   professor: ["instructor", "faculty"],
