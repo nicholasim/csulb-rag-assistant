@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { MenuIcon, SquarePenIcon } from "lucide-react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { MenuIcon, PencilIcon, SquarePenIcon } from "lucide-react";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Message, MessageContent } from "@/components/ui/message";
@@ -39,13 +39,22 @@ function historyFrom(turns: Turn[]): ChatMessage[] {
     .slice(-6);
 }
 
-/** Ask the API. Always resolves to a finished assistant turn (an answer or a friendly error). */
-async function fetchAnswer(id: string, question: string, history: ChatMessage[]): Promise<AssistantTurn> {
+/**
+ * Ask the API. Resolves to a finished assistant turn (an answer or a friendly error),
+ * or to null if the student pressed Stop (the request was cancelled).
+ */
+async function fetchAnswer(
+  id: string,
+  question: string,
+  history: ChatMessage[],
+  signal: AbortSignal,
+): Promise<AssistantTurn | null> {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, history }),
+      signal,
     });
     const data = await res.json().catch(() => null);
     if (res.ok && data?.answer) {
@@ -54,6 +63,7 @@ async function fetchAnswer(id: string, question: string, history: ChatMessage[])
     const error = data?.error ?? { code: "server_error", message: "Something went wrong on our end. Please try again." };
     return { id, role: "assistant", question, state: "error", error };
   } catch {
+    if (signal.aborted) return null; // stopped on purpose: not an error
     return {
       id,
       role: "assistant",
@@ -68,12 +78,36 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null); // small gray note under the box, e.g. "Stopped."
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const requestRef = useRef<AbortController | null>(null); // lets Stop cancel the request in flight
   const waiting = turns.some((t) => t.role === "assistant" && t.state === "loading");
+  const lastQuestionId = turns.findLast((t) => t.role === "user")?.id;
+
+  /** Put text in the question box and move the cursor to the end, ready to edit. */
+  function putInBox(text: string) {
+    setDraft(text);
+    requestAnimationFrame(() => {
+      const box = textareaRef.current;
+      if (!box) return;
+      box.focus();
+      box.setSelectionRange(text.length, text.length);
+    });
+  }
+
+  /** Send a request for an assistant turn; returns null if it was stopped. */
+  async function request(id: string, question: string, history: ChatMessage[]) {
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const finished = await fetchAnswer(id, question, history, controller.signal);
+    if (requestRef.current === controller) requestRef.current = null;
+    return finished;
+  }
 
   async function ask(rawQuestion: string) {
     const question = rawQuestion.trim();
     if (!question || waiting) return;
+    // History is always rebuilt from what's on screen, so stopped or edited questions are never sent.
     const history = historyFrom(turns);
     const answerId = newId();
     setTurns((t) => [
@@ -82,8 +116,9 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
       { id: answerId, role: "assistant", question, state: "loading" },
     ]);
     setDraft("");
-    const finished = await fetchAnswer(answerId, question, history);
-    setTurns((t) => t.map((turn) => (turn.id === answerId ? finished : turn)));
+    setNotice(null);
+    const finished = await request(answerId, question, history);
+    if (finished) setTurns((t) => t.map((turn) => (turn.id === answerId ? finished : turn)));
   }
 
   async function retry(turn: AssistantTurn) {
@@ -92,28 +127,60 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
     const index = turns.findIndex((t) => t.id === turn.id);
     const history = historyFrom(turns.slice(0, Math.max(0, index - 1)));
     setTurns((t) => t.map((x) => (x.id === turn.id ? { ...turn, state: "loading" } : x)));
-    const finished = await fetchAnswer(turn.id, turn.question, history);
-    setTurns((t) => t.map((x) => (x.id === turn.id ? finished : x)));
+    setNotice(null);
+    const finished = await request(turn.id, turn.question, history);
+    if (finished) setTurns((t) => t.map((x) => (x.id === turn.id ? finished : x)));
   }
 
-  // "New chat": clear the conversation and go back to the welcome screen.
-  // (If an answer is still loading, it's simply ignored when it arrives.)
+  /**
+   * Stop (button or Esc): cancel the request, remove the loading answer AND its question from
+   * the chat, and put the question back in the box so the student can edit and resend it.
+   */
+  function stop() {
+    const index = turns.findIndex((t) => t.role === "assistant" && t.state === "loading");
+    if (index === -1) return;
+    requestRef.current?.abort();
+    requestRef.current = null;
+    const loading = turns[index] as AssistantTurn;
+    const questionIndex = turns[index - 1]?.role === "user" ? index - 1 : index;
+    setTurns((t) => t.filter((_, i) => i < questionIndex || i > index));
+    putInBox(loading.question);
+    setNotice("Stopped. Your question is back in the box.");
+  }
+
+  // Esc stops a loading answer (only listens while something is loading).
+  const onEscape = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === "Escape") stop();
+  });
+  useEffect(() => {
+    if (!waiting) return;
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [waiting]);
+
+  /** Edit: remove the most recent question and its answer, and put the question back in the box. */
+  function editQuestion(turn: UserTurn) {
+    if (waiting) return;
+    const index = turns.findIndex((t) => t.id === turn.id);
+    setTurns((t) => t.slice(0, index));
+    setNotice(null);
+    putInBox(turn.content);
+  }
+
+  // "New chat": cancel anything loading, clear the conversation, and go back to the welcome screen.
   function newChat() {
+    requestRef.current?.abort();
+    requestRef.current = null;
     setTurns([]);
     setDraft("");
+    setNotice(null);
     setMenuOpen(false);
   }
 
   // Sidebar category: put its starter question in the box so the student can edit or send it.
   function pickCategory(starter: string) {
-    setDraft(starter);
     setMenuOpen(false);
-    requestAnimationFrame(() => {
-      const box = textareaRef.current;
-      if (!box) return;
-      box.focus();
-      box.setSelectionRange(starter.length, starter.length);
-    });
+    putInBox(starter);
   }
 
   return (
@@ -195,14 +262,29 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
                     {turns.map((turn) => (
                       <MessageScrollerItem key={turn.id} messageId={turn.id} scrollAnchor={turn.role === "user"}>
                         {turn.role === "user" ? (
-                          <Message align="end">
+                          <Message align="end" className="group/question">
                             <MessageContent>
                               <span className="sr-only">You:</span>
-                              <Bubble variant="default" align="end">
-                                <BubbleContent className="rounded-2xl rounded-br-md px-4 py-2.5 text-[15px] leading-6 sm:text-base">
-                                  {turn.content}
-                                </BubbleContent>
-                              </Bubble>
+                              <div className="flex max-w-full items-center justify-end gap-1 self-end">
+                                {/* Edit: only on the most recent question. Shows on hover with a mouse,
+                                    always on touch screens, and whenever it has keyboard focus. */}
+                                {turn.id === lastQuestionId && !waiting && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={() => editQuestion(turn)}
+                                    aria-label="Edit this question"
+                                    className="shrink-0 text-muted-foreground transition-opacity [@media(hover:hover)]:opacity-0 group-hover/question:opacity-100 focus-visible:opacity-100"
+                                  >
+                                    <PencilIcon />
+                                  </Button>
+                                )}
+                                <Bubble variant="default" align="end">
+                                  <BubbleContent className="rounded-2xl rounded-br-md px-4 py-2.5 text-[15px] leading-6 sm:text-base">
+                                    {turn.content}
+                                  </BubbleContent>
+                                </Bubble>
+                              </div>
                             </MessageContent>
                           </Message>
                         ) : (
@@ -220,7 +302,18 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
           {/* Sticky question box + footer note */}
           <div className="border-t border-border bg-background">
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
-              <ChatInput value={draft} onChange={setDraft} onSubmit={() => ask(draft)} disabled={waiting} textareaRef={textareaRef} />
+              <ChatInput
+                value={draft}
+                onChange={(value) => {
+                  setDraft(value);
+                  setNotice(null);
+                }}
+                onSubmit={() => ask(draft)}
+                waiting={waiting}
+                onStop={stop}
+                notice={notice}
+                textareaRef={textareaRef}
+              />
               <p className="text-center text-xs leading-5 text-muted-foreground">{FOOTER_NOTE}</p>
             </div>
           </div>

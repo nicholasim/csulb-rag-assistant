@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after the Phase 4 fixes (prompt log Entry 8; full suite not rerun yet)
+**Last updated:** 2026-11-11, after adding stop and edit (prompt log Entry 9)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -24,7 +24,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 
 ## 2. Prompt log (assignment: Vibe Coding Expectations)
 
-- [x] **At least 5 meaningful prompt iterations.** 7 so far (`docs/prompt-log.md` Entries 1-7).
+- [x] **At least 5 meaningful prompt iterations.** 9 so far (`docs/prompt-log.md` Entries 1-9).
 - [x] **At least 2 cases where the AI's solution didn't work, and how we fixed or redirected it.** Entry 3: Gemini overload (fixed with a backup model) and an invented email address (fixed with a contact-detail check), plus four more. Entry 2: our redirection on the incomplete Advising page and the swapped map source.
 - [ ] **"Who" filled in on every entry.** Team to fill in.
 - [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-7 not committed yet).
@@ -35,7 +35,10 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5).
 - [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
 - [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`. Numbered 1, 2, 3 in order with one chip per page; table quotes include column names (Entry 6).
-- [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6).
+- [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6). It also cancels an answer that's still loading (Entry 9).
+- [x] **Stop:** while an answer loads, the send button becomes a Stop button (Esc works too). It cancels the request, removes the loading bubble, and puts the question back in the box with a gray "Stopped" note, with no error card (Entry 9; `docs/screenshots/*-07-stop-button.png`).
+- [x] **Edit the latest question:** the pencil icon (on hover; always visible on touch screens) puts the question back in the box and removes it and its answer (Entry 9; `docs/screenshots/*-08-edit-icon.png`).
+- [x] **Stop and edit keep follow-up history correct:** history is rebuilt from the messages on screen. Checked by `npm run test:stop-edit` (32 checks, all passing).
 - [x] **Welcome trust line:** "Searches 18 official CSULB pages · Every answer links to its source." (count read from `knowledge/`; Entry 6).
 - [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`).
 - [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
@@ -92,7 +95,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - #3's date conflict stays a known limitation, so expect #3 to keep failing on Flash-Lite.
 - [x] **Known source quirks and limitations**, to explain on the testing / limitations slide (team decisions, Entries 4 and 8):
   - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table). **Limitation:** our default model (`gemini-3.5-flash-lite`) usually reports only Feb. 3 instead of showing both and saying to confirm (test #3).
-  - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy.
+  - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy. When both are busy, that message can take about 60 seconds (students can press Stop); a shorter backup timeout is proposed in Entry 9 and waiting for the team's decision.
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
   - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.

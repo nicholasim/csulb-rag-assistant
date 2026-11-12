@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, SquareIcon } from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group";
 import { MAX_QUESTION_LENGTH } from "@/lib/limits";
 import { cn } from "@/lib/utils";
@@ -11,23 +11,28 @@ const SHOW_COUNTER_AT = 400; // show "432 / 500" once the question gets close to
 /**
  * The question box: Enter sends, Shift+Enter adds a new line.
  * It starts about two lines tall and grows as you type (up to a limit, then scrolls).
+ * While an answer is loading, the send button becomes a Stop button (Esc works too).
  */
 export function ChatInput({
   value,
   onChange,
   onSubmit,
-  disabled,
+  waiting,
+  onStop,
+  notice,
   textareaRef,
 }: {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
-  disabled: boolean; // true while waiting for an answer
+  waiting: boolean; // true while an answer is loading
+  onStop: () => void;
+  notice: string | null; // a small gray note under the box, e.g. after pressing Stop
   textareaRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const length = value.trim().length;
   const tooLong = length > MAX_QUESTION_LENGTH;
-  const canSend = !disabled && length > 0 && !tooLong;
+  const canSend = !waiting && length > 0 && !tooLong;
 
   return (
     <form
@@ -60,18 +65,41 @@ export function ChatInput({
           className="max-h-40 min-h-[4.25rem] py-3 pl-4 text-base"
         />
         <InputGroupAddon align="inline-end" className="self-end pr-3 pb-3">
-          {/* aria-disabled instead of disabled: a truly disabled button makes InputGroup fade
-              the whole box. The form's onSubmit already ignores empty or too-long questions. */}
-          <InputGroupButton
-            type="submit"
-            size="icon-sm"
-            variant="default"
-            aria-disabled={!canSend}
-            className="rounded-full bg-gold text-gold-foreground hover:bg-black hover:text-gold aria-disabled:cursor-not-allowed aria-disabled:bg-muted aria-disabled:text-muted-foreground"
-            aria-label="Send question"
-          >
-            <ArrowUpIcon />
-          </InputGroupButton>
+          {/* Stop and Send get different keys so React never reuses one button element for the other.
+              Without this, clicking Stop re-rendered the same element as the Send (submit) button
+              before the click finished, and the browser then submitted the form: the question was
+              sent again right away. preventDefault() also cancels the click's default action. */}
+          {waiting ? (
+            <InputGroupButton
+              key="stop"
+              type="button"
+              size="icon-sm"
+              variant="default"
+              onClick={(e) => {
+                e.preventDefault();
+                onStop();
+              }}
+              className="rounded-full bg-black text-white hover:bg-black/80"
+              aria-label="Stop"
+              title="Stop (Esc)"
+            >
+              <SquareIcon className="fill-current" />
+            </InputGroupButton>
+          ) : (
+            // aria-disabled instead of disabled: a truly disabled button makes InputGroup fade
+            // the whole box. The form's onSubmit already ignores empty or too-long questions.
+            <InputGroupButton
+              key="send"
+              type="submit"
+              size="icon-sm"
+              variant="default"
+              aria-disabled={!canSend}
+              className="rounded-full bg-gold text-gold-foreground hover:bg-black hover:text-gold aria-disabled:cursor-not-allowed aria-disabled:bg-muted aria-disabled:text-muted-foreground"
+              aria-label="Send question"
+            >
+              <ArrowUpIcon />
+            </InputGroupButton>
+          )}
         </InputGroupAddon>
       </InputGroup>
       <p
@@ -84,9 +112,11 @@ export function ChatInput({
       >
         {tooLong
           ? `${length} / ${MAX_QUESTION_LENGTH}: please shorten your question`
-          : length >= SHOW_COUNTER_AT
-            ? `${length} / ${MAX_QUESTION_LENGTH}`
-            : <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line</span>}
+          : notice
+            ? notice
+            : length >= SHOW_COUNTER_AT
+              ? `${length} / ${MAX_QUESTION_LENGTH}`
+              : <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line</span>}
       </p>
     </form>
   );

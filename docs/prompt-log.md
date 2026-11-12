@@ -424,4 +424,52 @@ Per our instruction, Claude showed the 4 failures before fixing anything. Nothin
 
 ---
 
+## Entry 9 (Stop and edit)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> New feature from our team: stop and edit.
+>
+> 1. While an answer is loading, the send button turns into a Stop button (square icon, aria-label "Stop"). Pressing Esc does the same thing.
+> 2. Stopping cancels the request (AbortController on the fetch), removes the loading bubble, and puts the question back in the input box with the cursor at the end so the student can edit and resend. Don't show an error card for a stop. If anything, show a small gray "Stopped" note.
+> 3. Also add an edit option on the most recent question: a small pencil icon on hover (always visible on mobile). Clicking it puts that question back in the input and removes that question and its answer from the chat, so the student can rephrase and resend.
+> 4. Make sure stopping or editing doesn't mess up the chat history sent to the API for follow-ups.
+>
+> Test it with Playwright: stop mid-load, edit and resend, then edit after a clarifying question. Take a screenshot of the Stop button state and the edit icon. Then update the prompt log and checklist, and stop.
+
+**What the AI did:**
+- **Stop** (`components/chat/chat-app.tsx`, `chat-input.tsx`):
+  - While an answer loads, the gold send arrow becomes a black Stop button (square icon, `aria-label="Stop"`). Esc does the same.
+  - Stopping cancels the request with an `AbortController`, removes the question and its loading bubble, and puts the question back in the box with the cursor at the end.
+  - A small gray note, "Stopped. Your question is back in the box.", appears under the box. No error card is shown.
+  - "New chat" now also cancels an answer that's still loading.
+- **Edit:**
+  - A pencil icon appears next to the most recent question: on hover with a mouse, always on touch screens, and whenever it has keyboard focus.
+  - Clicking it removes that question and everything after it (its answer) and puts the question back in the box. It's hidden while an answer is loading, since Stop covers that.
+- **History stays correct:** the history sent to the API is always rebuilt from the messages on screen, so stopped or edited-away questions are never sent.
+- **`scripts/test-stop-edit.ts` (`npm run test:stop-edit`):** a Playwright test with 32 checks.
+  - **Stop:** for the Stop button and for Esc, the request is really cancelled, the bubble is gone, there's no error card, the question is back with the cursor at the end, and the "Stopped" note shows.
+  - **Edit and resend:** checked with real Gemini answers. The resent question carries no stale history and gets its own answer ($57 for a monthly permit).
+  - **Edit after a clarifying question:** checked with real Gemini answers. After changing "graduation" to "scholarships", the history still holds "How do I apply?" and the clarifying reply, but not "graduation", and the new answer is about scholarships.
+  - **Mobile:** the edit icon is always visible.
+  - **Screenshots:** `docs/screenshots/{desktop,mobile}-07-stop-button.png` and `-08-edit-icon.png`.
+
+**Did it work?** Yes, after fixing a real bug (below). Final run: **all 32 checks passed**, answered by the main model `gemini-3.5-flash-lite`.
+
+**Troubleshooting or redirection (if any):**
+1. **The Stop button didn't work (Esc did).** The first test run caught it:
+   - Clicking Stop cancelled the request, but the question was immediately sent again.
+   - Claude added a temporary debug log and found that `stop()` ran, then React re-rendered the same button element as the Send (submit) button while the click was still in progress, so the browser submitted the form.
+   - Esc wasn't affected because a keypress doesn't trigger a button's submit behavior.
+   - Fix: the Stop and Send buttons get different React keys, and the Stop click cancels the browser's default action (`preventDefault`). The debug log was removed.
+2. **Two mistakes in Claude's own test script.** The "request was cancelled" check ran a split second before the browser reported the cancellation, so it now waits up to 3 seconds. A text search for "graduation" matched both the option button and the chat bubble, so it now targets the chat bubble.
+3. **Gemini overload during testing (found, not fixed).** In one run, Flash-Lite returned 503 and the backup 3.8 Flash took about 60 seconds before failing with 429. The test now reports "Gemini busy" clearly instead of crashing, and it passed on a rerun a minute later. **Open question for the team:** when both models are busy, a student waits about 60 seconds for the friendly error, because the backup call allows one retry with a 25-second timeout. Claude suggests no retries and a 15-second timeout for the backup (about 35 seconds worst case). Claude didn't change this because it's Gemini logic.
+
+**Screenshot / commit:** `docs/screenshots/desktop-07-stop-button.png`, `desktop-08-edit-icon.png`, `mobile-07-stop-button.png`, `mobile-08-edit-icon.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
