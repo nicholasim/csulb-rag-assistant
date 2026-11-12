@@ -2,7 +2,7 @@
 title: "Available Health Services"
 url: https://www.csulb.edu/student-affairs/student-health-services/available-health-services
 category: Student Health Services
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 # Available Health Services

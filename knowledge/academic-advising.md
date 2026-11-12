@@ -2,7 +2,7 @@
 title: "Academic Advising at CSULB"
 url: https://www.csulb.edu/academic-advising-at-csulb
 category: Academic Advising
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 ## Undergraduate Academic Advising

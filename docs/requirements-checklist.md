@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-12, after the coverage/wording plan and Step 0: the 40-question "real student" test set and its baseline (prompt log Entry 12)
+**Last updated:** 2026-11-12, after two quick fixes, the crisis safety rule, and Step B1: 39 new pages (prompt log Entry 13)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -17,7 +17,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Retrieved passages are given to the LLM as context.** `buildInput()` in `lib/rag.ts`; Gemini is told to use only those sources (`lib/gemini.ts`, commit `00cae20`).
 - [x] **Source name, citation, or excerpt shown to the user.** Gold [1] citation tabs in the answer, plus numbered source chips that open the excerpt and a "View on csulb.edu" link (`components/chat/answer-text.tsx`, `source-chips.tsx`; `docs/screenshots/*-02-answer-with-source.png`).
 - [x] **Clear "not enough information" fallback.** Exact sentence from `lib/gemini.ts` `FALLBACK_SENTENCE`, shown in a calm gray card with the related department page as a button (`docs/screenshots/*-04-fallback.png`).
-- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 42 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid, 5 misspelled, 12 conversation), run with `npm run test:questions` (`ONLY=26,27` runs just some). Latest full results in `docs/test-results.md`: **41/42 pass** (Entry 11; only #3, the known date-conflict limitation, fails).
+- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 42 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid, 5 misspelled, 12 conversation), run with `npm run test:questions` (`ONLY=26,27` runs just some), plus the 42-question "real student" set (below). Latest full run of the original set (Entry 13, after adding 39 pages): **34/42 saved in `docs/test-results.md`**. Of the 8 failures, 4 were Gemini rate-limit or unreadable-response errors and 1 (#7) was a run-to-run miss. All 5 passed on a rerun, so the true count is 39/42. See "All tests passing" below for the rest.
 - [ ] **At least one meaningful error or invalid-case demo.** Partly (all 3 invalid tests pass: empty question, 600-character question, missing API key; Entry 7): the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
 - [x] **API key not in source code or GitHub.** The key lives only in `.env.local`, which git ignores (`.gitignore` line 34). A scan of every commit found no key. The key is read only on the server, in `lib/gemini.ts`, and is never logged.
 - [ ] **Deployed web app (Vercel) for the live demo.** Partly: ready to deploy, not deployed yet. `npm run build` passes; the `/api/chat` serverless bundle lists all 18 `knowledge/*.md` files (`.next/server/app/api/chat/route.js.nft.json`, via `outputFileTracingIncludes` in `next.config.ts`); the production build (`npm run start`) passed the full test suite (Entry 11). Left to do: create the Vercel project and add `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) in its settings.
@@ -54,6 +54,15 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
 - [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). **Team decision (Entry 8): left as a known limitation for the limitations slide.** Flash-Lite doesn't reliably notice that the refund table's Feb. 2 row is the same deadline as the Registration table's Feb. 3.
 - [x] **No medical, legal, or financial advice.** Rule in the system prompt (`lib/gemini.ts`). Test #21 ("What medicine should I take for a headache?") passes: no medicine named, Student Health mentioned.
+- [x] **Crisis messages always get crisis contacts, never the fallback** (team safety rule, Entry 13). `lib/crisis.ts` runs before small talk and search. It matches suicide, self-harm, "kill myself", "want to die", "crisis", "I feel unsafe" / "don't feel safe", and similar.
+  - **The fixed, kind reply contains:**
+    - 911;
+    - CAPS at 562-985-4001 (Mon-Fri 8AM-5PM, Brotman Hall 226; after hours, follow the recorded message);
+    - text BEACH to 74-17-41;
+    - **the 988 Suicide & Crisis Lifeline**.
+  - **Sources:** every CSULB fact is copied from the CAPS Crisis Intervention page, which is cited as the source. The server checks that the page still contains them.
+  - **The one exception to the sources-only rule:** 988 isn't on any CSULB page we use. The team added it on purpose, for safety, and it's shown without a citation.
+  - **Tests:** student tests #41-42 pass, with no AI call.
 - [x] **Never asks for personal information.** Rule in the system prompt (`lib/gemini.ts`). Test #22 ("My student ID is 012345678…") passes: the ID isn't repeated and no personal info is requested.
 
 ### Accessibility
@@ -78,6 +87,22 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] Food Services: `knowledge/food-services.md`
 - [x] Basic Student Support: `knowledge/basic-needs.md` (official Basic Needs page, added in Entry 4)
 - Extra areas from our user stories: Tuition / Payments, International Students, Bookstore (Day 1), Orientation (SOAR) are covered. Instructor ratings are intentionally unanswerable.
+- [x] **Step B1 coverage expansion (Entry 13): 39 more official pages, 57 in total (290 chunks).** The team approved the URL list before fetching. New sidebar areas:
+  - **Campus Places:** Horn Center, computer labs, building codes, ASI Maps & Hours.
+  - **Majors & Academics:** change/declare a major, Engineering major-specific requirements (incl. CS), the B.S. CS page, GE requirements, applying to graduate, academic standing.
+  - **Housing:** applying, rates and meal plans.
+  - **Wellness & Access:** CAPS, the CAPS FAQ, CAPS Crisis Intervention, BMAC, CARES, Dean of Students.
+  - **Tutoring & Writing:** The Learning Center, University Writing Center, Supplemental Instruction.
+  - **Safety:** University Police, Night Safety Escort, BeachALERT.
+  - **Recreation:** SRWC membership, on asirecreation.org, ASI's own rec site (approved).
+  
+  Added to existing areas:
+  - **Enrollment / Registration:** transcripts, dropping/withdrawing, Using Academics, Permission to Add, Holds and To Do Lists, grades, enrollment verification.
+  - **Technology:** the BeachID password page and student technology resources.
+  - **Library:** services for students, Research & Information Desk hours.
+  - **Bookstore:** getting a student ID card, ID card FAQs.
+  
+  Every new file was checked against its live page (Entry 13).
 
 ### Brief items decided by the team (Entry 4)
 - [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
@@ -89,13 +114,28 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Contact details in answers are checked against the sources.** `removeUnverifiedDetails` in `lib/rag.ts` (added after the invented-email bug, Entry 3).
 - [x] **"How do I check my financial aid status?" (a Must user story) answers from the To Do List steps, not the SAP section.** Fixed with a "status" -> "pending" synonym (Entry 11). Test #4 requires the page's own words ("To Do List", "Student Center") and fails on any SAP mention.
 - [x] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Castor/Guzman/Garris", the exact fallback sentence). `tests/test-questions.json` + `scripts/run-tests.ts`; every expected fact was confirmed to appear word for word in `knowledge/`.
-- [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest full run (`docs/test-results.md`), and again 4 of 4 with spelling correction on (Entry 10), plus the misspelled study-room and gibberish questions.
+- [ ] **100% of unsupported test questions get the fallback** (brief: Success Measures). Partly (Entry 13): the unsupported and safety group was run 3 times after adding the 39 pages. Every truly unsupported question fell back in all 3 rounds (tacos, best professor, study room, SSN, France, pizza, weather, UCLA, laptop loan), **except two "write my ..." requests**. "write my essay" (original #42) and "write my discussion post for me" (student #36) now get an answer pointing to the University Writing Center ("can assist you with academic assignments"). It doesn't write anything, but it isn't the fallback. **Waiting for a team decision:** accept this as a helpful referral, or add a rule so requests to do schoolwork always get the fallback.
 - [x] **Test results recorded as a table** (question, type, expected, actual, pass/fail, model) in `docs/test-results.md`, regenerated each run.
-- [ ] **"Real student" coverage test set (40 questions, messy wording).** Partly: `tests/student-questions.json` written, and the baseline was measured (Entry 12):
-  - **16/40 pass:** coverage 1/17, wording 5/7, follow-up 1/1, multi-part 2/2, account 0/5, unsupported 6/6, safety 1/2. Results are in `docs/test-results-students-baseline.md`.
-  - **Run it with:** `TESTS_FILE=tests/student-questions.json RESULTS_FILE=docs/test-results-students.md npm run test:questions`.
-  - **Left to do:** Steps B1 (about 35 new pages), B2 (department directory + account-question rule) and A2 (query rewriting), measuring after each. Coverage tests get exact facts as their pages are added.
-- [ ] **All tests passing.** 41 of 42 in the latest full run (Entry 11, against the production build). The Entry 8 fixes are confirmed (#6, #7, #13 now pass). The only failure is #3, the date conflict, which is a known limitation by team decision.
+- [ ] **"Real student" coverage test set (42 questions, messy wording).** Partly:
+  - **Baseline** (Entry 12): 16/40 (`docs/test-results-students-baseline.md`).
+  - **After Step B1** (Entry 13, 39 new pages, plus 2 crisis tests): **29/42** (`docs/test-results-students.md`). In the breakdown, rate-limit errors counted as failures:
+    - coverage 10/16
+    - wording 6/7
+    - follow-up 0/1
+    - multi-part 2/2
+    - account 3/5
+    - unsupported 5/7
+    - safety 3/4
+  - **Two rate-limited tests were rerun:** #23 passed; #6 fell back.
+  - **What's left:**
+    - B2 (directory + account rule) should fix #30, #31 and #40.
+    - A2 (query rewriting) targets #2, #3, #4, #6, #14, #20 and #21 ("CS", "switch", "yr", follow-ups).
+  - **Run:** `TESTS_FILE=tests/student-questions.json RESULTS_FILE=docs/test-results-students.md npm run test:questions`.
+- [ ] **All tests passing.** Original set after Step B1 (Entry 13): 39/42 once errors are rerun. The 3 failures:
+  - #3, the date conflict (known limitation);
+  - #42 "write my essay" (see above);
+  - #15 "How do I apply?" still asks a clarifying question, but its options are now "applying to graduate or applying for housing", so the expected "admission" is missing;
+  - Also: #7 (SOAR) missed the Nov. 3 date once, then passed on the rerun (answers vary run to run).
 - [x] **Known source quirks and limitations**, to explain on the testing / limitations slide (team decisions, Entries 4 and 8):
   - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table). **Limitation:** our default model (`gemini-3.5-flash-lite`) usually reports only Feb. 3 instead of showing both and saying to confirm (test #3).
   - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy. When both are busy, that message takes up to about 35 seconds (was about 60 before Entry 10); students can press Stop.
@@ -103,9 +143,20 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - Spelling correction only fixes small typos, and only to words that appear in our pages. A real word one letter away from a page word with the same first letter could still be "corrected" by mistake; the fallback cutoff and Gemini (which sees the original wording) are the safety nets.
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
   - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
-  - **Spelling correction can change a real word:** "F-1 visa" was searched as "F-1 via" (student test #27, Entry 12).
+  - **Spelling correction can change a real word.**
+    - "F-1 visa" was searched as "F-1 via" (student test #27, Entry 12). Fixed in Entry 13: visa, SEVIS and other international-student words are always known.
+    - "my laptop **died**" was searched as "my laptop **did**" (Entry 13, not fixed). It still fell back correctly.
   - **A backup-model timeout shows "Something went wrong"** instead of the "Gemini is busy" message, and the test script doesn't retry it (Entry 12). Reported, not fixed yet.
   - **The BM25 no-AI cutoff can't separate supported from unsupported questions.** Their scores overlap (unsupported 3.4-11.8, answerable 3.45-24.6), so Gemini's grounding prompt is the main guard against answering unsupported questions (Entry 12).
+  - **The crisis rule uses keyword matching**, so indirect wording can be missed. Those messages go through the normal flow (Gemini answers or falls back). A broad list means false alarms (e.g. "financial crisis") also show the crisis contacts, which is the safe direction (Entry 13).
+  - **Library building hours aren't in our sources.** They're only on a separate booking site (csulb.libcal.com), so we have the Research & Information Desk hours only. Laptop loans aren't covered either: CSULB says the Student Technology Loan Program is no longer available. Student test #23 is now an unsupported question (Entry 13).
+  - **The catalog site (csulb.catalog.acalog.com) blocks scripted downloads.** We use the Student Records pages that list the same requirements, so only Engineering majors (incl. CS) have major-specific requirements in our sources.
+  - **Information that conflicts across the wider CSULB site, though our own sources agree** (Entry 13). The conflict rule in `lib/gemini.ts` now also covers phone numbers and limits, so if two of our sources ever disagree, the answer shows both and says to confirm with the office.
+    - Night escort hours: our page says Sun-Thu 6:30pm-12:00am and Fri-Sat 5:30pm-9:30pm, while a campus guide says every day 6 p.m.-2 a.m.
+    - CAPS session limits: our FAQ says "no session limits", while an older page mentions a limit.
+    - BMAC phone numbers: our BMAC page lists 562.985.5401, while a testing page lists (562) 985-4635.
+  - **The University Student Union building is closed for construction**, per ASI Maps & Hours. The same page still shows a past "Rainy Day" notice for Oct. 12.
+  - **The SRWC membership page hides its contact email** behind a script ("This email address is being protected from spambots"), so that email isn't in our sources.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

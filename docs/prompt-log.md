@@ -644,4 +644,114 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 13 (Quick fixes, crisis safety rule, Step B1: 39 new pages)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code, plan mode for the URL list, then normal mode)
+
+**Prompt (several rounds of plan feedback):**
+> Yes to both quick fixes: 1. Backup-model timeout should show the "Gemini is busy" message, and the test script should retry it like other busy errors. Also make the server log show readable error names in production. 2. Add common international-student words (visa, F-1, J-1, I-20, OPT, CPT, SEVIS) to the spelling vocabulary so they're never "corrected". Then start Step B1: find and check the ~35 URLs and show me the final list before fetching.
+>
+> *(On the URL list:)* Approved, including asirecreation.org, the optional library desk hours page, and changing student #23 to unsupported. A few additions: 1. Check whether a Fall 2026 GE requirements page exists on csulb.edu. Use it instead of Fall 2025 if so. 2. Add the official page for getting a student ID card, if one exists on csulb.edu. Show me the URL first. 3. For the conflicting pages (escort hours, CAPS session limits, BMAC phone numbers), apply the same rule as the drop dates: show both and tell the student to confirm with the office. Add them to the limitations list. 4. Safety rule: if a question mentions crisis, self-harm, suicide, or feeling unsafe, never give the normal fallback. Always respond with CAPS's crisis and contact information from the CAPS pages, and 911 for emergencies. Add 2 safety tests for this to the student test set.
+>
+> *(Final tweaks:)* 1. Start the crisis reply with a short, warm line before the contact info [...] Keep it kind and plain, not clinical. 2. Also include the 988 Suicide & Crisis Lifeline (call or text 988). It isn't on the CAPS page, so document it in the prompt log and checklist as our one deliberate exception to the sources-only rule, for safety reasons. Add 988 to the expected facts in both crisis tests. 3. The .nft.json check should expect 57 knowledge files, not 53. Go ahead.
+
+**What the AI did:**
+- **Quick fix 1** (`lib/gemini.ts`):
+  - A Gemini request that times out or can't connect (no HTTP status) now shows "Gemini is having trouble right now…" (`ai_unavailable`) instead of "Something went wrong". The test script already retries that error.
+  - The server log now uses a readable label from a new `errorKind()` (`http-503`, `http-429`, `timeout`, `network`) instead of the error's class name, which the production build shortens to things like "oa".
+  - Checked offline with fake errors, and live: the production log showed `failed (http-503), trying backup model` and `request failed: http-429`.
+- **Quick fix 2** (`lib/spelling.ts`):
+  - visa, visas, sevis, opt, cpt, f1, j1 and i20 are always "known" words.
+  - **Honest note:** "F-1", "J-1", "I-20", "OPT" and "CPT" were never at risk, because the fixer already skips words with digits and words under 4 letters. So this really fixes "visa", "visas" and "SEVIS".
+  - "im on an F-1 visa who do i talk to" is no longer changed, and student test #27 now passes. The 5 misspelled-question tests still correct as before.
+- **The URL list** (in plan mode, before fetching). Claude searched csulb.edu and checked that every URL loaded. Problems it reported:
+  - the catalog site blocks scripts (empty HTTP 202);
+  - library building hours are only on a third-party booking site;
+  - the laptop loan program has ended;
+  - ASI's old rec address no longer works.
+  
+  The team approved substitutes for each.
+  - **No Fall 2026 GE page exists:** three URL patterns all returned 404. The Fall 2025 page says it applies to students who started "in Fall 2025 or later", so it's still current.
+  - **The ID card pages were found and shown first:** "Get Your ID" and "ID Card Services FAQs".
+- **Step B1: 39 new pages** (18 → 57 pages, 94 → 290 chunks), via `npm run fetch-sources`. Areas:
+  - Campus Places;
+  - Majors & Academics, including the Engineering major-specific requirements for CS;
+  - records and MyCSULB how-tos (transcripts, holds, grades, Using Academics);
+  - Housing;
+  - Wellness & Access (CAPS, CAPS FAQ, CAPS Crisis Intervention, BMAC, CARES, Dean of Students);
+  - Tutoring & Writing;
+  - Safety;
+  - Recreation (SRWC, on asirecreation.org);
+  - IT (the BeachID password page);
+  - Library (Research Desk hours);
+  - student ID cards.
+- **Fetch script changes** (`scripts/fetch-sources.ts`):
+  - a per-page `contentSelector`, for the two sites without a `<main>` element;
+  - an optional display `title` for vague headings ("Contact Us" → "University Police: Contact Us"). Only the label changes, not the page text;
+  - header-less tables are now converted to Markdown tables (see Troubleshooting 2).
+  - The original 18 pages didn't change, apart from their retrieval dates and the food page dropping its "Veterans Day Closed" banners after the holiday.
+- **Checking the new files:** Claude read every new file's headings, read the test-relevant sections in full, and searched all files for leftover HTML and menu text. Every expected fact in the student tests was confirmed word for word in `knowledge/`.
+- **Sidebar:** 7 new categories in `lib/categories.ts`: Majors & Academics, Tutoring & Writing, Campus Places, Housing, Wellness & Access, Safety, Recreation. 22 areas in total.
+- **Crisis safety rule** (new `lib/crisis.ts`, checked in `lib/rag.ts` before small talk and search):
+  - **Matching:** keywords like suicide, self-harm, "kill myself", "want to die", "crisis", "I feel unsafe" / "don't feel safe". A match always gets a fixed reply, never the fallback, with no AI call.
+  - **The reply:** a warm first line, then 911, CAPS at 562-985-4001 (Mon-Fri 8AM-5PM or Brotman Hall 226; after hours, follow the recorded message), and "Text BEACH to 74-17-41". All copied from the CAPS Crisis Intervention page, which is cited as the source chip.
+  - **988 Suicide & Crisis Lifeline:** call or text 988. **Our one deliberate exception to the sources-only rule, added by the team for safety.** It's shown in its own sentence with no citation.
+  - **Page check:** the server checks once that the CAPS page still contains every quoted fact, and logs which one is missing if the page ever changes.
+  - **Offline check:** 10 crisis phrasings matched, and 7 normal questions didn't, including "is the campus safe at night?" and "can someone walk me to my car at night".
+- **Conflict rule:** the prompt's "conflicting sources" rule now covers phone numbers and limits (e.g. how many sessions) as well as dates, prices and hours. Claude checked our files: the three known conflicts are each between one of our pages and another CSULB page we don't use. Inside our sources, each has only one value, so they're on the limitations list.
+- **Tests:**
+  - every student coverage test got an exact fact from its new page;
+  - #23 (laptop) became an unsupported test, as approved;
+  - #41-42 are new crisis tests: they must include 911, 562-985-4001, 74-17-41 and 988, and must not include the fallback.
+- **Build and Vercel:** `npm run build` passes, and the `/api/chat` bundle (`.nft.json`) lists all **57** knowledge files.
+
+**Did it work?** Mostly. Coverage went up, the crisis rule works, and there is one fallback regression for the team to decide on.
+- **Student set: 29/42**, up from 16/40 (`docs/test-results-students.md`):
+
+  | Type | Passed |
+  |---|---|
+  | coverage | 10/16 |
+  | wording | 6/7 |
+  | follow-up | 0/1 |
+  | multi-part | 2/2 |
+  | account | 3/5 |
+  | unsupported | 5/7 |
+  | safety | 3/4 |
+
+  Two tests hit rate limits. On a rerun, #23 passed and #6 fell back.
+  - **Now answered:** "What is the Horn Center?" (now a real answer, not the lobby), the police number, the night escort, the BeachID password, CAPS is free, tutoring, the Writing Center, graduation, grades, the class schedule, and #27 (visa).
+- **Original set: 34/42 saved; 39/42 after rerunning** the 4 rate-limit/unreadable-response errors and #7 (`docs/test-results.md`). The real failures are:
+  - #3, the known date conflict;
+  - #15 "How do I apply?", which now offers "applying to graduate or applying for housing" (no "admission");
+  - #42 "write my essay" (below).
+- **The unsupported and safety group, run 3 times:** everything truly unsupported fell back in all 3 rounds, except the two "write my …" requests. Student #40 (antibiotic) fell back every time but didn't name Student Health; that's for B2.
+- **No-AI gate calibration (team decision 4)**, on the new pages:
+  - **Answerable questions** score as low as 3.30 ("what are my grades").
+  - **Unsupported questions** score as high as 12.87 ("best pizza near campus").
+  - **The ranges overlap**, so no cutoff can separate them. `MIN_SCORE` stays at 3.0 (raising it would drop "what are my grades"). Gemini's grounding prompt remains the real guard.
+  - "what's the capital of France?" now scores 2.45, so it falls back without any AI call.
+
+**Troubleshooting or redirection (if any):**
+1. **Gemini was overloaded mid-run.** Both models returned 503, and some calls returned 429. Claude stopped the first student run, because it would have measured the outage rather than the app, and sent one probe question every 2 minutes until Gemini answered again (11:50).
+   - **Claude's mistake:** the stopped run's output was lost, because it was piped through `tail`. Later runs wrote to a log file.
+2. **Tables without a header row were saved as raw HTML** (building codes, summer housing, and a row of social-media icons on the SI page). The Markdown converter only converts tables that start with a header row.
+   - **Fix in the fetch script:** drop tables with no text; promote an all-bold first row to the header; otherwise add an empty header row.
+   - After re-fetching, no file has raw HTML, and the original 18 files didn't change.
+3. **The crisis page writes the text line as "74-17-41", not "741741".** The reply copies the page exactly, and the tests accept both forms.
+4. **New problems found by the tests (not fixed, as agreed):**
+   - **"write my essay" / "write my discussion post for me"** now point to the University Writing Center instead of falling back, because the new Writing Center page matches "write". The answers don't write anything, but they aren't the fallback either. **The team needs to decide** whether this is a helpful referral or should always be the fallback.
+   - **Wording misses for A2.** For "switch my major" and "owe the school money", the right page isn't in the top 5 at all. "CS" isn't matched to "Computer Science". The CS requirements are in the sources, but the CS section isn't among the top 5 chunks, so Gemini fell back and suggested the right page. Other misses: "yr", "is the gym free", and the follow-up.
+   - **Account questions #30 and #31** fell back even though the Holds page was in the sources, because the current prompt still sends personal-record questions to the fallback. The approved account rule (Step B2) changes this.
+   - **Another spelling false-correction:** "my laptop died" was searched as "my laptop did". The answer was still a correct fallback.
+5. **Source quirks for the limitations list:**
+   - the USU building is closed for construction;
+   - the ASI hours page still shows a past "Rainy Day" notice for Oct. 12;
+   - the SRWC page hides its contact email behind a script.
+
+**Screenshot / commit:** none this step (screenshots of the Horn Center and CS-major answers are planned once A2 makes the CS question pass)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

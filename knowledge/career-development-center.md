@@ -2,7 +2,7 @@
 title: "Career Development Center"
 url: https://www.csulb.edu/career-development-center
 category: Career Development Center
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 ## [Career Advocate Program for Faculty & Staff](https://www.csulb.edu/career-development-center/faculty-staff/career-advocate-program)

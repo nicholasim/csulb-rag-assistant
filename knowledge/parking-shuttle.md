@@ -2,7 +2,7 @@
 title: "Shuttle"
 url: https://www.csulb.edu/parking-and-transportation-services/shuttle
 category: Parking & Transportation
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 # Shuttle

@@ -2,7 +2,7 @@
 title: "Permit Fee Schedule (2026-27)"
 url: https://www.csulb.edu/parking-and-transportation-services/permit-fee-schedule-2026-27
 category: Parking & Transportation
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 # Permit Fee Schedule (2026-27)

@@ -2,7 +2,7 @@
 title: "MyCSULB Financial Aid Information"
 url: https://www.csulb.edu/enrollment-services/mycsulb-financial-aid-information
 category: Financial Aid
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 # MyCSULB Financial Aid Information

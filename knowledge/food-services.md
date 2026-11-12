@@ -2,7 +2,7 @@
 title: "Eat and Shop"
 url: https://www.csulb.edu/beach-shops/eat-and-shop
 category: Food Services
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 ## Where to Eat
@@ -21,16 +21,12 @@ retrieved: 2026-11-11
 
 #### [Art Store Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
 
-**Veterans Day Closed**
-
 **Fall 2026**
 Monday - Thursday 8 am - 7 pm
 Friday 8 am - 3 pm
 Saturday - Sunday Closed
 
 #### [Beach Hut Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
-
-**Veterans Day Closed**
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 8 pm
@@ -39,8 +35,6 @@ Saturday 9 am - 2 pm
 Sunday Closed
 
 #### [Corner Market Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
-
-**Veterans Day Closed**
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 7 pm
@@ -129,8 +123,6 @@ Saturday - Sunday Closed
 
 #### [Outpost Convenience Store](https://www.csulb.edu/beach-shops/convenience-stores-more "Convenience Stores")
 
-**Veterans Day Closed**
-
 **Fall 2026**
 Monday - Thursday 7:30 am - 7:30 pm
 Friday 7:30 am - 4 pm
@@ -159,8 +151,6 @@ Friday 7 am - 8 pm
 Saturday - Sunday Closed
 
 #### [WallstrEAT Cafe Convenience Store](https://www.csulb.edu/beach-shops/convenience-stores-more "Convenience Stores")
-
-**Veterans Day Closed**
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 7 pm

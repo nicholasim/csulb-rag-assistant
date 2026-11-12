@@ -1,7 +1,8 @@
 /**
  * rag.ts: the whole RAG flow in one place:
  *
- *   question -> 1. check the input; reply to small talk ("hi", "thanks") right away (small-talk.ts);
+ *   question -> 1. check the input; crisis messages get CSULB's crisis contacts right away (crisis.ts);
+ *                  reply to small talk ("hi", "thanks") right away (small-talk.ts);
  *                  fix typos for searching (spelling.ts)
  *            -> 2. retrieve the best-matching CSULB chunks (retrieval.ts)
  *            -> 3. nothing matches well? reply with the fallback, no AI needed
@@ -14,6 +15,7 @@ import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./g
 import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
+import { crisisReply, isCrisisMessage } from "./crisis";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -312,6 +314,16 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   const history: ChatMessage[] = (Array.isArray(rawHistory) ? rawHistory : [])
     .filter((m): m is ChatMessage => (m?.role === "user" || m?.role === "assistant") && typeof m?.content === "string")
     .slice(-6);
+
+  // Safety first: a message about a crisis, self-harm, suicide, or feeling unsafe always gets
+  // CSULB's crisis contacts (lib/crisis.ts), never the fallback. No search, no AI.
+  if (isCrisisMessage(question)) {
+    const { answer, chunks } = crisisReply();
+    const sources = chunks.length
+      ? [{ id: 1, title: chunks[0].title, url: chunks[0].url, category: chunks[0].category, excerpt: bestExcerpt(chunks, question, answer) }]
+      : [];
+    return { type: "answer", answer, sources, suggestion: null, model: null, correctedQuestion: null };
+  }
 
   // Small talk ("hi", "thanks", "what can you do?") gets a fixed friendly reply: no search, no AI.
   // A greeting plus a real question ("hi, how much is parking?") continues below,

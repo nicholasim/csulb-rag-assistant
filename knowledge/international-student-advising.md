@@ -2,7 +2,7 @@
 title: "Meet with an Advisor"
 url: https://www.csulb.edu/international/current-students/meet-an-advisor
 category: International Students
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 # Meet with an Advisor

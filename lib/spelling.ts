@@ -27,6 +27,11 @@ function maxTypos(word: string) {
 // (a staff member's last name). Real targets appear more often ("parking" 119 times, "tuition" 4).
 const MIN_TIMES_SEEN = 2;
 
+// Real words students use that may not appear in our pages, so they must never be "corrected"
+// ("F-1 visa" was searched as "F-1 via"). Words with a digit (f1, j1, i20) or under 4 letters
+// (opt, cpt) are already skipped by correctSpelling; they're listed so the rule stays clear.
+const ALWAYS_KNOWN = ["visa", "visas", "sevis", "opt", "cpt", "f1", "j1", "i20"];
+
 let vocabulary: Map<string, number> | null = null;
 
 /**
@@ -53,6 +58,7 @@ function getVocabulary(): Map<string, number> {
   for (const [word, related] of Object.entries(SYNONYMS)) {
     for (const w of [word, ...related]) add(w, MIN_TIMES_SEEN); // our own synonyms always count
   }
+  for (const w of ALWAYS_KNOWN) add(w, MIN_TIMES_SEEN);
   vocabulary = words;
   return words;
 }

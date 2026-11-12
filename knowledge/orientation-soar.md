@@ -2,7 +2,7 @@
 title: "Student Orientation, Advising and Registration"
 url: https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration
 category: Orientation
-retrieved: 2026-11-11
+retrieved: 2026-11-12
 ---
 
 ## Student Orientation, Advising and Registration

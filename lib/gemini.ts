@@ -38,7 +38,7 @@ WHEN TO USE EACH RESPONSE TYPE
   For "fallback", set answer to exactly: "${FALLBACK_SENTENCE}" and set related_source to the number of the source from the CSULB office or department that would handle this kind of question, or 0 if none of the sources fit.
 
 SPECIAL CASES
-- Conflicting sources: for any date, deadline, price, or hours question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
+- Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
 - Advising contacts: if a source lists an advising center with a "Contact & Location" link instead of a phone number or email, name the advising center and give that link. Do not make up contact details.
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
 - Do not give medical, legal, or financial advice. You may describe which CSULB services exist and how to contact them.
@@ -139,7 +139,7 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       const status = statusOf(err);
       const worthSwitching = status === 0 || status === 429 || status >= 500;
       if (!worthSwitching || backupModel === mainModel) throw err;
-      console.warn(`[gemini] ${mainModel} failed (status=${status || "timeout/network"}), trying backup model ${backupModel}`);
+      console.warn(`[gemini] ${mainModel} failed (${errorKind(err)}), trying backup model ${backupModel}`);
       usedModel = backupModel;
       // One try, 15 seconds max: worst case a student waits about 35 seconds (20 + 15) before
       // seeing "try again", instead of about 60 with retries.
@@ -167,11 +167,25 @@ function statusOf(err: unknown) {
   return typeof status === "number" ? status : 0;
 }
 
-/** Turn a Gemini/network error into a message a student can understand. */
-function toFriendlyError(err: unknown): FriendlyError {
+/**
+ * A short, readable label for an error, for the server log: "http-503", "timeout", "aborted",
+ * or "network". (We don't log err.name: the production build shortens class names to things
+ * like "oa", which tell us nothing.) Never includes the question or the key.
+ */
+export function errorKind(err: unknown) {
   const status = statusOf(err);
-  // Log only the status and error type. Never the question, and never the key.
-  console.error(`[gemini] request failed: status=${status || "none"} type=${(err as Error)?.name ?? "unknown"}`);
+  if (status) return `http-${status}`;
+  const message = String((err as Error)?.message ?? "");
+  if (/timed? ?out/i.test(message)) return "timeout";
+  if (/abort/i.test(message)) return "aborted";
+  return "network";
+}
+
+/** Turn a Gemini/network error into a message a student can understand. */
+export function toFriendlyError(err: unknown): FriendlyError {
+  const status = statusOf(err);
+  // Log only what kind of error it was. Never the question, and never the key.
+  console.error(`[gemini] request failed: ${errorKind(err)}`);
 
   if (status === 429) {
     return new FriendlyError("rate_limited", "The assistant is getting too many questions right now. Please wait a minute and try again.", 429);
@@ -182,7 +196,10 @@ function toFriendlyError(err: unknown): FriendlyError {
   if (status === 404) {
     return new FriendlyError("ai_config_error", "The Gemini model name in GEMINI_MODEL wasn't found. Please let the team know.", 502);
   }
-  if (status >= 500) {
+  // 500+ = Gemini's side is having trouble. No status at all = the request timed out or
+  // couldn't connect, which almost always means Gemini is overloaded too, so it gets the
+  // same "busy" message (and the test script retries it like other busy errors).
+  if (status >= 500 || status === 0) {
     return new FriendlyError("ai_unavailable", "Gemini is having trouble right now. Please try again in a moment.", 503);
   }
   return new FriendlyError("ai_error", "Something went wrong while writing the answer. Please try again.", 502);

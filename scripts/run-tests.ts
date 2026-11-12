@@ -8,7 +8,7 @@
  * Options (environment variables):
  *   APP_URL   where the app is running (default http://localhost:3000)
  *   DELAY_MS  pause between questions that call Gemini, to stay under rate limits (default 5000)
- *   RETRY_WAIT_MS  if Gemini is rate-limited or overloaded, wait this long and retry once (default 30000)
+ *   RETRY_WAIT_MS  if Gemini is rate-limited, overloaded, or timed out, wait this long and retry once (default 30000)
  *   ONLY      run just these test numbers, e.g. ONLY=26,27,28 (prints results, doesn't overwrite the results file)
  *   TESTS_FILE    which question set to run (default tests/test-questions.json;
  *                 the "real student" set is tests/student-questions.json)
