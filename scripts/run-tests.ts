@@ -34,6 +34,7 @@ type Expect = {
   errorCode?: string;
   httpStatus?: number;
   correctedQuestion?: string | null; // pattern the typo-fixed question must match; null = nothing should be fixed
+  minExamples?: number; // chat replies: at least this many example-question buttons
 };
 
 type Test = {
@@ -57,6 +58,7 @@ type ApiResult = {
     suggestion?: { title: string; url: string } | null;
     model?: string | null;
     correctedQuestion?: string | null;
+    examples?: string[];
     error?: { code: string; message: string };
   };
 };
@@ -108,6 +110,9 @@ function check(test: Test, result: ApiResult): string[] {
   }
   if (expect.correctedQuestion && !new RegExp(expect.correctedQuestion, "i").test(body.correctedQuestion ?? "")) {
     problems.push(`expected the question to be corrected to /${expect.correctedQuestion}/, got ${body.correctedQuestion ? `"${body.correctedQuestion}"` : "no correction"}`);
+  }
+  if (expect.minExamples && (body.examples?.length ?? 0) < expect.minExamples) {
+    problems.push(`expected at least ${expect.minExamples} example question(s), got ${body.examples?.length ?? 0}`);
   }
   if (expect.minSources && (body.sources?.length ?? 0) < expect.minSources) {
     problems.push(`expected at least ${expect.minSources} source(s), got ${body.sources?.length ?? 0}`);

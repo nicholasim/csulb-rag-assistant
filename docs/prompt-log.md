@@ -527,4 +527,59 @@ An offline check, with no AI, also confirmed that **none of the 22 existing test
 
 ---
 
+## Entry 11 (Financial aid status fix, basic conversation, full test run, Vercel check)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (two parts; the session hit a usage limit in between):**
+> Keep the first-letter rule.
+>
+> 1. Fix the financial aid status answer. "How do I check my financial aid status?" is a Must user story in our brief. It should answer from the MyCSULB financial aid page (how to check status / To Do List), not the academic progress section. Add it as a test with an expected fact taken word for word from knowledge/financial-aid.md. If retrieval ranks the wrong section, tell me why and what you'll change before changing it.
+>
+> 2. New feature from our team: basic conversation. Add a "chat" response type for simple social messages, handled before retrieval with simple pattern matching (no Gemini call, no sources): greetings (with 3 clickable example questions), thanks ("You're welcome! Anything else about CSULB services?"), goodbye, "What can you do?" / "help" / "who are you?" / "who made you?" (explain official-pages-only, list the service areas, mention our IS 300 team), and small talk like "how are you?" that steers back to CSULB. A greeting plus a real question gets answered normally; anything factual that isn't about CSULB still gets the normal fallback; the spelling fixer must not "correct" greetings; style "chat" replies like an answer with no source chips. Add test cases for each, including "hi, how much is parking?" and "what's the capital of France?".
+>
+> 3. Then rerun the FULL test suite (write to docs/test-results.md) and show me the results table. Expect #3 (date conflict) to fail as a known limitation. Show any other failures before fixing them. Take screenshots of "hello" and "what can you do?". Update the prompt log and checklist, and stop.
+>
+> *(After the usage limit:)* You hit the usage limit mid-task. Pick up where you left off: check git log and git diff HEAD~1 to see what's done. [...] Finish anything incomplete, run npm run build to make sure it compiles, then rerun the FULL test suite (writing to docs/test-results.md) and show me the results table. Show failures before fixing them. Then do the Vercel readiness check: make sure knowledge/ files are included in the serverless bundle, and test the production build with npm run start. Update the prompt log and checklist, and stop.
+
+**What the AI did:**
+- **Financial aid status (retrieval change, approved by the team first):**
+  - **Why it was wrong:** the To Do List section never uses the word "status". It says documents are "pending" or "need your review". The search also drops "to" and "do" as common words, so "To Do List" barely counts. The SAP (academic progress) section says "status" 5 times, 2 of them in its heading (headings count double), so it ranked 1st and the To Do List chunk ranked 5th.
+  - **Fix:** one synonym in `lib/retrieval.ts`, "status" -> "pending". The To Do List chunk now ranks 1st (10.95 vs 9.41), and "What is my SAP status?" still finds the SAP section first.
+  - **Tests:** #4 is this exact question, so its check was tightened rather than duplicated. It now requires "To Do List" and "Student Center", from Step 1 on the page: *"Click on the To Do List link on the right-hand side of your Student Center"*. It also must NOT mention SAP. #27 ("finacial aid status") got the same To Do List check.
+- **Basic conversation** (new `lib/small-talk.ts`, plain regex patterns with comments):
+  - **Detection:** greetings, thanks, and goodbyes are peeled off the start of the message. Thanks and goodbyes also come off the end ("…? thanks"). If nothing is left, it's small talk. If what's left is exactly "what can you do?" / "how are you?" (or similar), it's small talk too. Anything else is a real question, which is searched WITHOUT the greeting ("hi, how much is parking?" searches "how much is parking?").
+  - **Replies:** each kind of small talk gets the fixed reply the team asked for. The greeting and the about-me reply add 3 verified example questions as buttons.
+  - **Common typos are in the patterns** (helo, hii, heyy, thx, thanx, tysm, byee, gud morning, how r u), and the spelling fixer skips these words.
+  - **In the pipeline:** `lib/rag.ts` checks for small talk before search and returns type `"chat"` with no sources and no AI. `components/chat/assistant-message.tsx` shows it like an answer, with example buttons and no source chips.
+- **Spelling fixes found while testing** (see Troubleshooting 2): "thx so much" is now recognized, and a correction can only become a word that appears at least twice in our pages.
+- **Tests:** 12 new `conversation` tests (#31-42), plus a `minExamples` check in `scripts/run-tests.ts`. The suite now has 42 tests.
+- **Build and Vercel readiness:**
+  - `npm run build` passes (type-check, lint, production build).
+  - Vercel only ships the files listed in each route's trace file. `.next/server/app/api/chat/route.js.nft.json` lists all 18 `knowledge/*.md` files, thanks to `outputFileTracingIncludes` in `next.config.ts`.
+  - The home page counts the knowledge files at build time; it's prerendered as static, so it doesn't need them at runtime.
+  - The full test suite and the screenshots were run against the production server (`npm run start`), with no browser console errors.
+
+**Did it work?** Yes. **41 of 42 tests passed** (`docs/test-results.md`; answerable 13/14, ambiguous 2/2, unsupported 4/4, safety 2/2, invalid 3/3, misspelled 5/5, conversation 12/12). Every Gemini answer came from `gemini-3.5-flash-lite`, and no test needed a retry.
+- The only failure is #3, the known date-conflict limitation. It said "February 3" only, without Feb. 2 or "confirm".
+- #4 and #27 now answer from the To Do List / Student Center page.
+- #40 "hi, how much is parking?" was answered normally ($259 semester, $518 year, $15 daily, all checked against the sources).
+- #41 (capital of France) and #42 (write my essay) fell back.
+- Screenshots: `docs/screenshots/{desktop,mobile}-10-chat-hello.png` and `-11-chat-what-can-you-do.png`.
+
+**Troubleshooting or redirection (if any):**
+1. **Retrieval ranked the wrong section** (above). As the team asked, Claude explained the cause and the proposed synonym, and changed `lib/retrieval.ts` only after the team approved.
+2. **Two problems found in offline checks, before any Gemini call:**
+   - **"thx so much" wasn't recognized as thanks.** Only "thanks"/"thank" allowed words like "so much" after them. Fixed in the pattern.
+   - **"write my essay" became "white my essay".** "write" isn't in our pages, but "white" (a staff member's last name, on one page) is, with the same first letter. The note would have read "Showing results for: white my essay". **New rule:** a correction can only become a word that appears at least twice in our pages. Real targets appear more often ("parking" 119 times, and the rarest real target, "advisors", 2). With this rule, "write my essay" isn't changed and falls back without AI.
+3. **Two bugs in Claude's own first draft of the small-talk patterns:** "Goodbye!" wasn't recognized (an optional space in the pattern was converted wrongly). And greetings were also peeled off the END of messages, which would have cut "morning" off "Is the library open in the morning?". Both were fixed before testing, and only thanks and goodbyes come off the end now.
+4. **Usage limit mid-task.** The session ran out partway through. The team committed the unfinished work as `b0af1d7` ("WIP"). Claude checked the commit against where it had stopped, and nothing was missing.
+5. **Retrieval quirk noticed, not changed:** "what's the capital of France?" scores 3.4, just over the 3.0 fallback cutoff, because the search keeps the leftover "s" from "what's" as a word and it matches "Bachelor's". So this question reaches Gemini, which correctly falls back, instead of falling back without AI. Not changed, because retrieval wasn't broken.
+
+**Screenshot / commit:** `docs/screenshots/desktop-10-chat-hello.png`, `desktop-11-chat-what-can-you-do.png`, `mobile-10-chat-hello.png`, `mobile-11-chat-what-can-you-do.png`; partial work in `b0af1d7`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

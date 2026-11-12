@@ -1,5 +1,5 @@
 {
-  "about": "Test questions for the CSULB Services RAG Assistant. Run with: npm run test:questions (the app must be running: npm run dev). Patterns are case-insensitive regular expressions, checked against the answer text plus the titles of its source chips and suggested page. correctedQuestion: a pattern the spelling-corrected question must match, or null if nothing should be corrected.",
+  "about": "Test questions for the CSULB Services RAG Assistant. Run with: npm run test:questions (the app must be running: npm run dev). Patterns are case-insensitive regular expressions, checked against the answer text plus the titles of its source chips and suggested page. correctedQuestion: a pattern the spelling-corrected question must match, or null if nothing should be corrected. minExamples: how many example-question buttons a chat reply must have.",
   "tests": [
     {
       "id": 1,
@@ -287,6 +287,114 @@
       "area": "-",
       "expected_behavior": "Gibberish: nothing is close enough to correct, so it falls back without calling the AI.",
       "expected_fact": "No correction; fallback sentence",
+      "expect": { "response": "fallback", "correctedQuestion": null, "mustInclude": ["do not have enough information"] }
+    },
+    {
+      "id": 31,
+      "question": "hi",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Friendly hello, a one-line reminder of what it helps with, and 3 example question buttons. No AI, no sources.",
+      "expected_fact": "Mentions CSULB services; 3 examples",
+      "expect": { "response": "chat", "mustInclude": ["CSULB"], "minExamples": 3 }
+    },
+    {
+      "id": 32,
+      "question": "helo",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Greeting typo: treated as a greeting, NOT spell-corrected into another word.",
+      "expected_fact": "Chat reply; no spelling correction",
+      "expect": { "response": "chat", "correctedQuestion": null, "minExamples": 3 }
+    },
+    {
+      "id": 33,
+      "question": "Good morning!",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Greeting: friendly hello with example questions.",
+      "expected_fact": "Chat reply with 3 examples",
+      "expect": { "response": "chat", "minExamples": 3 }
+    },
+    {
+      "id": 34,
+      "question": "thank you",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Thanks: the fixed you're-welcome reply.",
+      "expected_fact": "\"You're welcome! Anything else about CSULB services?\"",
+      "expect": { "response": "chat", "mustInclude": ["You're welcome! Anything else about CSULB services\\?"] }
+    },
+    {
+      "id": 35,
+      "question": "thx so much",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Thanks with a typo-style abbreviation: same you're-welcome reply.",
+      "expected_fact": "\"You're welcome! Anything else about CSULB services?\"",
+      "expect": { "response": "chat", "mustInclude": ["You're welcome! Anything else about CSULB services\\?"] }
+    },
+    {
+      "id": 36,
+      "question": "bye!",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Goodbye: a short friendly goodbye.",
+      "expected_fact": "\"Goodbye\"",
+      "expect": { "response": "chat", "mustInclude": ["Goodbye"] }
+    },
+    {
+      "id": 37,
+      "question": "What can you do?",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Explains it answers CSULB student-service questions from official CSULB pages, lists the service areas, mentions the IS 300 team.",
+      "expected_fact": "official CSULB web pages; service areas; IS 300",
+      "expect": { "response": "chat", "mustInclude": ["official CSULB web pages", "Financial Aid", "Parking", "IS 300"], "minExamples": 3 }
+    },
+    {
+      "id": 38,
+      "question": "who made you?",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Same about-me reply, mentioning the IS 300 team.",
+      "expected_fact": "IS 300",
+      "expect": { "response": "chat", "mustInclude": ["IS 300"] }
+    },
+    {
+      "id": 39,
+      "question": "how are you?",
+      "type": "conversation",
+      "area": "Small talk",
+      "expected_behavior": "Short friendly reply that steers back to CSULB services.",
+      "expected_fact": "\"CSULB services\"",
+      "expect": { "response": "chat", "mustInclude": ["CSULB services"] }
+    },
+    {
+      "id": 40,
+      "question": "hi, how much is parking?",
+      "type": "conversation",
+      "area": "Parking & Transportation",
+      "expected_behavior": "Greeting plus a real question: skips the small talk and answers (or asks which permit) normally.",
+      "expected_fact": "A permit price such as $259, or a which-permit question",
+      "expect": { "response": ["answer", "clarify"], "mustIncludeAny": ["\\$\\d", "semester", "monthly", "daily"] }
+    },
+    {
+      "id": 41,
+      "question": "what's the capital of France?",
+      "type": "conversation",
+      "area": "Off-topic",
+      "expected_behavior": "Factual but not about CSULB: the normal fallback, never general knowledge.",
+      "expected_fact": "Fallback sentence; no 'Paris'",
+      "expect": { "response": "fallback", "mustInclude": ["do not have enough information"], "mustNotInclude": ["Paris"] }
+    },
+    {
+      "id": 42,
+      "question": "write my essay",
+      "type": "conversation",
+      "area": "Off-topic",
+      "expected_behavior": "Not about CSULB: the normal fallback. 'write' must not be spell-corrected (to 'white', a name on one page).",
+      "expected_fact": "Fallback sentence; no correction",
       "expect": { "response": "fallback", "correctedQuestion": null, "mustInclude": ["do not have enough information"] }
     }
   ]
