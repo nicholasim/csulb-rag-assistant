@@ -17,15 +17,26 @@ import TurndownService from "turndown";
 // @ts-expect-error -- this plugin ships without TypeScript types
 import { gfm } from "turndown-plugin-gfm";
 
-// The approved sources from the "CSULB Sources" table in our brief.
+type Source = {
+  slug: string;
+  category: string;
+  url: string;
+  // Some pages only show part of a list and hide the rest behind a "Load More" button.
+  // morePages = how many extra batches (?page=1, ?page=2, ...) to download and merge in.
+  morePages?: number;
+};
+
+// The approved sources from the "CSULB Sources" table in our brief, plus the pages we
+// added in Phase 1 to fill gaps (see docs/prompt-log.md, Entry 2).
 // "category" is the service area; the chat sidebar will use these names.
-const SOURCES = [
+const SOURCES: Source[] = [
   { slug: "enrollment-key-dates", category: "Enrollment / Registration", url: "https://www.csulb.edu/enrollment-services/key-dates-and-deadlines" },
   { slug: "financial-aid", category: "Financial Aid", url: "https://www.csulb.edu/enrollment-services/mycsulb-financial-aid-information" },
-  { slug: "academic-advising", category: "Academic Advising", url: "https://www.csulb.edu/academic-advising-at-csulb" },
+  { slug: "academic-advising", category: "Academic Advising", url: "https://www.csulb.edu/academic-advising-at-csulb", morePages: 4 },
   { slug: "parking-permit-fees", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/permit-fee-schedule-2026-27" },
   { slug: "parking-shuttle", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/shuttle" },
-  { slug: "campus-map-and-parking", category: "Parking & Transportation", url: "https://www.csulb.edu/college-of-liberal-arts/transnational-feminist-solidarities-conference/campus-map-and-parking" },
+  // Replaces the brief's conference "campus map and parking" page, which was for a 2024 event.
+  { slug: "parking-permit-information", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/permit-information" },
   { slug: "career-development-center", category: "Career Development Center", url: "https://www.csulb.edu/career-development-center" },
   { slug: "library-study-spaces", category: "Library", url: "https://www.asicsulb.org/corporate/enjoy/study-seating-spaces" },
   { slug: "library-services", category: "Library", url: "https://www.csulb.edu/university-library/university-library-services" },
@@ -35,7 +46,16 @@ const SOURCES = [
   // The brief's link had tracking (utm_) parameters; they don't change the page, so we drop them.
   { slug: "food-services", category: "Food Services", url: "https://www.csulb.edu/beach-shops/eat-and-shop" },
   { slug: "international-student-advising", category: "International Students", url: "https://www.csulb.edu/international/current-students/meet-an-advisor" },
+  // Added: names and contact info for the international student advisors.
+  { slug: "international-staff-contacts", category: "International Students", url: "https://www.csulb.edu/international/staff-contacts" },
+  // Added: brief features that had no source.
+  { slug: "day-1-textbook-access", category: "Bookstore", url: "https://www.csulb.edu/beach-shops/day-1-textbook-access" },
+  { slug: "orientation-soar", category: "Orientation", url: "https://www.csulb.edu/student-affairs/student-orientation-advising-and-registration" },
 ];
+
+const USER_AGENT = "Mozilla/5.0 (CSULB IS300 class project)";
+// On csulb.edu list pages, each list entry (e.g. one advising center) is one of these.
+const LIST_ITEM = ".views-view-responsive-grid__item";
 
 const OUTPUT_DIR = path.join(process.cwd(), "knowledge");
 
@@ -43,11 +63,26 @@ const OUTPUT_DIR = path.join(process.cwd(), "knowledge");
 const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced" });
 turndown.use(gfm);
 
+/** Download a URL and return its HTML, or throw if the page didn't load. */
+async function download(url: string) {
+  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return res.text();
+}
+
 /** Download one page and turn its main content into Markdown. */
-async function fetchAsMarkdown(url: string) {
-  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (CSULB IS300 class project)" } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const $ = cheerio.load(await res.text());
+async function fetchAsMarkdown({ url, morePages = 0 }: Source) {
+  const $ = cheerio.load(await download(url));
+
+  // "Load More" pages: download each extra batch and add its list entries after ours.
+  // (Each batch repeats the page intro, so we copy only the list entries.)
+  for (let page = 1; page <= morePages; page++) {
+    const $batch = cheerio.load(await download(`${url}?page=${page}`));
+    const items = $batch(`main ${LIST_ITEM}`);
+    if (items.length === 0) throw new Error(`no list entries found on ?page=${page}`);
+    $(`main ${LIST_ITEM}`).last().after($batch.html(items));
+  }
+  if (morePages > 0) $("main .pager, main button").remove(); // the "Load More" link and button
 
   // The page title, minus the " | California State University, Long Beach" suffix.
   const title = $("h1").first().text().trim() || $("title").text().split("|")[0].trim();
@@ -111,7 +146,7 @@ async function main() {
 
   for (const source of SOURCES) {
     try {
-      const { title, markdown } = await fetchAsMarkdown(source.url);
+      const { title, markdown } = await fetchAsMarkdown(source);
       // Small header ("front matter") the retrieval code will read later.
       const header = [
         "---",
