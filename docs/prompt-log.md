@@ -947,7 +947,10 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 **Troubleshooting or redirection (if any):**
 1. **The free-tier daily limit** (Entry 15) blocked the live A1 runs too. They need the same reset.
-2. **The acronym spelling bug** ("ADHD" → "Add", "UCLA's" → "Ucua's") showed up in this evaluation. **Proposed fix (not applied):** never "correct" a word typed in ALL CAPS, because those are acronyms (ADHD, FAFSA, GPA, UCLA).
+2. **The acronym spelling bug** ("ADHD" → "Add", "UCLA's" → "Ucua's") showed up in this evaluation. **Fixed after the team approved:** `lib/spelling.ts` never "corrects" a word typed in ALL CAPS, because those are acronyms.
+   - **Offline:** ADHD, UCLA, FAFSA, GPA and SEVIS are left alone. parkng, finacial, internatinal, studdy and "Finacial" are still fixed.
+   - **Trade-off:** a question typed entirely in capitals ("PARKNG PERMIT") is no longer corrected.
+   - No live tests yet. The team asked Claude to wait until the daily quota resets.
 
 **Screenshot / commit:** none (live results pending)
 

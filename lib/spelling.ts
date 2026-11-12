@@ -142,6 +142,9 @@ export function correctSpelling(question: string): SpellingResult {
   const corrected = question.replace(/[A-Za-z0-9]+/g, (original) => {
     const word = original.toLowerCase();
     if (word.length < MIN_LENGTH || /\d/.test(word) || STOP_WORDS.has(word)) return original;
+    // Words typed in ALL CAPS are acronyms (ADHD, FAFSA, GPA, UCLA), not typos: leave them alone.
+    // (Without this, "ADHD" became "Add" and "UCLA" became "Ucua"; prompt log Entry 16.)
+    if (/[A-Z]/.test(original) && original === original.toUpperCase()) return original;
     // Greetings and thanks, typos included ("helo", "thanx"), are never "corrected" into other words.
     if (isSocialWord(word)) return original;
     // Known word, or a plural/singular of one ("permits" -> "permit")? Leave it.

@@ -174,7 +174,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Gemini free-tier daily limit: 500 requests per model per day** (`gemini-3.5-flash-lite`, reported by Google on 2026-11-12). With query rewriting, a normal question costs 2 requests, so the app handles about 250 questions a day on this key. One full run of both test sets uses about 180. When the limit is hit, the rewrite is skipped automatically, but answers then fail with "too many questions" until midnight Pacific (Entry 15).
   - **Neither keyword nor meaning scores can tell unsupported questions from answerable ones** (keywords: unsupported up to 12.87 vs answerable from 3.30; meaning: unsupported up to 0.663 vs answerable from 0.604). The no-AI gate only stops near-empty matches, and Gemini's grounding prompt is the main guard (Entries 13, 16).
   - **Names in a question can still reach the search queries.** Codes strip IDs, SSNs, emails and phone numbers, but names rely on the rewrite prompt (Entry 15).
-  - **All-caps acronyms can be "corrected" by spelling** ("ADHD" → "Add", "UCLA's" → "Ucua's"). Proposed fix: skip ALL-CAPS words (Entry 16, not applied yet).
+  - **Words typed in ALL CAPS are never spell-corrected.** This stops acronyms from being "fixed" ("ADHD" was searched as "Add" and "UCLA's" as "Ucua's" before Entry 16), but a question typed entirely in capitals ("PARKNG PERMIT") isn't corrected either.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)
