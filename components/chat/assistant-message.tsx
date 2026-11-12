@@ -62,6 +62,12 @@ export function AssistantMessage({
       <AssistantMark />
       <MessageContent className="gap-3 pt-1">
         <span className="sr-only">Assistant:</span>
+        {/* We fixed a typo before searching: say so, like a search engine's "Did you mean". */}
+        {turn.state === "done" && turn.response.correctedQuestion && (
+          <p className="text-sm text-muted-foreground">
+            Showing results for: <span className="font-medium text-foreground">{turn.response.correctedQuestion}</span>
+          </p>
+        )}
         {turn.state === "loading" && <LoadingState />}
         {turn.state === "error" && <ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} />}
         {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} />}

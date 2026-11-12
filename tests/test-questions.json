@@ -1,5 +1,5 @@
 {
-  "about": "Test questions for the CSULB Services RAG Assistant. Run with: npm run test:questions (the app must be running: npm run dev). Patterns are case-insensitive regular expressions, checked against the answer text plus the titles of its source chips and suggested page.",
+  "about": "Test questions for the CSULB Services RAG Assistant. Run with: npm run test:questions (the app must be running: npm run dev). Patterns are case-insensitive regular expressions, checked against the answer text plus the titles of its source chips and suggested page. correctedQuestion: a pattern the spelling-corrected question must match, or null if nothing should be corrected.",
   "tests": [
     {
       "id": 1,
@@ -243,6 +243,51 @@
       "expected_behavior": "With GEMINI_API_KEY missing, a friendly setup error instead of a crash.",
       "expected_fact": "Error code missing_api_key",
       "expect": { "response": "error", "errorCode": "missing_api_key", "httpStatus": 500 }
+    },
+    {
+      "id": 26,
+      "question": "How much is a parkng permit?",
+      "type": "misspelled",
+      "area": "Parking & Transportation",
+      "expected_behavior": "Fixes 'parkng' to 'parking', shows 'Showing results for', and answers with permit prices (or asks which permit).",
+      "expected_fact": "Corrected to 'parking permit'; a price such as $259",
+      "expect": { "response": ["answer", "clarify"], "correctedQuestion": "parking permit", "mustIncludeAny": ["\\$\\d", "semester", "monthly", "daily"] }
+    },
+    {
+      "id": 27,
+      "question": "finacial aid status",
+      "type": "misspelled",
+      "area": "Financial Aid",
+      "expected_behavior": "Fixes 'finacial' to 'financial' and explains where to check aid status in MyCSULB.",
+      "expected_fact": "Corrected to 'financial aid status'; MyCSULB / To Do List",
+      "expect": { "response": "answer", "correctedQuestion": "financial aid status", "mustIncludeAny": ["To Do", "View Financial Aid", "MyCSULB"], "minSources": 1 }
+    },
+    {
+      "id": 28,
+      "question": "Who are the internatinal advisors?",
+      "type": "misspelled",
+      "area": "International Students",
+      "expected_behavior": "Fixes 'internatinal' to 'international' and names the International Student Advisors.",
+      "expected_fact": "Corrected to 'international advisors'; Ignacio Castor, Tammy Guzman, Angela Garris",
+      "expect": { "response": "answer", "correctedQuestion": "international advisors", "mustInclude": ["Castor", "Guzman", "Garris"], "minSources": 1 }
+    },
+    {
+      "id": 29,
+      "question": "how do i reserve a studdy room",
+      "type": "misspelled",
+      "area": "Library (not covered)",
+      "expected_behavior": "Fixes 'studdy' to 'study', but our sources still don't explain room reservations, so it falls back.",
+      "expected_fact": "Corrected to 'study room'; fallback sentence",
+      "expect": { "response": "fallback", "correctedQuestion": "study room", "mustInclude": ["do not have enough information"] }
+    },
+    {
+      "id": 30,
+      "question": "asdfgh qwerty",
+      "type": "misspelled",
+      "area": "-",
+      "expected_behavior": "Gibberish: nothing is close enough to correct, so it falls back without calling the AI.",
+      "expected_fact": "No correction; fallback sentence",
+      "expect": { "response": "fallback", "correctedQuestion": null, "mustInclude": ["do not have enough information"] }
     }
   ]
 }

@@ -12,7 +12,7 @@ import { loadChunks, type Chunk } from "./knowledge";
 
 // Common words that don't help find the right page ("how", "do", "the", ...).
 // "csulb" and "campus" are here too, since nearly every page is about CSULB's campus.
-const STOP_WORDS = new Set(
+export const STOP_WORDS = new Set(
   `a about am an and any are as at be been but by can could did do does for from get got had has have
   he her here how i if in into is it its just me my of on or our please she should so some tell than
   that the their them then there these they this to too us was we were what when where which who whom
@@ -29,7 +29,7 @@ function stem(word: string) {
 
 // Students and web pages often use different words for the same thing.
 // When a question uses a word on the left, we also search for the words on the right.
-const SYNONYMS: Record<string, string[]> = {
+export const SYNONYMS: Record<string, string[]> = {
   much: ["price", "fee"], // "how much is ..." -> pages list "Price" / "Fees"
   cost: ["price", "fee"],
   price: ["fee"],

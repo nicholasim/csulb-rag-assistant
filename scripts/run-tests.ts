@@ -9,6 +9,7 @@
  *   APP_URL   where the app is running (default http://localhost:3000)
  *   DELAY_MS  pause between questions that call Gemini, to stay under rate limits (default 5000)
  *   RETRY_WAIT_MS  if Gemini is rate-limited or overloaded, wait this long and retry once (default 30000)
+ *   ONLY      run just these test numbers, e.g. ONLY=26,27,28 (prints results, doesn't overwrite docs/test-results.md)
  *
  * The "missing API key" test can't use the running app (it has a key), so it calls the real
  * /api/chat route code directly inside this script, where GEMINI_API_KEY is removed first.
@@ -18,6 +19,7 @@ import { readFile, writeFile } from "node:fs/promises";
 const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 const DELAY_MS = Number(process.env.DELAY_MS ?? 5000);
 const RETRY_WAIT_MS = Number(process.env.RETRY_WAIT_MS ?? 30000);
+const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null;
 // Error codes from our API that mean "Gemini is busy right now", not "the app is broken".
 const BUSY_ERRORS = ["rate_limited", "ai_unavailable"];
 const TESTS_FILE = "tests/test-questions.json";
@@ -31,6 +33,7 @@ type Expect = {
   minSources?: number;
   errorCode?: string;
   httpStatus?: number;
+  correctedQuestion?: string | null; // pattern the typo-fixed question must match; null = nothing should be fixed
 };
 
 type Test = {
@@ -53,6 +56,7 @@ type ApiResult = {
     sources?: { id: number; title: string; excerpt: string }[];
     suggestion?: { title: string; url: string } | null;
     model?: string | null;
+    correctedQuestion?: string | null;
     error?: { code: string; message: string };
   };
 };
@@ -99,6 +103,12 @@ function check(test: Test, result: ApiResult): string[] {
   if (expect.httpStatus && httpStatus !== expect.httpStatus) {
     problems.push(`expected HTTP ${expect.httpStatus}, got ${httpStatus}`);
   }
+  if (expect.correctedQuestion === null && body.correctedQuestion) {
+    problems.push(`expected no spelling correction, got "${body.correctedQuestion}"`);
+  }
+  if (expect.correctedQuestion && !new RegExp(expect.correctedQuestion, "i").test(body.correctedQuestion ?? "")) {
+    problems.push(`expected the question to be corrected to /${expect.correctedQuestion}/, got ${body.correctedQuestion ? `"${body.correctedQuestion}"` : "no correction"}`);
+  }
   if (expect.minSources && (body.sources?.length ?? 0) < expect.minSources) {
     problems.push(`expected at least ${expect.minSources} source(s), got ${body.sources?.length ?? 0}`);
   }
@@ -125,13 +135,15 @@ function summarize(result: ApiResult) {
   if (body.error) return `HTTP ${httpStatus} error ${body.error.code}: "${body.error.message}"`;
   const text = (body.answer ?? "").replace(/\s+/g, " ").trim();
   const sources = body.sources?.length ? ` (${body.sources.length} source${body.sources.length > 1 ? "s" : ""})` : "";
-  return `${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}`;
+  const corrected = body.correctedQuestion ? `[searched: "${body.correctedQuestion}"] ` : "";
+  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}`;
 }
 
 const cell = (text: string) => text.replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 async function main() {
-  const { tests } = JSON.parse(await readFile(TESTS_FILE, "utf8")) as { tests: Test[] };
+  const allTests = (JSON.parse(await readFile(TESTS_FILE, "utf8")) as { tests: Test[] }).tests;
+  const tests = ONLY ? allTests.filter((t) => ONLY.includes(t.id)) : allTests;
 
   // Make sure the app is running before we start.
   try {
@@ -182,6 +194,7 @@ async function main() {
     const shortQ = question.length > 60 ? `${question.slice(0, 57)}...` : question || "(empty)";
     console.log(`${row.passed ? "PASS" : "FAIL"}  #${String(test.id).padStart(2)}  ${test.type.padEnd(11)} ${shortQ}`);
     if (!row.passed) console.log(`        -> ${problems.join("; ")}`);
+    if (ONLY) console.log(`        ${row.summary}  [${model}]`);
   }
 
   // Results table for the terminal and for docs/test-results.md.
@@ -217,10 +230,13 @@ async function main() {
       lines.push(`### #${f.test.id}: ${cell(f.question || "(empty)")}`, "", `- Problems: ${f.problems.join("; ")}`, `- Full answer: ${cell(f.answer)}`, "");
     }
   }
-  await writeFile(RESULTS_FILE, `${lines.join("\n")}\n`);
-
   console.log(`\n${passed} of ${rows.length} passed (${byType}). Models: ${models}.`);
-  console.log(`Saved ${RESULTS_FILE}`);
+  if (ONLY) {
+    console.log(`Ran only tests ${ONLY.join(", ")}, so ${RESULTS_FILE} was not changed.`);
+  } else {
+    await writeFile(RESULTS_FILE, `${lines.join("\n")}\n`);
+    console.log(`Saved ${RESULTS_FILE}`);
+  }
   process.exit(failures.length ? 1 : 0);
 }
 

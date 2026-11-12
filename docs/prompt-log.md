@@ -472,4 +472,59 @@ Per our instruction, Claude showed the 4 failures before fixing anything. Nothin
 
 ---
 
+## Entry 10 (Shorter backup wait + spelling correction)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Yes, shorten the backup model's wait so the worst case is about 35 seconds.
+>
+> Then, new feature from our team: handle misspellings. Right now a typo like "parkng permit" or "finacial aid" causes a fallback because retrieval matches exact words.
+>
+> 1. Build a vocabulary of every word in the knowledge base (plus our synonym list).
+> 2. Before retrieval, check each word in the question. If it isn't in the vocabulary, replace it with the closest vocabulary word using edit distance: allow 1 typo for words of 4-7 letters and 2 typos for 8+ letters. Skip words under 4 letters, numbers, and stopwords. Count swapped letters ("recieve") as one typo.
+> 3. Only correct when there's a clear closest match. If two words tie, leave the word alone.
+> 4. Search with the corrected question, but send Gemini the student's original wording plus the corrected version.
+> 5. If anything was corrected, show a small gray note above the answer: "Showing results for: financial aid", in the style of "Did you mean".
+> 6. Make sure corrections can't turn an off-topic question into a false match. The taco, professor, and capital-of-France style questions must still fall back.
+>
+> Add tests to tests/test-questions.json: "How much is a parkng permit?", "finacial aid status", "Who are the internatinal advisors?", "how do i reserve a studdy room" (should correct and still fall back), and one gibberish question like "asdfgh qwerty" (should fall back). Keep it simple and commented, since we have to explain it. Update the prompt log and checklist, and stop.
+
+**What the AI did:**
+- **Shorter backup wait** (`lib/gemini.ts`): the backup model now gets one try with a 15-second limit, down from one retry and 25 seconds. When both models are busy, the worst case is now about 35 seconds (20 + 15) instead of about 60.
+- **Spelling correction** (new file `lib/spelling.ts`, about 130 lines with comments):
+  - **Vocabulary:** every word in the 18 pages (titles, headings, text; link addresses skipped), their singular forms, and the synonym list.
+  - **Edit distance:** counts the fewest one-letter changes (add, remove, replace, or swap two neighbors), so "recieve" -> "receive" is 1.
+  - **Rules:** words under 4 letters, words with digits ("CECS326", "2027"), stopwords, and known words are left alone. Up to 1 typo for 4-7 letters and 2 for 8+. A tie between two closest words means no change.
+  - **One extra rule (see Troubleshooting 2):** the fix must start with the same letter.
+- **RAG flow** (`lib/rag.ts`): the question is corrected right after the input check. Search uses the corrected question, and a weak follow-up also corrects the previous question before searching again. Gemini gets the student's original question plus a line saying "Spelling-corrected version we searched with: …". The response has a new `correctedQuestion` field (null when nothing changed). `lib/retrieval.ts` changed only to export its stopword and synonym lists; the search itself is unchanged.
+- **UI** (`components/chat/assistant-message.tsx`): when something was corrected, a small gray "Showing results for: **…**" line appears above the reply (answer, clarify, or fallback). The student's own bubble keeps their original typing.
+- **Tests:**
+  - 5 new tests (#26-30, type "misspelled") in `tests/test-questions.json`, with a new `correctedQuestion` check (a pattern the fixed question must match, or `null` for "nothing should be corrected").
+  - `scripts/run-tests.ts` checks it and shows `[searched: "…"]` in the results.
+  - New option `ONLY=26,27` runs just those tests and doesn't overwrite `docs/test-results.md`.
+
+**Did it work?** Yes. Live run of the 5 new tests plus the 4 off-topic ones (`ONLY=17,18,19,20,26,27,28,29,30`): **9 of 9 passed** on `gemini-3.5-flash-lite`.
+- #26 "parkng" -> "parking": Gemini asked which permit (semester, monthly, daily, motorcycle, or resident).
+- #27 "finacial" -> "financial": answered about SAP status in MyCSULB. The fix worked; "financial aid status" on its own is vague, so the answer is about a different "status" than test #4's.
+- #28 "internatinal" -> "international": named Castor, Guzman, and Garris.
+- #29 "studdy" -> "study": still a fallback, pointing to Library Services.
+- #30 "asdfgh qwerty": nothing corrected; fallback without calling Gemini.
+- #17-20 (tacos, best professor, study room, Social Security number): all still fall back.
+
+An offline check, with no AI, also confirmed that **none of the 22 existing test questions is changed** by the corrector, and "What is the capital of France?" still matches nothing and falls back without AI. Screenshots: `docs/screenshots/desktop-09-spelling-note.png`, `mobile-09-spelling-note.png`. The full 30-test suite was not rerun.
+
+**Troubleshooting or redirection (if any):**
+1. **Singular words counted as typos.** In the first offline check, "taco" was "corrected" to "tacos" and "group" to "groups", because the vocabulary had only the exact words on the pages. Fix: the vocabulary also includes each word's singular form, the same one the search uses.
+2. **Real words turned into different words (the false-match risk in item 6).** With only the rules from the prompt, "good pizza" became "food pizza", and "How do I get to the dorms?" became "…the forms?". "Dorms" isn't in our pages, so that question went from matching nothing (score 0) to a financial aid page (score 4.5, above the fallback cutoff of 3.0). These are real words, not typos; they're just one letter from a word we have.
+   - **Fix, an addition to the team's rules:** the correction must start with the same letter as the student's word. People rarely mistype the first letter, and every real typo we tried still gets fixed (parkng, finacial, internatinal, studdy, professer, recieve, tution, libary, carrer, helth).
+   - **What's left:** a real word could still be one letter from a page word with the same first letter. Two safety nets remain: the fallback score cutoff, and Gemini seeing the student's original wording.
+3. **"Who is the easiest professer?"** is corrected to "professor" and then behaves exactly like the correctly spelled professor question: Gemini falls back, because rankings aren't in our sources. That's expected, not a false match.
+
+**Screenshot / commit:** `docs/screenshots/desktop-09-spelling-note.png`, `mobile-09-spelling-note.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

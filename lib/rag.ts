@@ -1,7 +1,7 @@
 /**
  * rag.ts: the whole RAG flow in one place:
  *
- *   question -> 1. check the input
+ *   question -> 1. check the input, and fix typos for searching (spelling.ts)
  *            -> 2. retrieve the best-matching CSULB chunks (retrieval.ts)
  *            -> 3. nothing matches well? reply with the fallback, no AI needed
  *            -> 4. otherwise ask Gemini, giving it ONLY those chunks (gemini.ts)
@@ -11,6 +11,7 @@ import type { Chunk } from "./knowledge";
 import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
 import { MAX_QUESTION_LENGTH } from "./limits";
+import { correctSpelling } from "./spelling";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -36,6 +37,7 @@ export type ChatResponse = {
   sources: Source[]; // sources cited in the answer
   suggestion: { title: string; url: string } | null; // for fallbacks: where to look instead
   model: string | null; // which Gemini model wrote the reply (null = no AI was needed)
+  correctedQuestion: string | null; // the question with typos fixed, if we fixed any ("Showing results for: ...")
 };
 
 /** Is the student asking for a map or how to get around? */
@@ -260,8 +262,12 @@ export function removeUnverifiedDetails(answer: string, results: SearchResult[])
   return final;
 }
 
-/** Build the message for Gemini: today's date, numbered sources, recent chat, and the question. */
-function buildInput(question: string, results: SearchResult[], history: ChatMessage[]) {
+/**
+ * Build the message for Gemini: today's date, numbered sources, recent chat, and the question.
+ * If we fixed typos, Gemini gets the student's own words AND the fixed version, so it can
+ * tell if our fix changed what the student meant.
+ */
+function buildInput(question: string, correctedQuestion: string | null, results: SearchResult[], history: ChatMessage[]) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "America/Los_Angeles" });
   const sources = results
     .map(({ chunk }, i) => `[${i + 1}] ${chunk.title} > ${chunk.heading}\nURL: ${chunk.url}\n${chunk.text}`)
@@ -271,15 +277,16 @@ function buildInput(question: string, results: SearchResult[], history: ChatMess
         .map((m) => `${m.role === "user" ? "Student" : "Assistant"}: ${m.content.slice(0, 600)}`)
         .join("\n")}\n\n`
     : "";
-  return `Today's date: ${today}\n\nSOURCES:\n\n${sources}\n\n${conversation}STUDENT QUESTION:\n${question}`;
+  const spelling = correctedQuestion ? `\n(Spelling-corrected version we searched with: ${correctedQuestion})` : "";
+  return `Today's date: ${today}\n\nSOURCES:\n\n${sources}\n\n${conversation}STUDENT QUESTION:\n${question}${spelling}`;
 }
 
 /** The fallback reply, plus a link to look at instead when we have one. */
-function fallback(suggestion: ChatResponse["suggestion"], model: string | null): ChatResponse {
+function fallback(suggestion: ChatResponse["suggestion"], model: string | null, correctedQuestion: string | null): ChatResponse {
   const answer = suggestion
     ? `${FALLBACK_SENTENCE} You may find help on this CSULB page: [${suggestion.title}](${suggestion.url})`
     : FALLBACK_SENTENCE;
-  return { type: "fallback", answer, sources: [], suggestion, model };
+  return { type: "fallback", answer, sources: [], suggestion, model, correctedQuestion };
 }
 
 const MAP_SUGGESTION = { title: "CSULB Campus Maps", url: CAMPUS_MAP_URL };
@@ -303,31 +310,37 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     .filter((m): m is ChatMessage => (m?.role === "user" || m?.role === "assistant") && typeof m?.content === "string")
     .slice(-6);
 
+  // Fix typos ("parkng" -> "parking") so the word-matching search can find the right pages.
+  // We search with the fixed question; Gemini sees both versions (see buildInput).
+  const spelling = correctSpelling(question);
+  const searchText = spelling.corrected;
+  const correctedQuestion = spelling.changes.length ? searchText : null;
+
   // 2. Retrieve. A follow-up like "the second one" matches nothing on its own,
   //    so if the first search is weak we search again together with the previous question.
-  let results = search(question, TOP_K);
+  let results = search(searchText, TOP_K);
   const lastUserQuestion = [...history].reverse().find((m) => m.role === "user")?.content;
   if ((results[0]?.score ?? 0) < MIN_SCORE && lastUserQuestion) {
-    results = search(`${lastUserQuestion} ${question}`, TOP_K);
+    results = search(`${correctSpelling(lastUserQuestion).corrected} ${searchText}`, TOP_K);
   }
 
   // 3. Nothing matched well enough: fall back without calling the AI.
   if ((results[0]?.score ?? 0) < MIN_SCORE) {
-    return fallback(isMapQuestion(question) ? MAP_SUGGESTION : null, null);
+    return fallback(isMapQuestion(searchText) ? MAP_SUGGESTION : null, null, correctedQuestion);
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
-  const { reply, model } = await askGemini(buildInput(question, results, history));
+  const { reply, model } = await askGemini(buildInput(question, correctedQuestion, results, history));
 
   // 5. Shape the response.
   if (reply.type === "fallback") {
     const related = results[reply.related_source - 1]?.chunk;
-    const suggestion = isMapQuestion(question)
+    const suggestion = isMapQuestion(searchText)
       ? MAP_SUGGESTION
       : related
         ? { title: related.title, url: related.url }
         : null;
-    return fallback(suggestion, model);
+    return fallback(suggestion, model, correctedQuestion);
   }
 
   // Double-check contact details against the sources before showing anything.
@@ -342,8 +355,8 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     title: chunks[0].title,
     url: chunks[0].url,
     category: chunks[0].category,
-    excerpt: bestExcerpt(chunks, question, textCiting(answer, id)),
+    excerpt: bestExcerpt(chunks, searchText, textCiting(answer, id)),
   }));
 
-  return { type: reply.type, answer, sources, suggestion: null, model };
+  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion };
 }

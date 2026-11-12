@@ -141,7 +141,9 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       if (!worthSwitching || backupModel === mainModel) throw err;
       console.warn(`[gemini] ${mainModel} failed (status=${status || "timeout/network"}), trying backup model ${backupModel}`);
       usedModel = backupModel;
-      interaction = await callModel(backupModel, 1, 25_000);
+      // One try, 15 seconds max: worst case a student waits about 35 seconds (20 + 15) before
+      // seeing "try again", instead of about 60 with retries.
+      interaction = await callModel(backupModel, 0, 15_000);
     }
     outputText = interaction.output_text ?? undefined;
   } catch (err) {

@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after adding stop and edit (prompt log Entry 9)
+**Last updated:** 2026-11-11, after the shorter backup wait and spelling correction (prompt log Entry 10)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -17,17 +17,17 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Retrieved passages are given to the LLM as context.** `buildInput()` in `lib/rag.ts`; Gemini is told to use only those sources (`lib/gemini.ts`, commit `00cae20`).
 - [x] **Source name, citation, or excerpt shown to the user.** Gold [1] citation tabs in the answer, plus numbered source chips that open the excerpt and a "View on csulb.edu" link (`components/chat/answer-text.tsx`, `source-chips.tsx`; `docs/screenshots/*-02-answer-with-source.png`).
 - [x] **Clear "not enough information" fallback.** Exact sentence from `lib/gemini.ts` `FALLBACK_SENTENCE`, shown in a calm gray card with the related department page as a button (`docs/screenshots/*-04-fallback.png`).
-- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 25 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid), run with `npm run test:questions`. Latest results in `docs/test-results.md`: 21/25 pass (Entry 7).
+- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 30 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid, 5 misspelled), run with `npm run test:questions` (`ONLY=26,27` runs just some). Latest full results in `docs/test-results.md`: 21/25 pass (Entry 7, before the misspelled tests existed).
 - [ ] **At least one meaningful error or invalid-case demo.** Partly (all 3 invalid tests pass: empty question, 600-character question, missing API key; Entry 7): the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
 - [x] **API key not in source code or GitHub.** The key lives only in `.env.local`, which git ignores (`.gitignore` line 34). A scan of every commit found no key. The key is read only on the server, in `lib/gemini.ts`, and is never logged.
 - [ ] **Deployed web app (Vercel) for the live demo.** Not started. `next.config.ts` already bundles `knowledge/` for Vercel (commit `00cae20`). `GEMINI_API_KEY` must be added in the Vercel project settings.
 
 ## 2. Prompt log (assignment: Vibe Coding Expectations)
 
-- [x] **At least 5 meaningful prompt iterations.** 9 so far (`docs/prompt-log.md` Entries 1-9).
+- [x] **At least 5 meaningful prompt iterations.** 10 so far (`docs/prompt-log.md` Entries 1-10).
 - [x] **At least 2 cases where the AI's solution didn't work, and how we fixed or redirected it.** Entry 3: Gemini overload (fixed with a backup model) and an invented email address (fixed with a contact-detail check), plus four more. Entry 2: our redirection on the incomplete Advising page and the swapped map source.
 - [ ] **"Who" filled in on every entry.** Team to fill in.
-- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-7 not committed yet).
+- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`, Entry 5 = `ff02f09`, Entry 6 = `fed9e9b`, Entry 7 = `018049e`, Entry 8 = `68299b9`, Entry 9 = `eb998a5`; Entry 10 not committed yet).
 
 ## 3. Design brief features
 
@@ -48,6 +48,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Citations only on what the sources say, once per paragraph or list.** System prompt rule plus `citeOncePerParagraph` in `lib/rag.ts` (Entry 6). Gemini's own reasoning (e.g., "this deadline has passed") must be uncited.
 - [x] **Clarifying question for ambiguous asks** ("How do I apply?" -> "Do you mean admission, scholarships, graduation, financial aid, or something else?"). Rule in `lib/gemini.ts`; passed test 3 in Entry 3. The UI shows the options as buttons.
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services).
+- [x] **Typos are fixed before searching** ("parkng permit" -> "parking permit"). `lib/spelling.ts`: edit distance against every word in our pages, 1 typo for 4-7 letters and 2 for 8+, no change on a tie, same first letter. Gemini sees the original and the corrected wording; the UI shows a gray "Showing results for: …" note (Entry 10; `docs/screenshots/*-09-spelling-note.png`). Tests #26-30 pass, and the off-topic tests #17-20 still fall back.
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
 - [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). **Team decision (Entry 8): left as a known limitation for the limitations slide.** Flash-Lite doesn't reliably notice that the refund table's Feb. 2 row is the same deadline as the Registration table's Feb. 3.
@@ -86,16 +87,18 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [ ] **Answers match the live CSULB pages.** Partly: the knowledge base was copied word for word from the live pages on 2026-11-11, and every answer cites its source. Before the presentation, re-run `npm run fetch-sources` and check `git diff knowledge/` for any page changes.
 - [x] **Contact details in answers are checked against the sources.** `removeUnverifiedDetails` in `lib/rag.ts` (added after the invented-email bug, Entry 3).
 - [x] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Castor/Guzman/Garris", the exact fallback sentence). `tests/test-questions.json` + `scripts/run-tests.ts`; every expected fact was confirmed to appear word for word in `knowledge/`.
-- [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest run (`docs/test-results.md`).
+- [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest full run (`docs/test-results.md`), and again 4 of 4 with spelling correction on (Entry 10), plus the misspelled study-room and gibberish questions.
 - [x] **Test results recorded as a table** (question, type, expected, actual, pass/fail, model) in `docs/test-results.md`, regenerated each run.
 - [ ] **All tests passing.** 21/25 in the first run (Entry 7). Fixes made in Entry 8 but **not yet rerun**:
   - contact check now accepts each source's own page link (#3's stray "contact details were removed" note);
   - the test script waits 30s and retries once when Gemini is busy (#6, #7);
   - "groceries" is now a synonym for food/pantry (#13; Beach Pantry now ranks #1).
   - #3's date conflict stays a known limitation, so expect #3 to keep failing on Flash-Lite.
+  - The 5 new misspelled tests (#26-30) passed in a partial run (Entry 10); the full 30-test suite hasn't been run yet.
 - [x] **Known source quirks and limitations**, to explain on the testing / limitations slide (team decisions, Entries 4 and 8):
   - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table). **Limitation:** our default model (`gemini-3.5-flash-lite`) usually reports only Feb. 3 instead of showing both and saying to confirm (test #3).
-  - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy. When both are busy, that message can take about 60 seconds (students can press Stop); a shorter backup timeout is proposed in Entry 9 and waiting for the team's decision.
+  - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy. When both are busy, that message takes up to about 35 seconds (was about 60 before Entry 10); students can press Stop.
+  - Spelling correction only fixes small typos, and only to words that appear in our pages. A real word one letter away from a page word with the same first letter could still be "corrected" by mistake; the fallback cutoff and Gemini (which sees the original wording) are the safety nets.
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
   - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
@@ -119,4 +122,4 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [ ] **3-5 minute live prototype demo**, showing an answer with sources, a clarifying question, a fallback, and an error case.
 - [ ] **Every team member speaks meaningfully.**
 - [ ] **Presented as a product or consulting team to university decision-makers**, not as students reporting to a professor.
-- [ ] **Team can explain each major component in plain language** (knowledge base, retrieval, fallback, Gemini prompt, contact check). The plain-language explanations are in the prompt log entries.
+- [ ] **Team can explain each major component in plain language** (knowledge base, retrieval, spelling correction, fallback, Gemini prompt, contact check). The plain-language explanations are in the prompt log entries.
