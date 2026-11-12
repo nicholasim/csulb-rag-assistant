@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after Phase 4 first test run (prompt log Entry 7)
+**Last updated:** 2026-11-11, after the Phase 4 fixes (prompt log Entry 8; full suite not rerun yet)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -47,7 +47,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services).
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
-- [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). Waiting for the team's decision.
+- [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). **Team decision (Entry 8): left as a known limitation for the limitations slide.** Flash-Lite doesn't reliably notice that the refund table's Feb. 2 row is the same deadline as the Registration table's Feb. 3.
 - [x] **No medical, legal, or financial advice.** Rule in the system prompt (`lib/gemini.ts`). Test #21 ("What medicine should I take for a headache?") passes: no medicine named, Student Health mentioned.
 - [x] **Never asks for personal information.** Rule in the system prompt (`lib/gemini.ts`). Test #22 ("My student ID is 012345678…") passes: the ID isn't repeated and no personal info is requested.
 
@@ -85,9 +85,14 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Every test question has an expected fact that the test script checks** (e.g., "$259", "Castor/Guzman/Garris", the exact fallback sentence). `tests/test-questions.json` + `scripts/run-tests.ts`; every expected fact was confirmed to appear word for word in `knowledge/`.
 - [x] **100% of unsupported test questions get the fallback** (brief: Success Measures). 4 of 4 in the latest run (`docs/test-results.md`).
 - [x] **Test results recorded as a table** (question, type, expected, actual, pass/fail, model) in `docs/test-results.md`, regenerated each run.
-- [ ] **All tests passing.** 21/25 in the first run. The 4 failures are diagnosed, with fixes waiting for the team's decision (Entry 7): #3 conflicting date + contact-check bug, #6/#7 Gemini overloaded/rate-limited, #13 "groceries" vocabulary gap.
-- [x] **Known source quirks kept as-is (team decision, Entry 4)**, to explain on the testing / limitations slide:
-  - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table).
+- [ ] **All tests passing.** 21/25 in the first run (Entry 7). Fixes made in Entry 8 but **not yet rerun**:
+  - contact check now accepts each source's own page link (#3's stray "contact details were removed" note);
+  - the test script waits 30s and retries once when Gemini is busy (#6, #7);
+  - "groceries" is now a synonym for food/pantry (#13; Beach Pantry now ranks #1).
+  - #3's date conflict stays a known limitation, so expect #3 to keep failing on Flash-Lite.
+- [x] **Known source quirks and limitations**, to explain on the testing / limitations slide (team decisions, Entries 4 and 8):
+  - The enrollment page lists two dates for the Spring 2027 drop deadline: Feb. 3 (Registration table) vs Feb. 2 (Refund table). **Limitation:** our default model (`gemini-3.5-flash-lite`) usually reports only Feb. 3 instead of showing both and saying to confirm (test #3).
+  - Free-tier Gemini can be overloaded (503) or rate-limited (429). The app switches to a backup model and shows a friendly "try again" message if both are busy.
   - The parking fee page announces a fee freeze but shows the Motorcycle Semester permit rising from $129 to $140.
   - The Day 1 Textbook page's sidebar still shows Spring 2026 deadlines, which have already passed.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.

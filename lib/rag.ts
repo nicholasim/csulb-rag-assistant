@@ -218,6 +218,8 @@ export function removeUnverifiedDetails(answer: string, results: SearchResult[])
   const knownUrls = new Set(
     [...sourceText.matchAll(/\]\(([^)\s]+)/g), ...sourceText.matchAll(/(https?:\/\/[^\s)\]]+)/g)]
       .map((m) => normalizeUrl(m[1]))
+      // Each source page's own address counts too (it's in the file header, not the page text).
+      .concat(results.map((r) => normalizeUrl(r.chunk.url)))
       .concat(normalizeUrl(CAMPUS_MAP_URL)),
   );
 

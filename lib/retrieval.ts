@@ -38,6 +38,8 @@ const SYNONYMS: Record<string, string[]> = {
   deadline: ["last", "day"],
   eat: ["food", "dining"],
   food: ["eat", "dining"],
+  grocery: ["food", "pantry"], // "groceries" becomes "grocery" after plural trimming
+  pantry: ["food"],
   advisor: ["advising"],
   advising: ["advisor"],
   professor: ["instructor", "faculty"],

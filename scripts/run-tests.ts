@@ -8,6 +8,7 @@
  * Options (environment variables):
  *   APP_URL   where the app is running (default http://localhost:3000)
  *   DELAY_MS  pause between questions that call Gemini, to stay under rate limits (default 5000)
+ *   RETRY_WAIT_MS  if Gemini is rate-limited or overloaded, wait this long and retry once (default 30000)
  *
  * The "missing API key" test can't use the running app (it has a key), so it calls the real
  * /api/chat route code directly inside this script, where GEMINI_API_KEY is removed first.
@@ -16,6 +17,9 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 const DELAY_MS = Number(process.env.DELAY_MS ?? 5000);
+const RETRY_WAIT_MS = Number(process.env.RETRY_WAIT_MS ?? 30000);
+// Error codes from our API that mean "Gemini is busy right now", not "the app is broken".
+const BUSY_ERRORS = ["rate_limited", "ai_unavailable"];
 const TESTS_FILE = "tests/test-questions.json";
 const RESULTS_FILE = "docs/test-results.md";
 
@@ -145,16 +149,26 @@ async function main() {
     const usesAi = test.type !== "invalid";
     if (usesAi && calledGemini) await sleep(DELAY_MS); // space out AI calls to avoid rate limits
 
-    let result: ApiResult;
-    try {
-      result = test.runWithoutApiKey ? await askWithoutApiKey(question) : await askApp(question);
-    } catch (err) {
-      result = { httpStatus: 0, body: { error: { code: "request_failed", message: (err as Error).message } } };
+    const run = async (): Promise<ApiResult> => {
+      try {
+        return test.runWithoutApiKey ? await askWithoutApiKey(question) : await askApp(question);
+      } catch (err) {
+        return { httpStatus: 0, body: { error: { code: "request_failed", message: (err as Error).message } } };
+      }
+    };
+    let result = await run();
+    // Gemini busy (rate-limited or overloaded)? Wait and try once more, unless the test expects an error.
+    let retried = false;
+    if (usesAi && BUSY_ERRORS.includes(result.body.error?.code ?? "") && test.expect.response !== "error") {
+      console.log(`        Gemini busy (${result.body.error?.code}); waiting ${RETRY_WAIT_MS / 1000}s and retrying once...`);
+      await sleep(RETRY_WAIT_MS);
+      result = await run();
+      retried = true;
     }
     if (usesAi) calledGemini = true;
 
     const problems = check(test, result);
-    const model = result.body.error ? "-" : (result.body.model ?? "none (no AI needed)");
+    const model = (result.body.error ? "-" : (result.body.model ?? "none (no AI needed)")) + (retried ? " (retried once)" : "");
     const row = {
       test,
       question,
@@ -178,7 +192,7 @@ async function main() {
       return `${type} ${ofType.filter((r) => r.passed).length}/${ofType.length}`;
     })
     .join(", ");
-  const models = [...new Set(rows.map((r) => r.model).filter((m) => m.startsWith("gemini")))].join(", ") || "none";
+  const models = [...new Set(rows.map((r) => r.model.replace(" (retried once)", "")).filter((m) => m.startsWith("gemini")))].join(", ") || "none";
 
   const lines = [
     "# Test Results: CSULB Services RAG Assistant",
@@ -187,7 +201,7 @@ async function main() {
     "",
     `**${passed} of ${rows.length} passed** (${byType}). Gemini models that answered: ${models}.`,
     "",
-    "Each test is checked automatically: the response type (answer / clarify / fallback / error), facts that must appear, and text that must not appear. The checks are listed in `tests/test-questions.json`. Test #25 calls the real `/api/chat` route code inside the test script with `GEMINI_API_KEY` removed, because the running app has a key.",
+    "Each test is checked automatically: the response type (answer / clarify / fallback / error), facts that must appear, and text that must not appear. The checks are listed in `tests/test-questions.json`. Test #25 calls the real `/api/chat` route code inside the test script with `GEMINI_API_KEY` removed, because the running app has a key. If Gemini is rate-limited or overloaded, the script waits ${RETRY_WAIT_MS / 1000} seconds and retries once; those rows say \"(retried once)\" in the Model column.",
     "",
     "| # | Question | Type | Expected behavior | Expected fact | Actual | Result | Model |",
     "|---|---|---|---|---|---|---|---|",

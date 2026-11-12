@@ -395,4 +395,33 @@ Per our instruction, Claude showed the 4 failures before fixing anything. Nothin
 
 ---
 
+## Entry 8 (Phase 4: Fixing the test failures)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Go with your recommendation: fix the contact check so it accepts each source's own page link, add a 30-second wait and one retry after rate-limit errors in the test script, and add "groceries" as a synonym for food/pantry. Leave the date conflict as a known limitation and note it in the checklist for our limitations slide. Don't rerun the full suite yet. Update the prompt log and stop.
+
+**What the AI did:**
+1. **Contact check** (`removeUnverifiedDetails` in `lib/rag.ts`): each source page's own web address now counts as verified, since it's in the file header rather than the page text.
+   - Checked offline: a link to the Key Dates and Deadlines page is kept, and a made-up link is still removed.
+2. **Retry in the test script** (`scripts/run-tests.ts`): if Gemini is rate-limited or overloaded, the script waits 30 seconds (`RETRY_WAIT_MS`) and retries once. Those rows say "(retried once)" in the Model column. Tests that expect an error are never retried.
+   - Checked against a small fake server that returned a rate-limit error once: the test retried, passed, and was labeled "(retried once)". The real `docs/test-results.md` was backed up and restored afterwards.
+3. **Synonym** (`lib/retrieval.ts`): "groceries" now also searches for "food" and "pantry", and "pantry" also searches for "food".
+   - Checked offline: for "Where can I get free groceries on campus?", the Beach Pantry section now ranks #1 (before, it wasn't in the top 4).
+4. **Date conflict:** left as a known limitation, as the team decided. It's in the checklist's limitations list, along with free-tier overloads.
+- No Gemini calls were made and the full suite was not rerun, as instructed. `docs/test-results.md` still shows the Entry 7 run (21/25).
+
+**Did it work?** Yes, all three fixes pass their offline checks. The full suite still needs a rerun. Expect test #3 to keep failing (known limitation).
+
+**Troubleshooting or redirection (if any):**
+- **Redirection from us:** we chose which fixes to make (Claude's recommendation) and decided to treat the date conflict as a documented limitation rather than keep tuning the prompt.
+- **A detail Claude caught:** the search code trims plurals before looking up synonyms ("groceries" → "grocery"), so the synonym had to be listed under "grocery" to work.
+
+**Screenshot / commit:**
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
