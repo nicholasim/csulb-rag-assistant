@@ -65,7 +65,11 @@ export function SourceChips({
             <p className="text-sm font-semibold">{open.title}</p>
             <p className="text-xs text-muted-foreground">{open.category}</p>
           </div>
-          <blockquote className="text-sm leading-6 text-foreground/90">“{open.excerpt}”</blockquote>
+          <blockquote className="flex flex-col gap-1.5 text-sm leading-6 text-foreground/90">
+            {open.excerpt.split("\n").map((line) => (
+              <p key={line}>“{line}”</p>
+            ))}
+          </blockquote>
           <div>
             <Button
               size="sm"

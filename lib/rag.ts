@@ -27,7 +27,7 @@ export type Source = {
   title: string;
   url: string;
   category: string;
-  excerpt: string; // a short quote from the chunk
+  excerpt: string; // a short quote from the page (one or two lines, separated by "\n")
 };
 
 export type ChatResponse = {
@@ -42,56 +42,161 @@ function isMapQuestion(question: string) {
   return /\b(maps?|directions?|get around|getting around|navigate|find (a |the )?building|where is (the )?\w+ (building|hall))\b/i.test(question);
 }
 
-/**
- * Make a short, readable excerpt for a source chip: the line of the chunk that best supports
- * the answer. We compare each line with the answer sentences that cite this source.
- * Shared numbers (prices, dates, phone numbers) count the most, then shared words.
- */
-function makeExcerpt(chunk: Chunk, question: string, citingText: string) {
-  const questionWords = new Set(tokenize(question));
-  const answerWords = new Set(tokenize(citingText));
-  const lines = chunk.text
-    .split("\n")
-    .map((line) =>
-      line
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // [text](url) -> text
-        .replace(/[*_#>]|^\s*-\s+|\|\s*-{3,}\s*/g, "") // Markdown symbols
-        .replace(/\s*\|\s*/g, " | ")
-        .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
-        .replace(/\s+/g, " ")
-        .trim(),
-    )
-    .filter((line) => line.length > 20);
-  let best = lines[0] ?? "";
-  let bestScore = -1;
-  for (const line of lines) {
-    let score = 0;
-    for (const word of new Set(tokenize(line))) {
-      if (answerWords.has(word)) score += /^\d+$/.test(word) ? 3 : 1;
-      else if (questionWords.has(word)) score += 1;
-    }
-    if (score > bestScore) [best, bestScore] = [line, score];
-  }
-  if (best.length <= 280) return best;
-  // A long table row: shorten the first (description) cell so the dates/prices at the end still show.
-  const cells = best.split(" | ");
-  if (cells.length > 1) {
-    const rest = cells.slice(1).join(" | ");
-    const room = Math.max(60, 280 - rest.length - 6);
-    return `${cells[0].slice(0, room)}... | ${rest}`.slice(0, 400);
-  }
-  return `${best.slice(0, 277)}...`;
+// A citation like [1] or [2, 3] (but not a Markdown link like [text](url)).
+const CITATION = /\[(\d+(?:\s*,\s*\d+)*)\](?!\()/g;
+
+/** One Markdown line as plain text: [text](url) -> text, no **, #, or leading "- ". */
+function plainText(line: string) {
+  return line
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[*_#>]/g, "")
+    .replace(/^\s*-\s+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-/** The sentences of the answer that cite source number n, e.g. "...is $259 [5]." */
-function sentencesCiting(answer: string, n: number) {
+const isTableRow = (line: string) => line.trim().startsWith("|");
+const isTableDivider = (line: string) => /^\s*\|\s*:?-{3,}/.test(line);
+const tableCells = (row: string) => row.trim().replace(/^\||\|$/g, "").split("|").map(plainText);
+const shorten = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text);
+
+/**
+ * The lines of a chunk that could be quoted on a source chip, as plain text.
+ * Table rows get their column names, so "| Student Semester | $250 | ... | $259 |" becomes
+ * "Student Semester, FY23/24: $250; ...; FY26/27: $259". If the answer names a column
+ * (like "Spring 2027"), only that column is shown.
+ */
+function excerptCandidates(chunk: Chunk, citingText: string): { text: string; fromTable: boolean }[] {
+  const lines = chunk.text.split("\n");
+  const candidates: { text: string; fromTable: boolean }[] = [];
+  let header: string[] = [];
+  lines.forEach((line, i) => {
+    if (!isTableRow(line)) {
+      header = [];
+      if (/^\s*#/.test(line)) return; // headings aren't quotes
+      const text = plainText(line);
+      if (text.length > 20) candidates.push({ text, fromTable: false });
+      return;
+    }
+    if (isTableDivider(line)) return;
+    if (isTableDivider(lines[i + 1] ?? "")) {
+      header = tableCells(line); // the row right above "| --- |" holds the column names
+      return;
+    }
+    const [label, ...values] = tableCells(line);
+    let pairs = values
+      .map((value, j) => ({ name: header[j + 1] ?? "", value }))
+      .filter((p) => p.value);
+    const named = pairs.filter((p) => p.name && citingText.toLowerCase().includes(p.name.toLowerCase()));
+    if (named.length > 0 && named.length < pairs.length) pairs = named;
+    const valuesText = pairs.map((p) => (p.name ? `${p.name}: ${p.value}` : p.value)).join("; ");
+    candidates.push({ text: valuesText ? `${shorten(label, 140)}, ${valuesText}` : label, fromTable: true });
+  });
+  return candidates;
+}
+
+/**
+ * Pick the excerpt for a source chip: the line(s) that best support the answer text citing this
+ * source. Numbers the answer uses (prices, dates, phone numbers) count far more than shared words,
+ * because they're what a student wants to double-check. Table rows that contain one of those
+ * numbers get a small bonus, since pages list official prices and dates in tables. If a second
+ * line backs up a number the first line doesn't (e.g. $259 per semester AND $518 per year),
+ * it's shown too, on its own line.
+ */
+export function bestExcerpt(chunks: Chunk[], question: string, citingText: string) {
+  const questionWords = new Set(tokenize(question));
+  const answerWords = new Set(tokenize(citingText));
+  const isNumber = (word: string) => /^\d+$/.test(word);
+
+  const scored = chunks
+    .flatMap((chunk) => excerptCandidates(chunk, citingText))
+    .map(({ text: line, fromTable }) => {
+      const words = new Set(tokenize(line));
+      let score = 0;
+      for (const word of words) {
+        if (answerWords.has(word)) score += isNumber(word) ? 10 : 1;
+        else if (questionWords.has(word)) score += 1;
+      }
+      const numbers = [...words].filter((w) => isNumber(w) && answerWords.has(w));
+      if (fromTable && numbers.length > 0) score += 5;
+      return { line, score, numbers };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const [first, ...rest] = scored;
+  if (!first) return "";
+  const second = rest.find((c) => c.numbers.some((n) => !first.numbers.includes(n)) && c.score >= first.score / 2);
+  return [first, second]
+    .filter(Boolean)
+    .map((c) => shorten(c!.line, 240))
+    .join("\n");
+}
+
+/**
+ * The paragraphs of the answer that cite source number n. (A paragraph or list ends with one
+ * citation that covers all of it, so we look at the whole paragraph, not just one sentence.)
+ */
+function textCiting(answer: string, n: number) {
   return answer
-    .split(/(?<=[.!?])\s+|\n/)
-    .filter((sentence) =>
-      [...sentence.matchAll(/\[(\d+(?:\s*,\s*\d+)*)\]/g)].some((m) => m[1].split(",").map(Number).includes(n)),
+    .split(/\n{2,}/)
+    .filter((paragraph) =>
+      [...paragraph.matchAll(CITATION)].some((m) => m[1].split(",").map(Number).includes(n)),
     )
     .join(" ")
-    .replace(/\[\d+(?:\s*,\s*\d+)*\]/g, ""); // drop the [1] markers so "1" doesn't count as a fact
+    .replace(CITATION, ""); // drop the [1] markers so "1" doesn't count as a fact
+}
+
+/**
+ * Cite once per paragraph or list: inside a paragraph, each source number is kept only at its
+ * LAST appearance. "A [1]. B [1]. C [1]." becomes "A. B. C. [1]", and "A [1, 2]. B [2]." becomes
+ * "A [1]. B [2]." Different sources ("A [1], but B [2]") are all kept.
+ */
+export function citeOncePerParagraph(text: string) {
+  return text
+    .split(/(\n{2,})/)
+    .map((paragraph) => {
+      const groups = [...paragraph.matchAll(CITATION)].map((m) => m[1].split(",").map((s) => s.trim()));
+      let index = 0;
+      return paragraph
+        .replace(CITATION, () => {
+          const later = groups.slice(index + 1).flat();
+          const keep = groups[index].filter((n) => !later.includes(n)); // numbers cited again later move there
+          index++;
+          return keep.length ? `[${keep.join(", ")}]` : "";
+        })
+        .replace(/[ \t]+([.,;:!?])/g, "$1")
+        .replace(/[ \t]+$/gm, ""); // no trailing spaces where a citation was removed
+    })
+    .join("");
+}
+
+/**
+ * Renumber citations 1, 2, 3... in the order they first appear in the answer, with no gaps.
+ * Gemini numbers its sources by search rank (it might cite only [5]), and two chunks can come
+ * from the same web page. Here every page gets ONE number, so each page gets one chip.
+ */
+export function renumberCitations(answer: string, results: SearchResult[]) {
+  const numberForPage = new Map<string, number>(); // page url -> new number
+  const chunksForNumber = new Map<number, Chunk[]>(); // new number -> the chunks it covers
+
+  const text = answer
+    .replace(CITATION, (_, nums: string) => {
+      const ids: number[] = [];
+      for (const n of nums.split(",").map((s) => Number(s.trim()))) {
+        const chunk = results[n - 1]?.chunk;
+        if (!chunk) continue; // a number we never gave Gemini: drop it
+        if (!numberForPage.has(chunk.url)) numberForPage.set(chunk.url, numberForPage.size + 1);
+        const id = numberForPage.get(chunk.url)!;
+        const chunks = chunksForNumber.get(id) ?? [];
+        if (!chunks.includes(chunk)) chunksForNumber.set(id, [...chunks, chunk]);
+        if (!ids.includes(id)) ids.push(id);
+      }
+      return ids.length ? `[${ids.sort((a, b) => a - b).join(", ")}]` : "";
+    })
+    .replace(/(\[\d+(?:, \d+)*\])(\s*\1)+/g, "$1") // "[1] [1]" -> "[1]"
+    .replace(/[ \t]+([.,;:!?])/g, "$1"); // tidy "word ." left behind by a dropped citation
+
+  return { text, chunksForNumber };
 }
 
 // Patterns for the contact details we double-check.
@@ -223,21 +328,19 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   }
 
   // Double-check contact details against the sources before showing anything.
-  const answer = removeUnverifiedDetails(reply.answer, results);
+  const checked = removeUnverifiedDetails(reply.answer, results);
 
-  // Which sources did the answer actually cite? "[1]", "[2, 3]" and "[1][2]" all count.
-  const citedNumbers = new Set<number>();
-  for (const match of answer.matchAll(/\[(\d+(?:\s*,\s*\d+)*)\]/g)) {
-    for (const n of match[1].split(",")) citedNumbers.add(Number(n.trim()));
-  }
-  const sources = [...citedNumbers]
-    .filter((n) => n >= 1 && n <= results.length)
-    .sort((a, b) => a - b)
-    .map((n) => {
-      const { chunk } = results[n - 1];
-      const excerpt = makeExcerpt(chunk, question, sentencesCiting(answer, n));
-      return { id: n, title: chunk.title, url: chunk.url, category: chunk.category, excerpt };
-    });
+  // Renumber the citations 1, 2, 3 (one number per web page), then build one chip per page.
+  // Then keep one citation per paragraph or list.
+  const { text: renumbered, chunksForNumber } = renumberCitations(checked, results);
+  const answer = citeOncePerParagraph(renumbered);
+  const sources = [...chunksForNumber.entries()].map(([id, chunks]) => ({
+    id,
+    title: chunks[0].title,
+    url: chunks[0].url,
+    category: chunks[0].category,
+    excerpt: bestExcerpt(chunks, question, textCiting(answer, id)),
+  }));
 
   return { type: reply.type, answer, sources, suggestion: null };
 }

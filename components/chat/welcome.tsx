@@ -1,9 +1,10 @@
 "use client";
 
+import { ShieldCheckIcon } from "lucide-react";
 import { EXAMPLE_QUESTIONS } from "@/lib/categories";
 
 /** The first screen: a short greeting and example questions that send when clicked. */
-export function Welcome({ onAsk }: { onAsk: (question: string) => void }) {
+export function Welcome({ onAsk, pageCount }: { onAsk: (question: string) => void; pageCount: number }) {
   return (
     <section aria-labelledby="welcome-title" className="flex flex-col gap-8 py-6 sm:py-12">
       <div className="flex flex-col gap-3">
@@ -31,6 +32,10 @@ export function Welcome({ onAsk }: { onAsk: (question: string) => void }) {
             </li>
           ))}
         </ul>
+        <p className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
+          <ShieldCheckIcon aria-hidden className="size-4 shrink-0 text-gold-ink" />
+          Searches {pageCount} official CSULB pages · Every answer links to its source.
+        </p>
       </div>
     </section>
   );

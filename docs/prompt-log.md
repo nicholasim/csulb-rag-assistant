@@ -277,4 +277,66 @@ Claude reviewed its own first round of screenshots and found these problems:
 
 ---
 
+## Entry 6 (Phase 3: Design feedback round 1)
+
+**Date:** 2026-11-11
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> Design feedback round 1 from our team. Fix these, then retake the same screenshots and show me:
+>
+> Bugs
+> 1. Source numbering: renumber cited sources 1, 2, 3 in the order they appear, with no gaps. If two cited chunks come from the same page, show one chip, or label each with its section heading so they don't look duplicated.
+> 2. Add a "New chat" button (top of the sidebar on desktop, in the header on mobile) that clears the conversation and returns to the welcome screen.
+> 3. Only put a citation on sentences the source actually says. If Gemini reasons something itself (like comparing a deadline to today's date), either drop that sentence or leave it uncited. Update the system prompt for this.
+>
+> Answer quality
+> 4. Answers should be 2-4 sentences: the direct answer first, then one useful related detail and a next step if the sources have them (for example, the semester price plus the academic-year price and where to buy the permit).
+> 5. Table excerpts in source chips should include the column header, e.g. "Student Semester, FY26/27: $259".
+> 6. Cite once per paragraph or list, not after every bullet.
+>
+> Visual polish
+> 7. Input focus state: replace the thick brown double ring with a clean, thin gold ring.
+> 8. Error card: black text, with red only on the icon and a thin border.
+> 9. Welcome screen: add a small trust line under the examples, like "Searches 18 official CSULB pages · Every answer links to its source."
+> 10. Mobile: make the empty input box shorter (about 2 lines tall, growing as you type).
+>
+> Don't change retrieval or the fallback logic. Rerun the 6 Phase 2 test questions after the prompt changes to make sure nothing broke, then update the prompt log and checklist.
+
+**What the AI did:**
+1. **Source numbering** (`lib/rag.ts`, `renumberCitations`): after Gemini answers, citations are renumbered 1, 2, 3 in the order they appear. Chunks from the same web page share one number, so each page gets one chip. Citation numbers Gemini made up are dropped. Example: Gemini's "[5] … [1][2]" (where 1 and 2 are the same page) becomes "[1] … [2]".
+2. **New chat:** a button at the top of the desktop sidebar, plus an icon in the mobile header (shown once a conversation exists). Both clear the chat and return to the welcome screen. Tested with Playwright on desktop and mobile.
+3. **Citations only on what sources say** (system prompt, `lib/gemini.ts`): a citation means "the source states this". Anything Gemini adds itself, like comparing a deadline with today's date, goes in its own sentence with no citation, or is left out.
+4. **2-4 sentence answers** (system prompt): direct answer first, then one related detail and one next step if the sources have them. Claude first put real parking facts in the prompt as the example, then replaced them with a fact-free template. Real facts in the prompt could leak into answers about other topics.
+5. **Column headers in table excerpts:**
+   - Excerpt examples:
+     - "Student Semester, FY23/24: $250; …; FY26/27: $259"
+     - "Ignacio Castor, Title: International Student Advisor; Email: …; Phone: …"
+   - If the answer names a column (like "Spring 2027"), only that column is shown.
+   - Excerpts now favor lines with the same numbers as the answer (prices, dates, phone numbers), especially in tables.
+   - A chip can show two lines when one page backs up two numbers ($259 per semester and $518 per year).
+6. **Cite once per paragraph or list** (`citeOncePerParagraph`): within a paragraph, each source number is kept only where it last appears. "A [1]. B [1]. C [1]." becomes "A. B. C. [1]".
+7. **Focus ring:** one thin gold ring around the input instead of the thick brown double ring.
+8. **Error card:** black text, red only on the icon and a thin red border.
+9. **Trust line** on the welcome screen: "Searches 18 official CSULB pages · Every answer links to its source." The 18 is counted from the `knowledge/` folder when the page is built, so it stays correct if we add pages.
+10. **Shorter mobile input:** the send button moved inside the box, and the hint and counter moved below it. The empty box is now 70px tall (about 2 lines, was about 120px) and grows as you type.
+- **Not changed:** retrieval and the fallback logic. The six Phase 2 questions still pass on the final code (all answered by the backup model, because `gemini-3.8-flash` was rate-limited).
+- **Screenshots:** all retaken (14 files in `docs/screenshots/`, including `desktop-06-clarify-follow-up.png`).
+
+**Did it work?** Yes. All 10 items are done, and the 6 Phase 2 questions pass.
+
+**Troubleshooting or redirection (if any):**
+- **Redirection from us:** the 10 feedback items above.
+- **Prompt alone wasn't enough for "cite once per paragraph" (#6).** With the new prompt, the backup model still put [1] after every sentence. Claude added a small code rule that removes repeated citations inside a paragraph. A first version left "$259 [1, 2] … [2]", which still cited source 2 twice, so the rule was tightened to keep each number only at its last appearance.
+- **Wrong source quotes.**
+  - The Help Desk chip quoted "Email: helpdesk@csulb.edu" instead of the hours. The excerpt was matched only to the one sentence carrying the [1], and with one citation per paragraph that sentence was about email. Fixed by matching the whole paragraph.
+  - The parking chip quoted the overflow-parking discount sentence ("$150 vs. full price is $259") and later a heading ("Permit Prices (2023-2026)"). Fixed by making numbers count more, giving table rows a small bonus, and never quoting headings.
+- **Leftover dev server (Claude's mistake).** The first rerun of the six questions went to an old dev server that hadn't fully stopped. The answers were still valid, since it had reloaded the new code. But Claude first said the main Gemini model answered, then checked the old server's log and corrected this: the backup model answered. Claude stopped the leftover server and now checks that port 3000 is free after stopping.
+- **Small script bug:** a quoting bug in Claude's terminal output formatter cut off one batch of test requests, so the six questions were rerun.
+
+**Screenshot / commit:** `docs/screenshots/` (14 files)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

@@ -8,7 +8,10 @@ import { cn } from "@/lib/utils";
 
 const SHOW_COUNTER_AT = 400; // show "432 / 500" once the question gets close to the limit
 
-/** The question box: Enter sends, Shift+Enter adds a new line. */
+/**
+ * The question box: Enter sends, Shift+Enter adds a new line.
+ * It starts about two lines tall and grows as you type (up to a limit, then scrolls).
+ */
 export function ChatInput({
   value,
   onChange,
@@ -28,6 +31,7 @@ export function ChatInput({
 
   return (
     <form
+      className="flex flex-col gap-1.5"
       onSubmit={(e) => {
         e.preventDefault();
         if (canSend) onSubmit();
@@ -36,7 +40,8 @@ export function ChatInput({
       <label htmlFor="question" className="sr-only">
         Ask a question about CSULB services
       </label>
-      <InputGroup className="rounded-2xl border-input bg-background shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+      {/* Focus: one thin gold ring instead of the default thick double ring. */}
+      <InputGroup className="rounded-2xl border-input bg-background has-[[data-slot=input-group-control]:focus-visible]:border-gold has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-gold">
         <InputGroupTextarea
           id="question"
           ref={textareaRef}
@@ -52,20 +57,9 @@ export function ChatInput({
           rows={1}
           aria-invalid={tooLong || undefined}
           aria-describedby="question-help"
-          className="max-h-40 min-h-12 px-4 pt-3.5 text-base"
+          className="max-h-40 min-h-[4.25rem] py-3 pl-4 text-base"
         />
-        <InputGroupAddon align="block-end" className="justify-between pb-2.5 pl-4">
-          <span
-            id="question-help"
-            aria-live="polite"
-            className={cn("text-xs font-normal tabular-nums", tooLong ? "font-medium text-destructive" : "text-muted-foreground")}
-          >
-            {tooLong
-              ? `${length} / ${MAX_QUESTION_LENGTH}: please shorten your question`
-              : length >= SHOW_COUNTER_AT
-                ? `${length} / ${MAX_QUESTION_LENGTH}`
-                : <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line</span>}
-          </span>
+        <InputGroupAddon align="inline-end" className="self-end pr-3 pb-3">
           {/* aria-disabled instead of disabled: a truly disabled button makes InputGroup fade
               the whole box. The form's onSubmit already ignores empty or too-long questions. */}
           <InputGroupButton
@@ -80,6 +74,20 @@ export function ChatInput({
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
+      <p
+        id="question-help"
+        aria-live="polite"
+        className={cn(
+          "px-1 text-xs tabular-nums sm:min-h-4",
+          tooLong ? "font-medium text-destructive" : "text-muted-foreground",
+        )}
+      >
+        {tooLong
+          ? `${length} / ${MAX_QUESTION_LENGTH}: please shorten your question`
+          : length >= SHOW_COUNTER_AT
+            ? `${length} / ${MAX_QUESTION_LENGTH}`
+            : <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line</span>}
+      </p>
     </form>
   );
 }

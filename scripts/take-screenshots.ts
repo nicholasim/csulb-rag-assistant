@@ -101,6 +101,22 @@ async function main() {
       await shot(page, vp.name, "04b-fallback-topic-requested");
     }
 
+    // 6. Desktop only: answer a clarifying question by clicking an option, then start a new chat
+    if (!vp.mobile) {
+      await page.goto(BASE_URL);
+      await ask(page, "How do I apply?");
+      await waitForReply(page);
+      const option = page.getByRole("group", { name: "Choose one" }).getByRole("button", { name: /graduation/i });
+      if (await option.count()) {
+        await option.click();
+        await waitForReply(page);
+        await shot(page, vp.name, "06-clarify-follow-up");
+      }
+      await page.getByRole("button", { name: "New chat" }).click();
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      console.log(`[${vp.name}] "New chat" returned to the welcome screen`);
+    }
+
     // 5. Error (simulated rate limit, see note at the top)
     await page.goto(BASE_URL);
     await page.route("**/api/chat", (route) =>

@@ -202,12 +202,13 @@ function RequestTopicButton({ question }: { question: string }) {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  // Calm, readable error: black text, red only on the icon and a thin border.
   // The retry button sits under the message (not beside it) so long messages don't get squeezed on phones.
   return (
-    <Alert variant="destructive" className="max-w-full sm:max-w-[90%]">
-      <AlertCircleIcon />
+    <Alert className="max-w-full border-destructive/40 sm:max-w-[90%]">
+      <AlertCircleIcon className="text-destructive" />
       <AlertTitle>No answer this time</AlertTitle>
-      <AlertDescription className="flex flex-col items-start gap-3">
+      <AlertDescription className="flex flex-col items-start gap-3 text-foreground">
         <span>{message}</span>
         <Button variant="outline" size="sm" className="h-8" onClick={onRetry}>
           <RotateCwIcon data-icon="inline-start" />

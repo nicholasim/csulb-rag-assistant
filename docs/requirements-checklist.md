@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-11, after Phase 3: chat UI (prompt log Entry 5)
+**Last updated:** 2026-11-11, after design feedback round 1 (prompt log Entry 6)
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -24,21 +24,25 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 
 ## 2. Prompt log (assignment: Vibe Coding Expectations)
 
-- [x] **At least 5 meaningful prompt iterations.** 5 so far (`docs/prompt-log.md` Entries 1-5).
+- [x] **At least 5 meaningful prompt iterations.** 6 so far (`docs/prompt-log.md` Entries 1-6).
 - [x] **At least 2 cases where the AI's solution didn't work, and how we fixed or redirected it.** Entry 3: Gemini overload (fixed with a backup model) and an invented email address (fixed with a contact-detail check), plus four more. Entry 2: our redirection on the incomplete Advising page and the swapped map source.
 - [ ] **"Who" filled in on every entry.** Team to fill in.
-- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-5 not committed yet).
+- [ ] **Screenshot / commit filled in on every entry.** Team to fill in (commits: Entry 1 = `8df0c0a`, Entry 2 = `dcd1b5b`, Entry 3 = `00cae20`; Entries 4-6 not committed yet).
 
 ## 3. Design brief features
 
 ### Chat experience
 - [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5).
 - [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
-- [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`.
+- [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`. Numbered 1, 2, 3 in order with one chip per page; table quotes include column names (Entry 6).
+- [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6).
+- [x] **Welcome trust line:** "Searches 18 official CSULB pages · Every answer links to its source." (count read from `knowledge/`; Entry 6).
 - [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`).
 - [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
 
 ### Answer behavior
+- [x] **Short answers:** 2-4 sentences, direct answer first, then one related detail and a next step (system prompt, Entry 6).
+- [x] **Citations only on what the sources say, once per paragraph or list.** System prompt rule plus `citeOncePerParagraph` in `lib/rag.ts` (Entry 6). Gemini's own reasoning (e.g., "this deadline has passed") must be uncited.
 - [x] **Clarifying question for ambiguous asks** ("How do I apply?" -> "Do you mean admission, scholarships, graduation, financial aid, or something else?"). Rule in `lib/gemini.ts`; passed test 3 in Entry 3. The UI shows the options as buttons.
 - [x] **Unsupported questions get the fallback and point to the right department page.** `lib/rag.ts` `fallback()`; passed tests 4-6 in Entry 3 (tacos -> Eat and Shop, study room -> Library Services).
 - [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.

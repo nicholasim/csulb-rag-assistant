@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MenuIcon } from "lucide-react";
+import { MenuIcon, SquarePenIcon } from "lucide-react";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Message, MessageContent } from "@/components/ui/message";
@@ -64,7 +64,7 @@ async function fetchAnswer(id: string, question: string, history: ChatMessage[])
   }
 }
 
-export function ChatApp() {
+export function ChatApp({ pageCount }: { pageCount: number }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -96,6 +96,14 @@ export function ChatApp() {
     setTurns((t) => t.map((x) => (x.id === turn.id ? finished : x)));
   }
 
+  // "New chat": clear the conversation and go back to the welcome screen.
+  // (If an answer is still loading, it's simply ignored when it arrives.)
+  function newChat() {
+    setTurns([]);
+    setDraft("");
+    setMenuOpen(false);
+  }
+
   // Sidebar category: put its starter question in the box so the student can edit or send it.
   function pickCategory(starter: string) {
     setDraft(starter);
@@ -112,8 +120,16 @@ export function ChatApp() {
     <div className="flex h-dvh bg-background">
       {/* Desktop sidebar */}
       <aside className="hidden w-72 shrink-0 flex-col gap-8 overflow-y-auto bg-sidebar px-4 py-6 text-sidebar-foreground lg:flex">
-        <div className="px-1">
+        <div className="flex flex-col gap-5 px-1">
           <Wordmark />
+          <Button
+            variant="outline"
+            onClick={newChat}
+            className="h-10 justify-start gap-2 border-sidebar-border bg-transparent px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-sidebar-ring"
+          >
+            <SquarePenIcon data-icon="inline-start" className="text-gold" />
+            New chat
+          </Button>
         </div>
         <CategoryList onPick={pickCategory} />
       </aside>
@@ -122,35 +138,48 @@ export function ChatApp() {
         {/* Mobile header with the slide-out menu */}
         <header className="flex items-center justify-between gap-3 bg-sidebar px-4 py-3 text-sidebar-foreground lg:hidden">
           <Wordmark />
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  aria-label="Browse services"
-                />
-              }
-            >
-              <MenuIcon />
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80 gap-6 overflow-y-auto border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
-              <SheetHeader className="p-1">
-                <SheetTitle className="sr-only">Browse services</SheetTitle>
-                <SheetDescription className="sr-only">Pick a service to fill in a starter question.</SheetDescription>
-                <Wordmark />
-              </SheetHeader>
-              <CategoryList onPick={pickCategory} />
-            </SheetContent>
-          </Sheet>
+          <div className="flex items-center gap-1">
+            {turns.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={newChat}
+                className="size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                aria-label="New chat"
+              >
+                <SquarePenIcon />
+              </Button>
+            )}
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    aria-label="Browse services"
+                  />
+                }
+              >
+                <MenuIcon />
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 gap-6 overflow-y-auto border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
+                <SheetHeader className="p-1">
+                  <SheetTitle className="sr-only">Browse services</SheetTitle>
+                  <SheetDescription className="sr-only">Pick a service to fill in a starter question.</SheetDescription>
+                  <Wordmark />
+                </SheetHeader>
+                <CategoryList onPick={pickCategory} />
+              </SheetContent>
+            </Sheet>
+          </div>
         </header>
 
         <main className="flex min-h-0 flex-1 flex-col">
           {turns.length === 0 ? (
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
-                <Welcome onAsk={ask} />
+                <Welcome onAsk={ask} pageCount={pageCount} />
               </div>
             </div>
           ) : (
