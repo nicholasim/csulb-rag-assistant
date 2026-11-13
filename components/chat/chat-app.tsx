@@ -265,7 +265,10 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
                           <Message align="end" className="group/question">
                             <MessageContent>
                               <span className="sr-only">You:</span>
-                              <div className="flex max-w-full items-center justify-end gap-1 self-end">
+                              {/* w-full: the bubble's max width (80%) must be measured against the whole
+                                  chat column. When this row was only as wide as its text, 80% of "hello"
+                                  was narrower than "hello" itself, so it broke mid-word ("he / llo"). */}
+                              <div className="flex w-full min-w-0 items-center justify-end gap-1">
                                 {/* Edit: only on the most recent question. Shows on hover with a mouse,
                                     always on touch screens, and whenever it has keyboard focus. */}
                                 {turn.id === lastQuestionId && !waiting && (

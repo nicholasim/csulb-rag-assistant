@@ -1063,4 +1063,51 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 19 (UI bug: chat bubble breaking words in the middle)
+
+**Date:** 2026-11-12
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt:**
+> UI bug: short messages in the student's chat bubble break in the middle of words. "hello" shows as "he" / "llo" on two lines.
+> 1. Fix the user bubble so words never split mid-word. Use overflow-wrap: break-word (Tailwind break-words) instead of break-all / overflow-wrap: anywhere, and give the bubble a sensible width (w-fit with a max width around 80%) so short messages stay on one line.
+> 2. Check every other text container (assistant answers, source chips, the Who can help card, clarifying buttons, the input box) for the same problem.
+> 3. Long URLs and long unbroken strings should still wrap instead of overflowing.
+> Take Playwright screenshots (desktop and mobile) of: "hello", a one-word message, a long message, and a message containing a long URL. Show me, then update the prompt log and stop. Don't call Gemini.
+
+**What the AI did:**
+- **Found the real cause first.** The bubble already used `overflow-wrap: break-word` (Tailwind v4's name for it is `wrap-break-word`), `w-fit` and `max-w-[80%]`, so the classes the prompt suggested were already there.
+  - **The problem was the bubble's row,** which was only as wide as its contents (the bubble plus the edit pencil).
+  - **The pencil only shows on the latest question, and not while a reply is loading.** Without it, the row was exactly as wide as "hello", and the bubble's 80% limit became 80% of "hello". That is too narrow for the word, so it broke mid-word.
+  - **That's why it showed up while the answer loaded and on every earlier question,** but not in our old screenshots, which were all taken after the answer, with the pencil showing.
+- **The fix (`components/chat/chat-app.tsx`):** the row is now full width (`w-full`), so 80% means 80% of the chat column.
+- **Checked every other text container** with a Playwright audit. It filled them with a long URL and a 90-character unbroken word, then listed anything wider than its box:
+  - **Already fine:** assistant answers (including links), the source panel, source chips (long titles end in "…" on purpose), and the input box.
+  - **Clipped at the bubble edge** (the same root cause: text in a flex row can't shrink below its longest word):
+    - the clarifying question and fallback sentence;
+    - the Who can help office name and email;
+    - the "Try:" page button;
+    - clarifying option buttons;
+    - example question buttons.
+  - **The fix (`components/chat/assistant-message.tsx`):** one shared `WRAP` class (`min-w-0 wrap-break-word`) on that text, plus `max-w-full` and normal wrapping on those buttons. Clarifying options used to be fixed at one line tall and now grow if the option is long.
+- **Screenshots** used a fake `/api/chat` reply, so Gemini was never called.
+
+**Did it work?** Yes.
+- **"hello" before the fix:** 2 lines ("he / llo") while loading and as an earlier question.
+- **After the fix:** 1 line in both cases, on desktop and mobile.
+- **Also checked in Firefox and WebKit (Safari's engine).**
+- **The audit after the fix:** nothing sticks out or is cut off, and the page never scrolls sideways.
+- **Long URLs and long words** wrap only where they have to; normal words always wrap whole.
+- tsc, eslint and `npm run build` pass.
+
+**Troubleshooting or redirection (if any):**
+1. **The first screenshots didn't show the bug** in Chrome, Firefox or WebKit, because they were all taken after the reply, when the pencil keeps the row wide. Asking twice showed the first question split, and that led to the cause.
+2. **In WebKit the test typed before the page was ready,** so the message was never sent. The script now waits for the page to finish loading. That was a test-timing problem, not an app bug.
+3. **Not fixed (not a wrapping issue):** the send button's container sticks out 4px past the input box border. It's invisible padding, and nothing looks wrong.
+
+**Screenshot / commit:** `docs/screenshots/mobile-14-wrap-hello-before.png` (the bug), `{desktop,mobile}-14-wrap-hello[-loading].png`, `-15-wrap-one-word[-loading].png`, `-16-wrap-long-message[-loading].png`, `-17-wrap-long-url[-loading|-input].png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

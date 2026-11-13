@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-12, after the "no dead-end fallbacks" rule: the "Who can help" card (prompt log Entry 17). Live test runs for A2, A1 and this change are waiting for Gemini's daily quota to reset.
+**Last updated:** 2026-11-12, after fixing the chat-bubble wrapping bug (prompt log Entry 19). Live test runs for A2, A1 and the "Who can help" card (Entry 17) are waiting for Gemini's daily quota to reset.
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -41,7 +41,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Edit the latest question:** the pencil icon (on hover; always visible on touch screens) puts the question back in the box and removes it and its answer (Entry 9; `docs/screenshots/*-08-edit-icon.png`).
 - [x] **Stop and edit keep follow-up history correct:** history is rebuilt from the messages on screen. Checked by `npm run test:stop-edit` (32 checks, all passing).
 - [x] **Welcome trust line:** "Searches 18 official CSULB pages · Every answer links to its source." (count read from `knowledge/`; Entry 6).
-- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`).
+- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`). Text wraps at word boundaries everywhere; long URLs and long unbroken strings wrap inside their box instead of overflowing (Entry 19, `docs/screenshots/*-14..17-wrap-*.png`).
 - [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
 
 ### Answer behavior

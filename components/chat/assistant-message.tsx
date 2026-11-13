@@ -38,6 +38,12 @@ export function clarifyOptions(question: string): string[] {
 }
 
 /** The "C" mark that stands in for an avatar next to assistant messages. */
+// Text inside a flex row (next to an icon, or inside a button). A flex item normally can't get
+// narrower than its longest word, so a long URL or email would stick out of the bubble and be cut
+// off. min-w-0 lets it shrink; overflow-wrap: break-word then breaks ONLY a word that can't fit on
+// a line by itself. Normal words always wrap whole (never "he / llo").
+const WRAP = "min-w-0 wrap-break-word";
+
 function AssistantMark() {
   return (
     <div
@@ -120,10 +126,10 @@ function ChatState({ response, onAsk }: { response: ChatResponse; onAsk: (q: str
     <>
       <AnswerText text={response.answer} citableIds={[]} onCite={() => {}} />
       {examples.length > 0 && (
-        <div className="flex flex-col items-start gap-2" role="group" aria-label="Example questions">
+        <div className="flex max-w-full flex-col items-start gap-2" role="group" aria-label="Example questions">
           {examples.map((example) => (
-            <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 whitespace-normal py-1.5 text-left" onClick={() => onAsk(example)}>
-              {example}
+            <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 max-w-full whitespace-normal py-1.5 text-left" onClick={() => onAsk(example)}>
+              <span className={WRAP}>{example}</span>
             </Button>
           ))}
         </div>
@@ -140,13 +146,13 @@ function ClarifyState({ response, onAsk }: { response: ChatResponse; onAsk: (q: 
       <BubbleContent className="flex flex-col gap-3 rounded-xl border-l-4 border-l-gold px-4 py-3">
         <p className="flex items-start gap-2 text-[15px] leading-7 sm:text-base">
           <MessageCircleQuestionIcon aria-hidden className="mt-1.5 size-4 shrink-0 text-gold-ink" />
-          <span>{response.answer}</span>
+          <span className={WRAP}>{response.answer}</span>
         </p>
         {options.length > 0 && (
           <div className="flex flex-wrap gap-2" role="group" aria-label="Choose one">
             {options.map((option) => (
-              <Button key={option} variant="outline" size="sm" className="h-8 bg-background capitalize" onClick={() => onAsk(option)}>
-                {option}
+              <Button key={option} variant="outline" size="sm" className="h-auto min-h-8 max-w-full whitespace-normal bg-background py-1.5 text-left capitalize" onClick={() => onAsk(option)}>
+                <span className={WRAP}>{option}</span>
               </Button>
             ))}
           </div>
@@ -165,7 +171,7 @@ function FallbackState({ question, response, onAsk }: { question: string; respon
       <BubbleContent className="flex flex-col gap-3 rounded-xl px-4 py-3">
         <p className="flex items-start gap-2 text-[15px] leading-7 sm:text-base">
           <InfoIcon aria-hidden className="mt-1.5 size-4 shrink-0 text-muted-foreground" />
-          <span>{sentence}</span>
+          <span className={WRAP}>{sentence}</span>
         </p>
         {/* Never a dead end: a CSULB question gets the office that can help; anything else gets
             what we can help with and a few example questions. */}
@@ -175,10 +181,10 @@ function FallbackState({ question, response, onAsk }: { question: string; respon
             <p className="text-sm">
               I can answer questions about CSULB student services, like parking, financial aid, advising, and registration. Try one of these:
             </p>
-            <div className="flex flex-col items-start gap-2" role="group" aria-label="Example questions">
+            <div className="flex max-w-full flex-col items-start gap-2" role="group" aria-label="Example questions">
               {examples.map((example) => (
-                <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 whitespace-normal bg-background py-1.5 text-left" onClick={() => onAsk(example)}>
-                  {example}
+                <Button key={example} variant="outline" size="sm" className="h-auto min-h-8 max-w-full whitespace-normal bg-background py-1.5 text-left" onClick={() => onAsk(example)}>
+                  <span className={WRAP}>{example}</span>
                 </Button>
               ))}
             </div>
@@ -188,11 +194,11 @@ function FallbackState({ question, response, onAsk }: { question: string; respon
           {response.suggestion && (
             <Button
               size="sm"
-              className="h-8"
+              className="h-auto min-h-8 max-w-full whitespace-normal py-1.5 text-left"
               nativeButton={false}
               render={<a href={response.suggestion.url} target="_blank" rel="noreferrer" />}
             >
-              Try: {response.suggestion.title}
+              <span className={WRAP}>Try: {response.suggestion.title}</span>
               <ExternalLinkIcon data-icon="inline-end" />
               <span className="sr-only"> (opens in a new tab)</span>
             </Button>
@@ -210,8 +216,8 @@ function WhoCanHelp({ office }: { office: HelpOffice }) {
   return (
     <section aria-label="Who can help" className="flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5">
       <h3 className="text-xs font-semibold text-muted-foreground">Who can help</h3>
-      <a href={office.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-medium underline underline-offset-4">
-        {office.name}
+      <a href={office.url} target="_blank" rel="noreferrer" className="flex max-w-full items-center gap-1.5 font-medium underline underline-offset-4">
+        <span className={WRAP}>{office.name}</span>
         <ExternalLinkIcon aria-hidden className="size-3.5 shrink-0" />
         <span className="sr-only"> (opens in a new tab)</span>
       </a>
@@ -219,15 +225,15 @@ function WhoCanHelp({ office }: { office: HelpOffice }) {
       {(office.phone || office.email) && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {office.phone && (
-            <a href={`tel:${office.phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 underline underline-offset-4">
+            <a href={`tel:${office.phone.replace(/[^\d+]/g, "")}`} className="flex max-w-full items-center gap-1.5 underline underline-offset-4">
               <PhoneIcon aria-hidden className="size-3.5 shrink-0" />
-              {office.phone}
+              <span className={WRAP}>{office.phone}</span>
             </a>
           )}
           {office.email && (
-            <a href={`mailto:${office.email}`} className="flex items-center gap-1.5 underline underline-offset-4">
+            <a href={`mailto:${office.email}`} className="flex max-w-full items-center gap-1.5 underline underline-offset-4">
               <MailIcon aria-hidden className="size-3.5 shrink-0" />
-              {office.email}
+              <span className={WRAP}>{office.email}</span>
             </a>
           )}
         </div>
