@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-23, after Entry 24: the cleanup round before the feature freeze. 121 pages, 651 chunks. A targeted live rerun passed 15 of 16 (only the SOAR date, original #7, still fails).
+**Last updated:** 2026-11-23, after Entry 25. **Feature freeze.** The College of Natural Sciences and Mathematics office is fixed (42 of 42 offices), and the SOAR test checks the sign-up steps instead of a past date (it passes live).
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -196,7 +196,8 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Words typed in ALL CAPS are never spell-corrected.** This stops acronyms from being "fixed" ("ADHD" was searched as "Add" and "UCLA's" as "Ucua's" before Entry 16), but a question typed entirely in capitals ("PARKNG PERMIT") isn't corrected either.
   - **The "Who can help" office is sometimes only the general default.** Meaning scores for offices are close together (right 0.51-0.72, wrong 0.58-0.66), so below 0.63 we show Dean of Students instead of guessing. Offices whose page has no matchable description can have our own search `keywords` (used only for matching, never shown). The Dream Success Center and the College of Business center have them (Entry 18), so "undocumented" now goes to the Dream Success Center. In the offline check of the 25 fallback test questions, no wrong office is shown. Gemini's own pick comes first when Gemini is asked.
   - **Whether off-campus questions that reach Gemini (tacos, pizza, weather, UCLA) get example questions instead of an office** depends on Gemini's `about_csulb` answer. In the live runs, the unsupported tests passed (Entries 20 and 23). Health questions are always treated as CSULB questions (Entry 21).
-  - **Office directory needs one fix:** CSULB changed the College of Natural Sciences and Mathematics advising page, so its description sentence no longer matches word for word. `npm run fetch-sources` drops that office until the sentence is updated in `scripts/fetch-sources.ts`. The last verified list (42 offices) is kept in git (Entry 24).
+  - **Office descriptions can go stale when CSULB edits a page.** Entry 24 found one: the College of Natural Sciences and Mathematics sentence had been hidden in an HTML comment. It was fixed in Entry 25 with a visible sentence (42 of 42 offices). `npm run fetch-sources` reports any future mismatch and leaves that office out until the sentence is updated.
+  - **Some source pages still show dates that have already passed**, for example "starting on November 3, 2026" for SOAR reservations, or one-time announcements such as rainy-day study rooms and extended drop-in hours. The assistant repeats dates as the page states them, and Gemini sometimes leaves a past date out. Tests check steps rather than past dates (Entry 25). Re-run `npm run fetch-sources` before the demo to pick up updated pages.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

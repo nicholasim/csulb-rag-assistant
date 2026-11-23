@@ -1457,4 +1457,43 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 25 (Last two fixes before the feature freeze)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Two last fixes, then the feature freeze:
+> 1. Update the College of Natural Sciences and Mathematics advising office description with a sentence copied word for word from its current page, and confirm the fetch script keeps all 42 offices.
+> 2. Original #7 (SOAR): the November 3, 2026 date has passed, so don't require it; check the sign-up steps instead. Note in the limitations list that some source pages show dates that have already passed.
+>
+> Rerun only #7.
+
+**What the AI did:**
+- **The College of Natural Sciences and Mathematics office:**
+  - **Why it was dropped:** the old sentence ("CNSM declared majors can contact their major advisor for questions and drop-in hours.") is still in the page's HTML, but inside an HTML comment. Students can't see it, so the fetch script was right to reject it.
+  - **New sentence,** copied from the visible text: "Each student in the College of Natural Sciences and Mathematics has an assigned academic advisor." It's in the entry in `scripts/fetch-sources.ts`, and it isn't part of the page's dated announcements.
+  - `npm run fetch-sources`: **"Saved lib/data/directory.json (42 of 42 offices)"**. No knowledge page changed beyond its date (date-only changes reverted).
+  - `npm run embeddings` re-embedded only that office.
+- **Original #7 (SOAR):** dropped the `Nov 3` requirement. The test now checks the sign-up steps our sources give:
+  - must include "SOAR";
+  - plus any of SSO / Single Sign On / Student Center / Sign-Up / reservation;
+  - at least 1 source.
+- **Limitations list:** added a note on past dates.
+
+**Did it work?**
+- **#7 passes live (6.7s):** "log in to your MyCSULB Student Center and select 'SOAR Sign-Up'… mandatory program", citing Steps for Newly Admitted Transfers, SOAR, and Steps for Newly Admitted First-Time, First-Year Students.
+- tsc, eslint and `npm run build` pass.
+- **Cost:** about 3 requests.
+
+**Troubleshooting or redirection (if any):**
+1. **The office sentence looked like it was still on the page,** because a plain text dump of the HTML includes comments. Removing comments showed it's hidden, so the fix was a visible sentence, not a change to how the script reads pages.
+
+**Screenshot / commit:** none
+
+**Feature freeze:** no new features after this entry.
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

@@ -64,9 +64,9 @@
       "question": "How do I sign up for SOAR orientation?",
       "type": "answerable",
       "area": "Orientation",
-      "expected_behavior": "Explains SOAR reservations open in SSO on November 3, 2026.",
-      "expected_fact": "November 3, 2026",
-      "expect": { "response": "answer", "mustInclude": ["Nov(\\.|ember) 3"], "minSources": 1 }
+      "expected_behavior": "Explains how to sign up: make a SOAR reservation in Single Sign On (SSO) / the SOAR Sign-Up link in MyCSULB Student Center. The November 3, 2026 opening date has passed, so it isn't required (Entry 25).",
+      "expected_fact": "\"Incoming students for Spring 2027 will make a SOAR reservation in their Single Sign On (SSO)\"; \"You should see a SOAR Sign-Up link\"",
+      "expect": { "response": "answer", "mustInclude": ["SOAR"], "mustIncludeAny": ["SSO", "Single Sign On", "Student Center", "Sign-Up", "reservation"], "minSources": 1 }
     },
     {
       "id": 8,

@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-22",
+  "checked": "2026-11-23",
   "offices": [
     {
       "name": "Admissions",
@@ -88,7 +88,7 @@
     {
       "name": "College of Natural Sciences and Mathematics Academic Advising Center",
       "url": "https://web.csulb.edu/colleges/cnsm/advising/",
-      "description": "CNSM declared majors can contact their major advisor for questions and drop-in hours."
+      "description": "Each student in the College of Natural Sciences and Mathematics has an assigned academic advisor."
     },
     {
       "name": "Career Development Center",
