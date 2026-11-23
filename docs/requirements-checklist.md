@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-22, after Entry 22 (coverage round B3: 61 more official pages, 118 in total). Entry 21 and 22 changes are built and checked offline. **The combined live run is waiting for the quota reset and the team's go-ahead.**
+**Last updated:** 2026-11-23, after Entry 23: the combined live run on the paid tier (presets 21/22, original 40/42, student 46/48, bank sample 29/40; about $0.48 for the whole run).
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -64,7 +64,8 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - If the rewrite fails, the app searches as before. This was tested with a model name that doesn't exist.
   - Personal details are removed from every query.
   - **Live (Entry 20, A2+A1 together):** student set **46/48** (B2: 36/45), original set 39/42 (B2: 41/42).
-  - **Cost:** 2 Gemini requests per question instead of 1, so about 250 questions per day on the free tier. ⚠ This is beyond the brief's "built-in similarity search"; the team should be able to explain it in plain words.
+  - **Live (Entry 23, with top 8 and B3's pages):** original set 40/42, student set 46/48, presets 21/22. Average answer time is 3.1-3.6s per set.
+  - **Cost:** 2 Gemini requests per question instead of 1. On the paid tier (since Entry 23) there's no daily cap. Measured cost is about $0.0035 per question (rewrite + answer + embedding). ⚠ This is beyond the brief's "built-in similarity search"; the team should be able to explain it in plain words.
 - [x] **Understanding any wording: hybrid search with embeddings (Step A1).** Built in Entry 16; first live runs in Entry 20.
   - `npm run embeddings` saves 290 vectors (0.9 MB, `gemini-embedding-001`, 768 numbers each) to `data/`. It's incremental, batched, waits out 429s, and is resumable, for the future full-site crawl.
   - `lib/vector-search.ts` falls back to keyword search if the vectors are missing or stale, or the call fails (both tested).
@@ -134,7 +135,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Offline retrieval** (`npm run check:coverage`, no generate calls): the expected page reaches Gemini's top 8 for **150 of 151** questions that have an approved page, up from 98.
   - **Regression:** #7 "How much does it cost to apply?" is crowded out by the new cost and tuition pages.
   - **6 questions have no approved page** and get the Who can help fallback: student pay, athletics tickets, child care, laptop loans, lost and found, name change.
-  - **Live run:** pending.
+  - **Live run (Entry 23):** the bank sample of 40 questions scored 29/40. #7 "How much does it cost to apply?" recovered live: the rewrite added "application fee", and the answer was "The CSU Application Fee is $70". Remaining misses are 4 coverage gaps (school code, commencement dates, study room booking, concurrent enrollment for CSULB students), 1 wording, 1 API timeout, and 5 test expectations that are out of date or too strict.
 - [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
 - **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Decision: **not built; future work.** It conflicts with our official-sources-only rule. Mention it on the "next steps" slide.
 
@@ -186,12 +187,14 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **The SRWC membership page hides its contact email** behind a script ("This email address is being protected from spambots"), so that email isn't in our sources.
   - **The Writing Center page doesn't give the center's location.** "wheres the writing center" (student #7) sometimes falls back, and once answered with a room from a past writing-retreat event (LA2-200), which could mislead. The test passed on keywords, but the answer isn't really right (Entry 14).
   - **The office directory relies on Gemini to pick the office** for a fallback. Plain keyword matching on office descriptions was tried first and was too noisy ("take" matched Commencement's "take place"), so it wasn't used. Gemini can only pick a number from our 42-office list or 0, so a wrong pick is possible, but an invented office or link isn't (Entry 14).
-  - **Gemini free-tier daily limit: 500 requests per model per day** (`gemini-3.5-flash-lite`, reported by Google on 2026-11-12). With query rewriting, a normal question costs 2 requests, so the app handles about 250 questions a day on this key. One full run of both test sets uses about 180. When the limit is hit, the rewrite is skipped automatically, but answers then fail with "too many questions" until midnight Pacific (Entry 15).
+  - **Gemini API cost (paid tier since 2026-11-23, Entry 23):** Tier 1, $5 prepaid, same key. The free tier's 500-requests-per-day limit no longer applies. A full live run of all 4 test sets (about 135 questions) cost about $0.48, about $0.0035 per question. At that rate, $5 covers about 1,400 student questions.
+    - **History:** during development the free tier repeatedly caused 429 rate limits (the daily cap: Entries 15 and 20; 100 embeddings per minute: Entry 22) and long runs of 503 "busy" replies on both models (Entries 20 and 23). That's why the app has the busy retry, the backup model, and the runner's retry, and why test results were sometimes marked invalid.
+    - Busy (503) replies can still happen on the paid tier; the app shows "Gemini is busy, try again".
   - **Neither keyword nor meaning scores can tell unsupported questions from answerable ones** (keywords: unsupported up to 12.87 vs answerable from 3.30; meaning: unsupported up to 0.663 vs answerable from 0.604). The no-AI gate only stops near-empty matches, and Gemini's grounding prompt is the main guard (Entries 13, 16).
   - **Names in a question can still reach the search queries.** Codes strip IDs, SSNs, emails and phone numbers, but names rely on the rewrite prompt (Entry 15).
   - **Words typed in ALL CAPS are never spell-corrected.** This stops acronyms from being "fixed" ("ADHD" was searched as "Add" and "UCLA's" as "Ucua's" before Entry 16), but a question typed entirely in capitals ("PARKNG PERMIT") isn't corrected either.
   - **The "Who can help" office is sometimes only the general default.** Meaning scores for offices are close together (right 0.51-0.72, wrong 0.58-0.66), so below 0.63 we show Dean of Students instead of guessing. Offices whose page has no matchable description can have our own search `keywords` (used only for matching, never shown). The Dream Success Center and the College of Business center have them (Entry 18), so "undocumented" now goes to the Dream Success Center. In the offline check of the 25 fallback test questions, no wrong office is shown. Gemini's own pick comes first when Gemini is asked.
-  - **Whether off-campus questions that reach Gemini (tacos, pizza, weather, UCLA) get example questions instead of an office** depends on Gemini's `about_csulb` answer. This is untested until the quota resets (Entry 17).
+  - **Whether off-campus questions that reach Gemini (tacos, pizza, weather, UCLA) get example questions instead of an office** depends on Gemini's `about_csulb` answer. In the live runs, the unsupported tests passed (Entries 20 and 23). Health questions are always treated as CSULB questions (Entry 21).
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

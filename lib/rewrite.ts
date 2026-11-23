@@ -17,7 +17,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { CATEGORIES } from "./categories";
 import { OFFICES } from "./directory";
-import { errorKind } from "./gemini";
+import { errorKind, logUsage } from "./gemini";
 import type { ChatMessage } from "./rag";
 
 const DEFAULT_REWRITE_MODEL = "gemini-3.5-flash-lite";
@@ -83,9 +83,10 @@ export async function rewriteQuestion(question: string, history: ChatMessage[]):
     : "";
   try {
     const client = new GoogleGenAI({ apiKey });
+    const model = process.env.GEMINI_REWRITE_MODEL?.trim() || DEFAULT_REWRITE_MODEL;
     const interaction = await client.interactions.create(
       {
-        model: process.env.GEMINI_REWRITE_MODEL?.trim() || DEFAULT_REWRITE_MODEL,
+        model,
         system_instruction: REWRITE_PROMPT,
         input: `${conversation}STUDENT MESSAGE:\n${question}`,
         response_format: { type: "text", mime_type: "application/json", schema: QUERY_SCHEMA },
@@ -95,6 +96,7 @@ export async function rewriteQuestion(question: string, history: ChatMessage[]):
       },
       { maxRetries: 0, timeout: TIMEOUT_MS },
     );
+    logUsage("rewrite", model, interaction);
     if (interaction.status === "incomplete") throw new Error("reply cut off");
     const parsed = JSON.parse(interaction.output_text ?? "") as { queries?: unknown };
     const queries = (Array.isArray(parsed.queries) ? parsed.queries : [])

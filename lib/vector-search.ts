@@ -77,6 +77,8 @@ export async function vectorSearch(queries: string[], limit = 10): Promise<{ lis
       contents: queries,
       config: { taskType: "RETRIEVAL_QUERY", outputDimensionality: DIMENSIONS, httpOptions: { timeout: TIMEOUT_MS } },
     });
+    // Cost log (Entry 23). The embedding API doesn't return token counts, so estimate ~4 characters per token.
+    console.info(`[usage] embed model=${EMBEDDING_MODEL} texts=${queries.length} est_tokens=${Math.ceil(queries.join(" ").length / 4)}`);
     const embeddings = response.embeddings ?? [];
     if (embeddings.length !== queries.length) throw new Error("wrong number of vectors");
     const queryVectors = embeddings.map((e) => normalize(e.values ?? []));

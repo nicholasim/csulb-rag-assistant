@@ -136,8 +136,8 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   const mainModel = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
   const backupModel = process.env.GEMINI_BACKUP_MODEL?.trim() || DEFAULT_BACKUP_MODEL;
 
-  const callModel = (model: string, maxRetries: number, timeout: number) =>
-    client.interactions.create(
+  const callModel = async (model: string, maxRetries: number, timeout: number) => {
+    const interaction = await client.interactions.create(
       {
         model,
         system_instruction: SYSTEM_PROMPT,
@@ -148,6 +148,9 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       },
       { maxRetries, timeout },
     );
+    logUsage("answer", model, interaction);
+    return interaction;
+  };
 
   let usedModel = mainModel;
   let interaction;
@@ -201,7 +204,21 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   return { reply, model: usedModel };
 }
 
-type Interaction = { output_text?: string | null; status?: string; usage?: { total_output_tokens?: number; total_thought_tokens?: number } };
+type Interaction = {
+  output_text?: string | null;
+  status?: string;
+  usage?: { total_input_tokens?: number; total_output_tokens?: number; total_thought_tokens?: number };
+};
+
+/**
+ * One log line per Gemini call with its token counts, so we can estimate cost (Entry 23):
+ * "[usage] answer model=gemini-3.5-flash-lite in=5123 out=180 thought=96". Only numbers are
+ * logged: never the question, the answer, or the key. Thinking tokens are billed like output.
+ */
+export function logUsage(kind: "answer" | "rewrite", model: string, interaction: Interaction) {
+  const u = interaction.usage ?? {};
+  console.info(`[usage] ${kind} model=${model} in=${u.total_input_tokens ?? 0} out=${u.total_output_tokens ?? 0} thought=${u.total_thought_tokens ?? 0}`);
+}
 
 /** Gemini's JSON reply, or null if it was cut off (status "incomplete") or isn't the shape we asked for. */
 function readReply(interaction: Interaction): GeminiReply | null {

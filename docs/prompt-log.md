@@ -1306,4 +1306,89 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 23 (Paid tier + combined live run of Entries 21 and 22)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> We set up billing ($5 prepaid, Tier 1 paid tier, same API key); keep usage reasonable.
+> 1. Send one probe question; if it answers in a few seconds, run the combined live test (presets, original set, student set, bank sample) and show the before/after table, timing, and whether "How much does it cost to apply?" recovered.
+> 2. Estimate the run's cost from the token counts in the logs.
+> 3. Update the checklist and prompt log for the paid tier (keep a note that the free tier caused rate limits and 503s).
+>
+> (Earlier the same day, two attempts on the free tier were stopped: Gemini answered "503 busy" on both models almost every time. About 81 requests were spent and no results were saved.)
+
+**What the AI did:**
+- **Token logging:** our logs didn't record token counts, so Claude added one `[usage]` line per Gemini call (`lib/gemini.ts`, `lib/rewrite.ts`) with input, output and thinking token counts. Embeddings get an estimate (`lib/vector-search.ts`), since that API returns no count. Only numbers are logged: never the question, the answer or the key.
+- **Probe:** "How many units is a full time student?" was answered in 2.4s from the new Student Unit Load page ("12 or more units for undergraduate…").
+- **Full run** on the production server: presets, original set, student set, then the new `tests/bank-live-sample.json` (40 bank questions, 2 per category, mostly ones that were missing before B3). It took about 22 minutes. The only Gemini trouble was 3 rewrite timeouts and 1 answer timeout.
+- **S1 check:** `npm run check:coverage` still showed 150/151, unchanged.
+- **Prices:** looked up on the official Gemini API pricing page (aistudio.google.com/docs/pricing, paid tier, per 1M tokens):
+  - gemini-3.5-flash-lite: $0.30 input, $2.50 output (including thinking);
+  - gemini-3.8-flash: $0.75 / $3.75 through Dec 31, 2026;
+  - gemini-embedding-001: $0.15.
+
+**Did it work?**
+
+| Test set | B2 | Entry 20 (A2/A1, top 5) | Now (Entries 21 + 22) |
+|---|---|---|---|
+| Presets | not tested | 22/22, twice | 21/22 |
+| Original (42) | 41/42 | 39/42 | **40/42** |
+| Real student (48) | 36/45 | 46/48 | **46/48** |
+| Bank sample (40, new) | (offline: 98/151 before B3) | not run | 29/40 |
+| Average answer time | 2.1s | 6.1s / 5.4s | **3.1-3.6s** (bank 4.7s, because of one 50s timeout) |
+
+- **Entry 21 fixes, confirmed live:**
+  - financial aid #4/#27 pass with the new ordering check;
+  - headache #21 shows Student Health;
+  - student GE #4 and writing center #7 pass (coverage 16/16).
+- **#7 "How much does it cost to apply?" recovered live.** The rewrite added the query "application fee admissions cost", and the answer was "The CSU Application Fee is $70" with its source.
+- **Still failing (shown, not fixed):**
+  - **Presets #19** (food help): the answer is right (Basic Needs) but doesn't mention the Pantry. Other.
+  - **Original #7** (SOAR): gives the sign-up steps but not the Nov. 3 date. Other.
+  - **Original #20** (SSN for an on-campus job): it's an "unsupported" test, but B3 added CSULB's Social Security Number page, so it's now answered from an official source. The test is out of date.
+  - **Student #21** (follow-up "what about for a year?"): the rewrite hit the new 2s timeout (S2), so the search used only the follow-up's own words and Gemini fell back. API timeout, and a cost of S2.
+  - **Student #44** (join a club): answered from the new Student Organizations page (BeachSync), but the test expects the words "Student Life". The test is out of date.
+  - **Bank sample, coverage:**
+    - #30 concurrent enrollment: the page we added is for non-CSULB students;
+    - #52 FAFSA school code: not on any fetched page;
+    - #79 commencement date: not in the calendar or FAQ text we fetched;
+    - #113 study room booking: the Library Study Areas page lists group-study floors, not booking.
+
+    All four fell back correctly with the right office.
+  - **Bank sample, wording:** #104 (email setup) was answered from the BeachID page, not the Student Email page.
+  - **Bank sample, API error:** #105 (Canvas) timed out. The main model took more than 20s, and the test client gave up.
+  - **Bank sample, test too strict or out of date:**
+    - #61 student assistant: answered via CareerLINK from a source not in the expected list;
+    - #84 "Where is my advising center?": asked a sensible clarifying question ("What is your major or college?");
+    - #96 child care: now answered from ASI's page (ASI runs the Isabel Patterson Child Development Center);
+    - #137 lost and found: answered from the library Circulation Desk, which is narrow but grounded;
+    - #148 update address: answered from a source not in the expected list.
+
+**Cost of the full run** (from the `[usage]` lines):
+
+| Set | Generate calls | Input tokens | Output + thinking | Cost |
+|---|---|---|---|---|
+| Presets | 22 | 133,383 | 17,315 | $0.083 |
+| Original | 51 | 190,305 | 21,197 | $0.110 |
+| Student | 87 | 298,081 | 23,698 | $0.149 |
+| Bank sample | 78 | 256,657 | 23,555 | $0.139 |
+| **Total (with the probe)** | **240** | **884,358** | **85,954** | **≈ $0.48** |
+
+- **About $0.0035 per question** (rewrite + answer + embedding).
+- **Input dominates:** each answer call sends about 5-6k tokens (instructions, office list, 8 chunks).
+- **Embeddings** cost under $0.001 in total.
+- At this rate, $5 covers about 1,400 student questions.
+
+**Troubleshooting or redirection (if any):**
+1. **The free tier blocked the run twice before billing.** Gemini returned 503 on both models almost every time. Both runs were stopped early instead of recording outage results, and a one-question probe gated each retry.
+2. **No token counts were logged, so a cost estimate wasn't possible.** Claude added `[usage]` log lines (numbers only) before the run.
+3. **The S2 2s rewrite timeout caused one failure** (the follow-up #21). The team may want 3s.
+
+**Screenshot / commit:** results in `docs/test-results-presets.md`, `docs/test-results.md`, `docs/test-results-students.md`, `docs/test-results-bank-sample.md`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
