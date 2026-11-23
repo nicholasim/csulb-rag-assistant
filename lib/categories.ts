@@ -42,7 +42,7 @@ export const CATEGORIES: Category[] = [
   { name: "Majors & Academics", icon: ScrollTextIcon, starter: "How do I change my major?" },
   { name: "Tutoring & Writing", icon: PenLineIcon, starter: "How do I book a Writing Center appointment?" },
   { name: "Parking & Transportation", icon: BusIcon, starter: "How much is a semester student parking permit?" },
-  { name: "Campus Maps", icon: MapIcon, starter: "Is there a campus map so I can get around?" },
+  { name: "Campus Maps", icon: MapIcon, starter: "What building does the code ECS stand for?" },
   { name: "Campus Places", icon: Building2Icon, starter: "What is the Horn Center?" },
   { name: "Housing", icon: BedDoubleIcon, starter: "How do I apply for on-campus housing?" },
   { name: "Career Development Center", icon: BriefcaseIcon, starter: "Where can I get help with my resume?" },

@@ -52,7 +52,7 @@ type Test = {
   type: string;
   area: string;
   expected_behavior: string;
-  expected_fact: string;
+  expected_fact?: string; // optional (the preset tests describe the fact in expected_behavior)
   runWithoutApiKey?: boolean;
   // Earlier messages in the chat, for follow-up questions like "what about for a year?"
   history?: { role: "user" | "assistant"; content: string }[];
@@ -170,7 +170,7 @@ function summarize(result: ApiResult) {
   return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}`;
 }
 
-const cell = (text: string) => text.replace(/\|/g, "\\|").replace(/\n/g, " ");
+const cell = (text: string | undefined) => (text ?? "-").replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 async function main() {
   const allTests = (JSON.parse(await readFile(TESTS_FILE, "utf8")) as { tests: Test[] }).tests;

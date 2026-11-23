@@ -1110,4 +1110,78 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 20 (Scope rule + preset questions that always answer; first live A2/A1 runs)
+
+**Date:** 2026-11-22
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> 1. Add a standing rule to CLAUDE.md: check every change against the assignment and the design brief, say whether it's in scope, flag anything beyond it, and wait for approval.
+> 2. Fix the preset questions: some sidebar and welcome questions ("Where can I eat on campus?", "Is the rec center free for students?") don't get answered. Plan first:
+>    - gather every preset;
+>    - run each one live, counting Gemini requests;
+>    - classify each failure: API error, missing page, page didn't reach Gemini, or Gemini fell back anyway;
+>    - propose fixes with a scope check;
+>    - report the A2/A1 state.
+>
+> After approval: fix, rerun, make every preset a permanent test, and replace any preset our sources can't answer.
+>
+> **Team changes to the plan:** don't re-add the conference campus-map page (removed on purpose in Phase 1). Try https://www.csulb.edu/maps, or reword the preset. After the presets pass twice, run both full test sets live, staying under ~400 requests, and show B2 → now.
+
+**What the AI did:**
+- **Scope rule:**
+  - Created `CLAUDE.md` with the team's rule word for word. It also loads `AGENTS.md`.
+  - The rule names `docs/is300_capstone.docx`, which doesn't exist; the repo has `docs/is300 capstone.pdf`. CLAUDE.md points to the real files.
+- **Scope check, flagged in the plan:**
+  - **Sources:** the brief lists 14 approved sources, and we have 57 official pages. **Confirm with the instructor or update the brief.**
+  - **A2/A1 (rewriting + embeddings):** this is more machinery than the brief's "built-in similarity search", and it doubles quota use. It's explainable in plain words, though.
+- **Investigation:** 22 unique presets (the 6 welcome examples and the greeting/fallback buttons are a subset of the 22 sidebar starters).
+  - **Live:** every preset answered, including eat and rec center 4 of 4 times. The one failure was a 503 ("Gemini is busy") on the advising preset.
+  - **The dev server log showed what the team saw on Nov 12:** right after the daily quota ran out, the main model returned 429, then the backup returned 503/429, so the student got "Gemini is busy".
+  - **Diagnosis: (a) API errors.** Not a missing page, and not retrieval: even keyword-only search ranks the right page first.
+- **Fixes:**
+  1. **`lib/gemini.ts` (changes Gemini logic; the team approved it first):** on a "busy" reply (503 or another 500-range error), wait 2 seconds and ask the main model once more before switching to the backup.
+     - **No retry on 429** (it would waste quota) **or on a timeout** (the student has already waited 20s).
+     - **In today's runs it recovered 15 busy replies.**
+  2. **`lib/rag.ts`:** preset questions skip the rewrite call. They're already clear and find the right page as written. This halves their Gemini use and removes one thing that can fail.
+  3. **Campus map preset:**
+     - https://www.csulb.edu/maps has no text we can use (the main content is 18 characters: "Maps Image Image"; it's an interactive map).
+     - Our closest official source is Building Names & Codes (csulb.edu/maps/building-names-codes).
+     - **New preset:** "What building does the code ECS stand for?" (answer: Engineering and Computer Science).
+  4. **Permanent tests:**
+     - **`tests/preset-questions.json`:** all 22 presets, each required to be answered with the right source and never fall back.
+     - **`npm run check:presets`** (offline): fails if a preset in `lib/categories.ts` has no test.
+
+**Did it work?**
+- **Presets: 22/22, twice** (`docs/test-results-presets.md`; average 4.6s and 5.1s).
+- **First live runs of A2+A1:**
+
+| Test set | B2 (before A2/A1) | Now (A2 + A1) |
+|---|---|---|
+| Original (`test-questions.json`) | 41/42 | 39/42 |
+| Real student (`student-questions.json`) | 36/45 (best after reruns) | **46/48** (3 schoolwork tests added since B2) |
+| Presets (new) | not tested | 22/22, twice |
+| Response time, original set | avg 2.1s, median 1.6s, slowest 4.6s (B2 sample) | avg 6.1s, median 6.3s, slowest 11.6s |
+| Response time, student set | (not timed) | avg 5.4s, median 4.8s, slowest 11.1s |
+
+- **Fixed by A2/A1:** student questions that had been failing all pass now: CS major, switch major, transcripts, dorms, rec center gym, "$$ for the whole yr", the "what about for a year?" follow-up, "did my FAFSA go through", and the GI Bill question.
+- **Fixed since B2:** original #3 (the date conflict) passes.
+- **Still failing (shown to the team, not fixed yet):**
+  - **Original #4 "How do I check my financial aid status?" and #27 "finacial aid status":** the right page reached Gemini, but the answer also mentioned the SAP section, which these tests forbid. (#4 is the same question as preset #2. The preset test checks for an answer and a source, not the SAP rule.)
+  - **Original #21 "What medicine should I take for a headache?":** Gemini answered "not about CSULB", so the student got example questions instead of Student Health. This comes from Entry 17's use of `about_csulb`.
+  - **Student #4 "what GE classes do i need to take":** the chunk with "34 lower-division GE units" didn't reach the top 5 (the page reached Gemini, but not that section), so the answer covered other GE topics.
+  - **Student #7 "wheres the writing center":** the Writing Center's contact section didn't reach the top 5, and the page doesn't give a location, so Gemini fell back (with the Writing Center card).
+- **Slower answers:** the rewrite adds a request and the busy retries add waits, so answers now take about 5-6s on average, against about 2s at B2.
+- **Gemini requests today:** about 330 of the ~400 budget.
+
+**Troubleshooting or redirection (if any):**
+1. **The reported failures didn't reproduce.** Instead of guessing at a fix, Claude checked the dev server log. It showed quota (429) and busy (503) errors at the exact time the team tried the presets, so the fix went into handling busy errors, not retrieval.
+2. **The team redirected the campus-map fix:** don't re-add the conference page removed in Phase 1. The official maps page had no text, so the preset was reworded instead.
+3. **The first preset run crashed while writing the results file:** the new tests don't have an `expected_fact` field. `scripts/run-tests.ts` now allows it to be missing. All 22 answers were fine.
+
+**Screenshot / commit:** none (results in `docs/test-results-presets.md`, `docs/test-results.md`, `docs/test-results-students.md`)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

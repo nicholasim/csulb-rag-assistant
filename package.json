@@ -10,6 +10,7 @@
     "fetch-sources": "tsx scripts/fetch-sources.ts",
     "screenshots": "tsx scripts/take-screenshots.ts",
     "test:questions": "tsx scripts/run-tests.ts",
+    "check:presets": "tsx scripts/check-presets.ts",
     "test:stop-edit": "tsx scripts/test-stop-edit.ts",
     "english-words": "tsx scripts/build-english-words.ts",
     "explain": "tsx scripts/explain.ts",

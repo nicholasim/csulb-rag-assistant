@@ -19,7 +19,7 @@ import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
 import { crisisReply, isCrisisMessage } from "./crisis";
 import { officeAt } from "./directory";
-import { EXAMPLE_QUESTIONS } from "./categories";
+import { CATEGORIES, EXAMPLE_QUESTIONS } from "./categories";
 import { MIN_OFFICE_SIMILARITY, OFF_TOPIC_SIMILARITY, pickHelpOffice, rankOfficesByMeaning, type HelpOffice } from "./help-office";
 import { removePersonalDetails, rewriteQuestion } from "./rewrite";
 import { mergeRankings } from "./rank-merge";
@@ -57,6 +57,9 @@ export type ChatResponse = {
   helpOffice?: HelpOffice | null;
   offTopic?: boolean;
 };
+
+// Every question the app offers as a button: sidebar starters and welcome/example questions.
+const PRESET_QUESTIONS = new Set([...CATEGORIES.map((c) => c.starter), ...EXAMPLE_QUESTIONS]);
 
 /** Is the student asking for a map or how to get around? */
 function isMapQuestion(question: string) {
@@ -396,7 +399,10 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   // 2. Rewrite the question into search queries ("CS major" -> "Computer Science major"; a follow-up
   //    becomes a full question). We always search with the question itself too, so a bad rewrite
   //    can't hide an obvious match. Personal details (IDs, emails, phone numbers) are removed first.
-  const rewritten = await rewriteQuestion(smallTalk.rest, history);
+  //    Preset questions (sidebar starters, welcome examples) skip the rewrite: they're already
+  //    clear, they find the right page as written (tests/preset-questions.json), and skipping
+  //    saves one Gemini request per click and one thing that can fail (Entry 20).
+  const rewritten = PRESET_QUESTIONS.has(question.trim()) ? null : await rewriteQuestion(smallTalk.rest, history);
   const searchQueries = [...new Set([searchText, ...(rewritten ?? [])].map(removePersonalDetails).filter(Boolean))];
   let { results, matched, queryVectors, bestSimilarity } = await retrieve(searchQueries);
 

@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-12, after fixing the chat-bubble wrapping bug (prompt log Entry 19). Live test runs for A2, A1 and the "Who can help" card (Entry 17) are waiting for Gemini's daily quota to reset.
+**Last updated:** 2026-11-22, after fixing the preset questions and the first live runs with A2/A1 (prompt log Entry 20).
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -17,7 +17,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Retrieved passages are given to the LLM as context.** `buildInput()` in `lib/rag.ts`; Gemini is told to use only those sources (`lib/gemini.ts`, commit `00cae20`).
 - [x] **Source name, citation, or excerpt shown to the user.** Gold [1] citation tabs in the answer, plus numbered source chips that open the excerpt and a "View on csulb.edu" link (`components/chat/answer-text.tsx`, `source-chips.tsx`; `docs/screenshots/*-02-answer-with-source.png`).
 - [x] **Clear "not enough information" fallback.** Exact sentence from `lib/gemini.ts` `FALLBACK_SENTENCE`, shown in a calm gray card with the related department page as a button (`docs/screenshots/*-04-fallback.png`).
-- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 42 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid, 5 misspelled, 12 conversation), run with `npm run test:questions` (`ONLY=26,27` runs just some), plus the 45-question "real student" set (below). Latest full run of the original set (Entry 14): **41/42** in `docs/test-results.md`; only #3, the known date conflict, fails.
+- [x] **At least 10 test questions: answerable, ambiguous, and unsupported.** 42 tests in `tests/test-questions.json` (14 answerable across 13 service areas, 2 ambiguous, 4 unsupported, 2 safety, 3 invalid, 5 misspelled, 12 conversation), run with `npm run test:questions` (`ONLY=26,27` runs just some), plus the 45-question "real student" set (below). Latest full run of the original set (Entry 20, with A2/A1): **39/42** in `docs/test-results.md`. #4 and #27 mention the SAP section, and #21 (headache medicine) got example questions instead of Student Health. **Preset tests:** all 22 preset questions are permanent tests in `tests/preset-questions.json`. They passed **22/22 twice** (`docs/test-results-presets.md`), and `npm run check:presets` fails if a preset has no test.
 - [ ] **At least one meaningful error or invalid-case demo.** Partly (all 3 invalid tests pass: empty question, 600-character question, missing API key; Entry 7): the API returns friendly errors for an empty question, a question over 500 characters, a missing API key, Gemini rate limits, and Gemini outages (tested in Entry 3). The UI shows them with a "Try again" button and blocks questions over 500 characters with a red counter (`docs/screenshots/*-05-error.png`, which uses a simulated rate limit). Phase 4: choose and rehearse the live demo case (e.g., a 500+ character question, or a missing key on a test deploy).
   - **"The AI sent back an answer we couldn't read"** (Entry 14). Cause: Gemini's hidden thinking counts toward its output limit (2048 tokens), and table-heavy questions used up to about 1,000 thinking tokens, so a long reply was sometimes cut off mid-JSON (status "incomplete"). Fix: the limit is now 8192, the server retries an unreadable reply once automatically, and the log records the status and token counts.
 - [x] **API key not in source code or GitHub.** The key lives only in `.env.local`, which git ignores (`.gitignore` line 34). A scan of every commit found no key. The key is read only on the server, in `lib/gemini.ts`, and is never logged.
@@ -33,7 +33,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 ## 3. Design brief features
 
 ### Chat experience
-- [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5).
+- [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5). Every preset (22 sidebar starters, which include the 6 welcome examples) is a permanent live test, passing 22/22 twice (Entry 20). Presets skip the rewrite call, to save quota.
 - [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
 - [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`. Numbered 1, 2, 3 in order with one chip per page; table quotes include column names (Entry 6).
 - [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6). It also cancels an answer that's still loading (Entry 9).
@@ -58,20 +58,21 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Screenshots:** `docs/screenshots/*-12-fallback-who-can-help.png` and `*-13-fallback-not-csulb.png`.
 - [x] **Basic conversation ("chat" replies):** greetings (with 3 example question buttons), thanks, goodbye, "what can you do?" / "who made you?" (official pages only, the service areas, our IS 300 team), and "how are you?" get fixed friendly replies with no AI and no sources (`lib/small-talk.ts`, Entry 11; `docs/screenshots/*-10-chat-hello.png`, `*-11-chat-what-can-you-do.png`). A greeting plus a real question is answered normally; off-topic facts ("capital of France", "write my essay") still fall back. Tests #31-42 pass.
 - [x] **Typos are fixed before searching** ("parkng permit" -> "parking permit"). `lib/spelling.ts`: edit distance against every word in our pages, 1 typo for 4-7 letters and 2 for 8+, no change on a tie, same first letter, and only into words that appear at least twice in our pages (Entry 11). **Real English words are never changed** (Entry 14): about 44,000 common words from SCOWL (`lib/data/english-words.json`, made by `npm run english-words`), so "died", "write" and "dorms" stay as typed. Greetings like "helo" and "thx" are never corrected. Gemini sees the original and the corrected wording, and the UI shows a gray "Showing results for: …" note (Entry 10; `docs/screenshots/*-09-spelling-note.png`). Misspelled tests #26-30 pass (Entry 14).
-- [ ] **Understanding any wording: query rewriting (Step A2).** Partly: built and checked offline (Entry 15).
+- [x] **Understanding any wording: query rewriting (Step A2).** Built in Entry 15; first live runs in Entry 20.
   - `lib/rewrite.ts` turns each message into 1-3 search queries: slang, "CS" → Computer Science, follow-ups, two-part questions, "my record" → how to check it, schoolwork → Writing Center/tutoring.
   - The question itself is always searched too, and the results are merged with RRF (`lib/rank-merge.ts`).
   - If the rewrite fails, the app searches as before. This was tested with a model name that doesn't exist.
   - Personal details are removed from every query.
-  - **Left:** the live runs of both test sets, after the daily quota resets.
-- [ ] **Understanding any wording: hybrid search with embeddings (Step A1).** Partly: built, embedded and checked offline (Entry 16).
+  - **Live (Entry 20, A2+A1 together):** student set **46/48** (B2: 36/45), original set 39/42 (B2: 41/42).
+  - **Cost:** 2 Gemini requests per question instead of 1, so about 250 questions per day on the free tier. ⚠ This is beyond the brief's "built-in similarity search"; the team should be able to explain it in plain words.
+- [x] **Understanding any wording: hybrid search with embeddings (Step A1).** Built in Entry 16; first live runs in Entry 20.
   - `npm run embeddings` saves 290 vectors (0.9 MB, `gemini-embedding-001`, 768 numbers each) to `data/`. It's incremental, batched, waits out 429s, and is resumable, for the future full-site crawl.
   - `lib/vector-search.ts` falls back to keyword search if the vectors are missing or stale, or the call fails (both tested).
   - Vercel bundles `data/embeddings.*`.
   - **Offline:** the right page is in the top 5 for 22/22 questions with known pages (19/22 with keywords only).
-  - **Left:** the live runs after the quota resets.
+  - **Live:** see A2 above. No "[vectors] skipped" warnings in any live run.
 - [x] **Schoolwork rule** (team decision, Entry 15). The prompt in `lib/gemini.ts` says never to write, rewrite, edit, outline or complete schoolwork, even indirectly. Instead the assistant refers the student to the University Writing Center or The Learning Center. Student tests #36 and #46-48 check for the referral, no content, and ≤ 600 characters. Live run pending.
-- [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
+- [x] **Map / "getting around" questions point to https://www.csulb.edu/maps.** (That page has no text we can use, so the "Campus Maps" preset is now "What building does the code ECS stand for?", answered from Building Names & Codes; Entry 20.) `lib/gemini.ts` and `lib/rag.ts`; tested in Entry 3.
 - [x] **Advising: name the center and give its Contact & Location link; never make up phone numbers or emails.** Prompt rule plus the contact-detail check (`removeUnverifiedDetails` in `lib/rag.ts`); tested in Entry 3.
 - [ ] **Conflicting sources: show both values and say to confirm with the office.** Partly: prompt rule in `lib/gemini.ts`. It works for "When is the add/drop deadline for spring?" but not for "last day to drop without a W" (Entry 3, issue 6). It is still failing in test #3 on `gemini-3.5-flash-lite` (Entry 7). **Team decision (Entry 8): left as a known limitation for the limitations slide.** Flash-Lite doesn't reliably notice that the refund table's Feb. 2 row is the same deadline as the Registration table's Feb. 3.
 - [x] **No medical, legal, or financial advice.** Rule in the system prompt (`lib/gemini.ts`). Test #21 ("What medicine should I take for a headache?") passes: no medicine named, Student Health mentioned.

@@ -151,8 +151,18 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   let interaction;
   try {
     try {
-      // No retries on the main model: if it's busy, switching to the backup is faster.
-      interaction = await callModel(mainModel, 0, 20_000);
+      try {
+        interaction = await callModel(mainModel, 0, 20_000);
+      } catch (err) {
+        // "Busy" (503) or a server error (500+) usually clears in a moment, and the error comes
+        // back fast, so wait 2 seconds and ask the main model once more (Entry 20: a busy reply
+        // from both models was the only reason preset questions failed). We don't retry a
+        // rate limit (429: retrying uses up more quota) or a timeout (the student already waited 20s).
+        if (statusOf(err) < 500) throw err;
+        console.warn(`[gemini] ${mainModel} busy (${errorKind(err)}), retrying once in 2s`);
+        await new Promise((resolve) => setTimeout(resolve, 2_000));
+        interaction = await callModel(mainModel, 0, 20_000);
+      }
     } catch (err) {
       // Main model overloaded (503), rate-limited (429), erroring (500+), or timed out (no status)?
       // Try the backup model before giving up. Other errors (bad key, bad model name) won't
