@@ -186,7 +186,10 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
   return (
     <div className="flex h-dvh bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-72 shrink-0 flex-col gap-8 overflow-y-auto bg-sidebar px-4 py-6 text-sidebar-foreground lg:flex">
+      {/* relative: the category buttons' hidden screen-reader labels (sr-only = position: absolute)
+          must be positioned inside this scroll box. Without it they were placed against the page and
+          made it 183px taller than the window, so the whole page could scroll (Entry 26). */}
+      <aside className="relative hidden w-72 shrink-0 flex-col gap-8 overflow-y-auto bg-sidebar px-4 py-6 text-sidebar-foreground lg:flex">
         <div className="flex flex-col gap-5 px-1">
           <Wordmark />
           <Button
@@ -244,7 +247,7 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
 
         <main className="flex min-h-0 flex-1 flex-col">
           {turns.length === 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="relative min-h-0 flex-1 overflow-y-auto">
               <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
                 <Welcome onAsk={ask} pageCount={pageCount} />
               </div>

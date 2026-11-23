@@ -1496,4 +1496,41 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 26 (UI bug: the whole page scrolled past the window)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> UI bug (fix only, no new features): when I scroll down, the whole page scrolls past the window. The sidebar, chat and input box slide up and leave a half-white blank area at the bottom, and the top of the sidebar gets cut off. The app should fill exactly the window, with only the message list scrolling. Likely fixes: full-height html/body with overflow hidden, h-dvh on the shell, min-h-0 on the scrolling flex child, and overscroll-behavior. Check that nothing outside the shell adds height. Don't call Gemini; use fake messages. Before/after Playwright screenshots (desktop Chrome and WebKit, and mobile), at the top and bottom of a long chat.
+
+**What the AI did:**
+- **Measured first** (fake chat, `/api/chat` mocked, no Gemini):
+  - the shell, `body`, `main` and the sidebar were each exactly 900px (the shell already used `h-dvh`, and the scrollers already had `min-h-0`);
+  - but `html` could scroll to 1083px. **The page was 183px taller than the window.**
+- **The cause wasn't any of the likely suspects.** Each sidebar category button has a hidden screen-reader label (`sr-only`, which is `position: absolute`). The sidebar `<aside>` wasn't `position: relative`, so those labels were positioned against the page instead of the sidebar. They escaped its scroll box, and the last ones sat 15-183px below the window, stretching the page.
+- **Fixes:**
+  - `relative` on the sidebar `<aside>` and on the welcome screen's scroll container (`components/chat/chat-app.tsx`);
+  - a guard in `app/globals.css`: `html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }`, so the page itself can never scroll or rubber-band, even if something like this happens again.
+
+**Did it work?** Yes.
+
+| | Page scrollable | Page scrolled | Sidebar top cut off | Blank area at bottom |
+|---|---|---|---|---|
+| Before: desktop Chrome / WebKit | 183px | 183px | 183px | 183px |
+| Before: mobile Chrome / WebKit (sidebar hidden) | 0 | 0 | 0 | 0 |
+| **After: all 4** | **0** | **0** | **0** | **0** |
+
+- Only the message list scrolls: about 6,300px of it on desktop and about 8,600px on mobile, in a 12-turn fake chat.
+- The welcome screen and the mobile menu still scroll on their own, and the page stays at 0.
+- tsc, eslint and `npm run build` pass.
+
+**Troubleshooting or redirection (if any):**
+1. **The suggested fixes (h-dvh, min-h-0) were already in place.** Measuring each layer showed only `<html>` was too tall, and listing absolutely positioned elements below the window found the screen-reader labels. The fix was one `relative` class, plus a CSS guard.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-{chrome,webkit}-18-scroll-{before,after}-{top,bottom}.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

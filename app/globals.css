@@ -138,4 +138,12 @@
   html {
     @apply font-sans;
   }
+  /* The app fills exactly the window: only the message list, the welcome screen and the sidebar
+     scroll. The page itself never scrolls or rubber-bands (Entry 26). */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
 }
