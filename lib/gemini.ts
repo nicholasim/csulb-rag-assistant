@@ -5,6 +5,7 @@
  * environment variable at request time and is never logged or sent to the browser.
  */
 import { GoogleGenAI } from "@google/genai";
+import { DeadlineError, REQUEST_BUDGET_MS, timeLeft, withDeadline } from "./deadline";
 import { numberedOfficeList } from "./directory";
 
 export const FALLBACK_SENTENCE = "I do not have enough information in the provided CSULB sources.";
@@ -17,6 +18,9 @@ const DEFAULT_BACKUP_MODEL = "gemini-3.8-flash";
 // How long the main model gets before we switch to the backup. Normal answers take 1-6s; a stuck
 // request once made a student wait 50s (Entry 23), so after 10s we move on (Entry 24).
 const MAIN_TIMEOUT_MS = 10_000;
+const BACKUP_TIMEOUT_MS = 15_000;
+const BUSY_PAUSE_MS = 2_000;
+const MIN_TRY_MS = 2_000; // don't start a Gemini try with less time than this left
 // The most tokens Gemini may produce, INCLUDING its hidden "thinking". Our answers are short
 // (about 100-200 tokens), but thinking alone can use about 1,000 tokens on table-heavy questions
 // like parking prices. At the old limit of 2048, a long think sometimes cut the JSON reply off
@@ -51,7 +55,7 @@ SPECIAL CASES
 - Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
 - Where is an office, or how do I reach it: if the sources don't give the office's location but do give its phone, email, website, or how to book an appointment, use type "answer": say our sources don't list where it is, then give that contact and booking information with citations. Never guess a building or room, and don't use a room from an event listing as the office's location.
 - Health and medical questions (symptoms, medicine, getting sick or hurt, vaccines) are always about CSULB students: if you fall back, set about_csulb to true and related_office to Student Health Services.
-- Follow-up questions (follow_ups): for "answer" only, suggest 2-3 short questions (under 60 characters) the student might ask next about the same topic, written the way a student would ask them. Only suggest questions the SOURCES you were given clearly answer: never general knowledge, other schools, opinions, or anything the sources don't cover. Use [] for "clarify" and "fallback".
+- Follow-up questions (follow_ups): for "answer" only, suggest up to 3 short questions (under 60 characters) the student might ask next about the same topic, written the way a student would ask them. Only suggest a question if one of the SOURCES states its answer directly (a specific step, price, date, contact, or rule). Do not suggest questions about locations, hours, or eligibility rules unless that exact information is in the sources. If unsure, suggest fewer or none. Use [] for "clarify" and "fallback".
 - Name what the sources name: when the sources list specific programs, places, or services for what the student needs (for example the Beach Pantry for food), name them in the answer.
 - Advising contacts: if a source lists an advising center with a "Contact & Location" link instead of a phone number or email, name the advising center and give that link. Do not make up contact details.
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
@@ -99,7 +103,7 @@ export const RESPONSE_SCHEMA = {
     follow_ups: {
       type: "array",
       items: { type: "string" },
-      description: "Only for answer: 2-3 short follow-up questions (under 60 characters each) the student might ask next, on the same topic, that the SOURCES you were given can answer. Use [] for clarify and fallback.",
+      description: "Only for answer: up to 3 short follow-up questions (under 60 characters each) on the same topic whose answers the SOURCES state directly. No locations, hours, or rules unless the sources give them. Use [] for clarify and fallback.",
     },
   },
   required: ["type", "answer", "related_source", "related_office", "about_csulb", "follow_ups"],
@@ -134,7 +138,7 @@ export function hasApiKey() {
  * Ask Gemini. `input` already contains the sources, conversation, and question.
  * Returns Gemini's reply and the name of the model that wrote it (main or backup).
  */
-export async function askGemini(input: string): Promise<{ reply: GeminiReply; model: string }> {
+export async function askGemini(input: string, deadlineAt = Date.now() + REQUEST_BUDGET_MS): Promise<{ reply: GeminiReply; model: string }> {
   if (!hasApiKey()) {
     throw new FriendlyError(
       "missing_api_key",
@@ -147,8 +151,12 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   const mainModel = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
   const backupModel = process.env.GEMINI_BACKUP_MODEL?.trim() || DEFAULT_BACKUP_MODEL;
 
-  const callModel = async (model: string, maxRetries: number, timeout: number) => {
-    const interaction = await client.interactions.create(
+  // Each try gets its own limit, but never more than the time left for this question (Entry 28).
+  // Under 2s left: don't start another try; the student gets "Gemini is having trouble" instead.
+  const callModel = async (model: string, limitMs: number) => {
+    const ms = Math.min(limitMs, timeLeft(deadlineAt));
+    if (ms < MIN_TRY_MS) throw new DeadlineError(`answer ${model} (no time left)`, ms);
+    const interaction = await withDeadline(`answer ${model}`, ms, (signal) => client.interactions.create(
       {
         model,
         system_instruction: SYSTEM_PROMPT,
@@ -157,8 +165,11 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
         generation_config: { thinking_level: "low", max_output_tokens: MAX_OUTPUT_TOKENS },
         store: false, // privacy: don't keep students' questions on Google's servers
       },
-      { maxRetries, timeout },
-    );
+      // Interactions use timeout_ms / retries (not timeout / maxRetries, which were silently ignored
+      // before Entry 28: no timeout, and up to 4 hidden retries). Our own busy retry and backup are
+      // the only retries.
+      { timeout_ms: ms, retries: { strategy: "none" }, signal },
+    ));
     logUsage("answer", model, interaction);
     return interaction;
   };
@@ -168,16 +179,16 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   try {
     try {
       try {
-        interaction = await callModel(mainModel, 0, MAIN_TIMEOUT_MS);
+        interaction = await callModel(mainModel, MAIN_TIMEOUT_MS);
       } catch (err) {
         // "Busy" (503) or a server error (500+) usually clears in a moment, and the error comes
         // back fast, so wait 2 seconds and ask the main model once more (Entry 20: a busy reply
         // from both models was the only reason preset questions failed). We don't retry a
         // rate limit (429: retrying uses up more quota) or a timeout (the student already waited 10s).
-        if (statusOf(err) < 500) throw err;
+        if (statusOf(err) < 500 || timeLeft(deadlineAt) < BUSY_PAUSE_MS + MIN_TRY_MS) throw err;
         console.warn(`[gemini] ${mainModel} busy (${errorKind(err)}), retrying once in 2s`);
-        await new Promise((resolve) => setTimeout(resolve, 2_000));
-        interaction = await callModel(mainModel, 0, MAIN_TIMEOUT_MS);
+        await new Promise((resolve) => setTimeout(resolve, BUSY_PAUSE_MS));
+        interaction = await callModel(mainModel, MAIN_TIMEOUT_MS);
       }
     } catch (err) {
       // Main model overloaded (503), rate-limited (429), erroring (500+), or timed out (no status)?
@@ -190,7 +201,7 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       usedModel = backupModel;
       // One try, 15 seconds max: worst case a student waits about 25 seconds (10 + 15) before
       // seeing "try again", instead of about 60 with retries.
-      interaction = await callModel(backupModel, 0, 15_000);
+      interaction = await callModel(backupModel, BACKUP_TIMEOUT_MS);
     }
   } catch (err) {
     throw toFriendlyError(err);
@@ -202,7 +213,7 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
     // (Each try is a fresh answer, so a second try usually works.)
     console.warn(`[gemini] unreadable reply from ${usedModel} (${replyStats(interaction)}), retrying once`);
     try {
-      interaction = await callModel(usedModel, 0, 20_000);
+      interaction = await callModel(usedModel, MAIN_TIMEOUT_MS);
     } catch (err) {
       throw toFriendlyError(err);
     }

@@ -17,6 +17,7 @@ import { GoogleGenAI } from "@google/genai";
 import { loadChunks, type Chunk } from "./knowledge";
 import { chunkHash, DIMENSIONS, EMBEDDING_MODEL, normalize, readStore } from "./embeddings-store";
 import { errorKind } from "./gemini";
+import { REQUEST_BUDGET_MS, timeLeft, withDeadline } from "./deadline";
 
 const TIMEOUT_MS = 3_000; // after this, skip meaning-based search for this question
 
@@ -65,18 +66,23 @@ export type VectorResult = { chunk: Chunk; similarity: number };
  * plus the query vectors themselves (so the "Who can help" office can be picked without another call).
  * Returns empty lists (and the app keeps going with keyword search) if anything goes wrong.
  */
-export async function vectorSearch(queries: string[], limit = 10): Promise<{ lists: VectorResult[][]; queryVectors: Float32Array[] }> {
+export async function vectorSearch(queries: string[], limit = 10, deadlineAt = Date.now() + REQUEST_BUDGET_MS): Promise<{ lists: VectorResult[][]; queryVectors: Float32Array[] }> {
   const none = { lists: [], queryVectors: [] };
   const data = load();
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!data || !apiKey || queries.length === 0) return none;
   try {
     // One request embeds all of this question's queries together.
-    const response = await new GoogleGenAI({ apiKey }).models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: queries,
-      config: { taskType: "RETRIEVAL_QUERY", outputDimensionality: DIMENSIONS, httpOptions: { timeout: TIMEOUT_MS } },
-    });
+    // withDeadline also covers a reply that starts but never finishes, which httpOptions.timeout
+    // alone didn't (Entry 28).
+    const ms = Math.min(TIMEOUT_MS, timeLeft(deadlineAt));
+    const response = await withDeadline("embedding", ms, (signal) =>
+      new GoogleGenAI({ apiKey }).models.embedContent({
+        model: EMBEDDING_MODEL,
+        contents: queries,
+        config: { taskType: "RETRIEVAL_QUERY", outputDimensionality: DIMENSIONS, httpOptions: { timeout: ms }, abortSignal: signal },
+      }),
+    );
     // Cost log (Entry 23). The embedding API doesn't return token counts, so estimate ~4 characters per token.
     console.info(`[usage] embed model=${EMBEDDING_MODEL} texts=${queries.length} est_tokens=${Math.ceil(queries.join(" ").length / 4)}`);
     const embeddings = response.embeddings ?? [];

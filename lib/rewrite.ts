@@ -18,6 +18,7 @@ import { GoogleGenAI } from "@google/genai";
 import { CATEGORIES } from "./categories";
 import { OFFICES } from "./directory";
 import { errorKind, logUsage } from "./gemini";
+import { REQUEST_BUDGET_MS, timeLeft, withDeadline } from "./deadline";
 import type { ChatMessage } from "./rag";
 
 const DEFAULT_REWRITE_MODEL = "gemini-3.5-flash-lite";
@@ -75,7 +76,7 @@ export function removePersonalDetails(text: string) {
  * Ask Gemini for search queries. Returns null if anything goes wrong (no key, slow, error,
  * unreadable reply); the caller then searches with the question as typed.
  */
-export async function rewriteQuestion(question: string, history: ChatMessage[]): Promise<string[] | null> {
+export async function rewriteQuestion(question: string, history: ChatMessage[], deadlineAt = Date.now() + REQUEST_BUDGET_MS): Promise<string[] | null> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) return null; // the answer step reports the missing key
   const conversation = history.length
@@ -84,7 +85,8 @@ export async function rewriteQuestion(question: string, history: ChatMessage[]):
   try {
     const client = new GoogleGenAI({ apiKey });
     const model = process.env.GEMINI_REWRITE_MODEL?.trim() || DEFAULT_REWRITE_MODEL;
-    const interaction = await client.interactions.create(
+    const ms = Math.min(TIMEOUT_MS, timeLeft(deadlineAt));
+    const interaction = await withDeadline("rewrite", ms, (signal) => client.interactions.create(
       {
         model,
         system_instruction: REWRITE_PROMPT,
@@ -94,8 +96,9 @@ export async function rewriteQuestion(question: string, history: ChatMessage[]):
         generation_config: { thinking_level: "minimal", max_output_tokens: 1024 },
         store: false, // privacy: don't keep students' questions on Google's servers
       },
-      { maxRetries: 0, timeout: TIMEOUT_MS },
-    );
+      // Interactions read timeout_ms / retries (Entry 28); withDeadline is the backstop.
+      { timeout_ms: ms, retries: { strategy: "none" }, signal },
+    ));
     logUsage("rewrite", model, interaction);
     if (interaction.status === "incomplete") throw new Error("reply cut off");
     const parsed = JSON.parse(interaction.output_text ?? "") as { queries?: unknown };

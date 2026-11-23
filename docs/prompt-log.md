@@ -1610,4 +1610,68 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 28 (No request over 30 seconds; stricter follow-ups; #3 check; #31 shortcut)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> 1. Priority: a request hung for 90s with no warning logged (original #3). Find what our timeouts don't cover and make sure no request takes longer than about 30s before the student sees an answer or a friendly error.
+> 2. Follow-ups: tighten the prompt so suggestions only ask about facts the sources state (no locations, hours, or rules unless given); recheck the same 5 answers.
+> 3. #3: rerun 3 times; if it keeps giving one date, say whether the follow-up line is the cause before changing anything.
+> 4. #31: add a keyword shortcut so it finds the To Do List even if the rewrite times out.
+>
+> Rerun only the affected tests. Plan first with the scope check.
+
+**What the AI did:**
+- **Found the cause by reading the installed Gemini SDK:**
+  - **Wrong option names:** our rewrite and answer calls use `interactions.create`, which reads `timeout_ms` and `retries`. We were passing `timeout` and `maxRetries` (the names from the older API), which it silently ignores. So by default there was **no timeout** and up to **4 hidden retries** (on 408/409/429/5xx, with backoff up to 30s).
+  - **The embedding call** had a timeout, but it doesn't cover a reply that starts and never finishes.
+- **Proved it first** with a new offline check, `npm run check:timeouts`. It replaces `fetch` with fakes, so no Gemini is involved.
+  - **Before the fix:**
+    - **Gemini never answers:** the main model gave up at 10s, but the backup never did, and the request was still waiting at **45s**;
+    - **a reply that starts but never ends:** the first request (the embedding) held everything past **45s**.
+- **Fix:**
+  - **New `lib/deadline.ts` (`withDeadline`):** each Gemini call gets an abort signal and a hard timer, so it's cancelled and abandoned on time, whatever the SDK does.
+  - **The correct SDK options:** `timeout_ms`, `retries: { strategy: "none" }`, `signal`.
+  - **A 28s budget for the whole question** (`lib/rag.ts`): every step gets the smaller of its own limit and the time left (rewrite 3s at the same time as the embedding 3s, main model 10s, busy retry 2s + 10s, backup 15s, unreadable-reply retry 10s, down from 20s). Under 2s left means no new try, and the student gets the friendly "Gemini is having trouble" error.
+  - **`maxDuration = 30`** on the chat route.
+  - **A `[timing] rewrite/embed/answer/total` log line** (numbers only) for any question over 10s.
+- **Follow-up prompt rule, stricter:** only suggest a question "if one of the SOURCES states its answer directly… no locations, hours, or eligibility rules unless that exact information is in the sources. If unsure, suggest fewer or none."
+- **#31: a phrase shortcut** (`expandQuery` in `lib/retrieval.ts`). FAFSA, Dream Act/CADAA or financial aid together with status words ("go through", "status", "received", "processed", "submitted", "pending"…) adds the search words "pending to do list". It works without the rewrite.
+
+**Did it work?**
+- **`npm run check:timeouts` after the fix, with every Gemini call making exactly one request (no hidden retries):**
+
+| Fake Gemini behavior | Before | After |
+|---|---|---|
+| Never answers | still waiting at 45s | friendly error at **28.1s** (rewrite 3s, embed 3s, main 10s, backup 15s) |
+| Reply starts, never ends | still waiting at 45s | friendly error at **28.0s** |
+| Busy (503) | friendly error at 2.0s | friendly error at 2.0s: one busy retry, then the backup |
+
+- **Follow-ups, same 5 answers:**
+  - Gemini suggested 14 and the filter kept 12;
+  - **11 of 12 kept are stated in the sources** (Entry 27: 10 of 13), for example the summer permit price ($171) and "When must I declare a major?" (by 60 units);
+  - **the one exception** is "What are the drop-in advising hours?" again: the page explains how to drop in, but no hours;
+  - **2 good ones dropped** by the filter ("Can I apply for financial aid after the deadline?", "How do I apply for financial aid?"), because their best keyword match wasn't a page Gemini was shown. That's not most, so the filter is unchanged.
+  - None appeared on the "best professor" fallback or the crisis message.
+- **#31 passes** (the shortcut ranks the To Do List section #2). FAFSA deadline and school code searches are unchanged, and the offline coverage is still 150/151.
+- **The 5 follow-up answer tests pass.**
+- **#3: passed 1 of 3, failing twice by giving only Feb. 3.** The experiment (same sources and input, 3 calls each):
+  - **with** the follow-up rule: both dates 2 of 3;
+  - **without** it: 1 of 3.
+
+  **The follow-up rule isn't the cause.** Gemini applies the "show both conflicting dates" rule inconsistently. Not changed (team decision pending).
+- No busy, timeout or slow-question warnings in the server log during this round.
+- tsc, eslint, build, `check:presets` and `check:follow-ups` pass. Cost: about 35 requests (~$0.07).
+
+**Troubleshooting or redirection (if any):**
+1. **The SDK's `timeout` looked set,** and some rewrite timeouts were logged, so the bug was easy to miss. Reading the SDK's own option types and defaults showed the interactions API ignores those names.
+2. **In the first offline run the rewrite never ran.** The test question was a preset, which skips the rewrite. Claude switched to a non-preset question so the check covers every step.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

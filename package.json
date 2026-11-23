@@ -13,6 +13,7 @@
     "check:presets": "tsx scripts/check-presets.ts",
     "check:coverage": "tsx scripts/check-coverage.ts",
     "check:follow-ups": "tsx scripts/check-follow-ups.ts",
+    "check:timeouts": "tsx scripts/check-timeouts.ts",
     "test:stop-edit": "tsx scripts/test-stop-edit.ts",
     "english-words": "tsx scripts/build-english-words.ts",
     "explain": "tsx scripts/explain.ts",

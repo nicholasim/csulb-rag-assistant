@@ -11,6 +11,10 @@
 import { answerQuestion } from "@/lib/rag";
 import { FriendlyError } from "@/lib/gemini";
 
+// Hosting limit for this route (seconds). lib/rag.ts already answers or gives a friendly error
+// within 28s (Entry 28); this stops the platform from holding a request any longer.
+export const maxDuration = 30;
+
 export async function POST(request: Request) {
   let body: { question?: unknown; history?: unknown };
   try {

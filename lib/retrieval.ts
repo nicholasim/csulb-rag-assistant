@@ -99,10 +99,30 @@ function getIndex(): Index {
 
 export type SearchResult = { chunk: Chunk; score: number };
 
+/**
+ * Phrase shortcuts for questions whose words don't appear on the page that answers them. Unlike
+ * SYNONYMS (one word at a time), these look at the whole question. They only add search words.
+ * "did my FAFSA go through" means "is my aid application still pending?", which the MyCSULB
+ * To Do List section answers, but that section never says "FAFSA" or "go through" (Entry 28).
+ * This works even when the rewrite step times out.
+ */
+const PHRASE_SHORTCUTS: { when: RegExp[]; add: string }[] = [
+  {
+    when: [/\b(fafsa|cadaa|dream act|financial aid|aid application)\b/i, /\b(go(ne)? through|went through|status|receiv\w*|process\w*|submitted|pending|approved)\b/i],
+    add: "pending to do list",
+  },
+];
+
+/** The question plus any shortcut search words that apply to it. */
+export function expandQuery(question: string) {
+  const extra = PHRASE_SHORTCUTS.filter((s) => s.when.every((re) => re.test(question))).map((s) => s.add);
+  return extra.length ? `${question} ${extra.join(" ")}` : question;
+}
+
 /** Score every chunk against the question and return the best `limit` matches. */
 export function search(question: string, limit = 5): SearchResult[] {
   const { chunks, termCounts, lengths, avgLength, docFreq } = getIndex();
-  const words = tokenize(question);
+  const words = tokenize(expandQuery(question));
   const queryWords = [...new Set([...words, ...words.flatMap((w) => SYNONYMS[w] ?? [])])];
   const N = chunks.length;
 

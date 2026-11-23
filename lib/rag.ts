@@ -14,6 +14,7 @@
 import type { Chunk } from "./knowledge";
 import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
+import { REQUEST_BUDGET_MS } from "./deadline";
 import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
@@ -341,7 +342,7 @@ export function removeUnverifiedDetails(answer: string, results: SearchResult[])
  * If we fixed typos, Gemini gets the student's own words AND the fixed version, so it can
  * tell if our fix changed what the student meant.
  */
-function buildInput(question: string, correctedQuestion: string | null, searchQueries: string[], results: SearchResult[], history: ChatMessage[]) {
+export function buildInput(question: string, correctedQuestion: string | null, searchQueries: string[], results: SearchResult[], history: ChatMessage[]) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "America/Los_Angeles" });
   const sources = results
     .map(({ chunk }, i) => `[${i + 1}] ${chunk.title} > ${chunk.heading}\nURL: ${chunk.url}\n${chunk.text}`)
@@ -379,6 +380,7 @@ function fallback(
   };
 }
 
+const SLOW_REQUEST_MS = 10_000; // log step timings for questions slower than this
 const RESULTS_PER_QUERY = 10; // how deep each search list goes before merging
 
 // Meaning-based search alone can also let a question through to Gemini, if its best match is at
@@ -391,10 +393,10 @@ const MIN_SIMILARITY = Infinity;
  * vector-search.ts). Then merge all the lists into the TOP_K chunks for Gemini (rank-merge.ts).
  * bestScore / bestSimilarity are the best match from each kind: our "did anything really match?" check.
  */
-async function retrieve(queries: string[], meaning?: Promise<Awaited<ReturnType<typeof vectorSearch>>>) {
+async function retrieve(queries: string[], meaning?: Promise<Awaited<ReturnType<typeof vectorSearch>>>, deadlineAt?: number) {
   const keywordLists = queries.map((q) => search(q, RESULTS_PER_QUERY));
   // Meaning search: already started by the caller (see answerQuestion), or run now. Empty if unavailable.
-  const { lists: meaningLists, queryVectors } = await (meaning ?? vectorSearch(queries, RESULTS_PER_QUERY));
+  const { lists: meaningLists, queryVectors } = await (meaning ?? vectorSearch(queries, RESULTS_PER_QUERY, deadlineAt));
   const bestScore = Math.max(0, ...keywordLists.map((list) => list[0]?.score ?? 0));
   const bestSimilarity = Math.max(0, ...meaningLists.map((list) => list[0]?.similarity ?? 0));
   const results = mergeRankings(
@@ -413,6 +415,11 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     throw new FriendlyError("empty_question", "Please type a question first.", 400);
   }
   const question = rawQuestion.trim();
+  // The whole question has REQUEST_BUDGET_MS (28s) from here: every Gemini step gets the smaller of
+  // its own limit and the time left, so a student never waits longer than that (Entry 28).
+  const startedAt = Date.now();
+  const deadlineAt = startedAt + REQUEST_BUDGET_MS;
+  const timing = { rewrite: 0, embed: 0, answer: 0 };
   if (question.length > MAX_QUESTION_LENGTH) {
     throw new FriendlyError(
       "question_too_long",
@@ -460,8 +467,11 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   //    time as the rewrite, instead of waiting for it (saves about 0.4s). Keyword search still uses
   //    every rewritten query.
   const typedQuery = removePersonalDetails(searchText);
-  const meaning = vectorSearch([typedQuery], RESULTS_PER_QUERY);
-  const rewritten = PRESET_QUESTIONS.has(question.trim()) ? null : await rewriteQuestion(smallTalk.rest, history);
+  const embedStart = Date.now();
+  const meaning = vectorSearch([typedQuery], RESULTS_PER_QUERY, deadlineAt).finally(() => (timing.embed = Date.now() - embedStart));
+  const rewriteStart = Date.now();
+  const rewritten = PRESET_QUESTIONS.has(question.trim()) ? null : await rewriteQuestion(smallTalk.rest, history, deadlineAt);
+  timing.rewrite = Date.now() - rewriteStart;
   const searchQueries = [...new Set([typedQuery, ...(rewritten ?? []).map(removePersonalDetails)].filter(Boolean))];
   let { results, matched, queryVectors, bestSimilarity } = await retrieve(searchQueries, meaning);
 
@@ -470,7 +480,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   const lastUserQuestion = [...history].reverse().find((m) => m.role === "user")?.content;
   if (!rewritten && !matched && lastUserQuestion) {
     const retryQuery = removePersonalDetails(`${correctSpelling(lastUserQuestion).corrected} ${searchText}`);
-    ({ results, matched, queryVectors, bestSimilarity } = await retrieve([retryQuery]));
+    ({ results, matched, queryVectors, bestSimilarity } = await retrieve([retryQuery], undefined, deadlineAt));
     searchQueries.push(retryQuery);
   }
 
@@ -495,7 +505,17 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
-  const { reply, model } = await askGemini(buildInput(question, correctedQuestion, searchQueries, results, history));
+  const answerStart = Date.now();
+  let reply: Awaited<ReturnType<typeof askGemini>>["reply"];
+  let model: string;
+  try {
+    ({ reply, model } = await askGemini(buildInput(question, correctedQuestion, searchQueries, results, history), deadlineAt));
+  } finally {
+    timing.answer = Date.now() - answerStart;
+    // Slow questions get one line of timings (numbers only), so a slow request can be explained.
+    const total = Date.now() - startedAt;
+    if (total > SLOW_REQUEST_MS) console.warn(`[timing] rewrite=${timing.rewrite}ms embed=${timing.embed}ms answer=${timing.answer}ms total=${total}ms`);
+  }
 
   // 5. Shape the response.
   if (reply.type === "fallback") {

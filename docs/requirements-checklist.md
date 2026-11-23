@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-23, after Entry 27: follow-up suggestions (the one feature added after the freeze). Original 40/42, student 47/48 in the full rerun.
+**Last updated:** 2026-11-23, after Entry 28: hard 28s limit per question (proved offline with `npm run check:timeouts`), stricter follow-ups, and a FAFSA-status search shortcut.
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -200,6 +200,8 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Office descriptions can go stale when CSULB edits a page.** Entry 24 found one: the College of Natural Sciences and Mathematics sentence had been hidden in an HTML comment. It was fixed in Entry 25 with a visible sentence (42 of 42 offices). `npm run fetch-sources` reports any future mismatch and leaves that office out until the sentence is updated.
   - **Some source pages still show dates that have already passed**, for example "starting on November 3, 2026" for SOAR reservations, or one-time announcements such as rainy-day study rooms and extended drop-in hours. The assistant repeats dates as the page states them, and Gemini sometimes leaves a past date out. Tests check steps rather than past dates (Entry 25). Re-run `npm run fetch-sources` before the demo to pick up updated pages.
   - **Follow-up suggestions can be on-topic but not actually answered** (3 of 13 in the Entry 27 check, e.g. "Where is the Center for International Education located?"). The filter checks the suggestion matches a page Gemini was shown, not that the page states the specific fact. Clicking one then gets a normal fallback with the right office.
+  - **Every question finishes within about 28 seconds** (Entry 28): an answer, or the friendly "Gemini is having trouble" error. Before that, the Gemini SDK ignored our timeout option names, so a slow or stuck Gemini could hold a request for over a minute. Hidden SDK retries also spent extra requests on busy errors.
+  - **Conflicting dates are not always both shown.** Original #3 (last day to drop without a W) gave both dates in 2 of 3 tries with the current prompt, and 1 of 3 without the follow-up rule. Gemini applies the conflict rule inconsistently (Entry 28).
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)
