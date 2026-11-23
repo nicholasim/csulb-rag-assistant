@@ -183,11 +183,11 @@
     {
       "id": 20,
       "question": "How do I get a Social Security number for an on-campus job?",
-      "type": "unsupported",
-      "area": "-",
-      "expected_behavior": "Falls back (a user story in our brief with no source).",
-      "expected_fact": "Exact fallback sentence",
-      "expect": { "helpOffice": true, "response": "fallback", "mustInclude": ["I do not have enough information in the provided CSULB sources\\."] }
+      "type": "answerable",
+      "area": "International Students",
+      "expected_behavior": "A user story in our brief. Unsupported until B3 added CSULB's On-Campus Employment and Social Security Number pages (Entry 24): get a written job offer and an SSN support letter from the Center for International Education, then apply with the Social Security Administration.",
+      "expected_fact": "\"International students must secure a written job offer and support letter from an International Student Advisor to obtain a Social Security Number (SSN).\"",
+      "expect": { "response": "answer", "mustInclude": ["SSN|Social Security", "letter"], "minSources": 1 }
     },
     {
       "id": 21,

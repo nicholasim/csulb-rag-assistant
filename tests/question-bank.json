@@ -288,8 +288,7 @@
    "question": "How do I take a class at another school (concurrent enrollment)?",
    "coverageBefore": "M",
    "expectedPages": [
-    "concurrent-enrollment",
-    "enrollment-options"
+    "cross-enrollment"
    ]
   },
   {
@@ -496,6 +495,7 @@
    "question": "What is the CSULB school code for the FAFSA?",
    "coverageBefore": "M",
    "expectedPages": [
+    "how-to-apply-for-aid",
     "fafsa-cadaa"
    ]
   },
@@ -543,7 +543,8 @@
    "question": "What is the Cal Grant?",
    "coverageBefore": "M",
    "expectedPages": [
-    "fafsa-cadaa"
+    "how-to-apply-for-aid",
+    "scholarships"
    ]
   },
   {
@@ -581,7 +582,8 @@
    "coverageBefore": "M",
    "expectedPages": [
     "job-internship-search",
-    "federal-work-study"
+    "federal-work-study",
+    "career-development-center"
    ]
   },
   {
@@ -744,6 +746,7 @@
    "question": "When is commencement?",
    "coverageBefore": "M",
    "expectedPages": [
+    "commencement-ceremony-schedules",
     "commencement-faq",
     "academic-calendar"
    ]
@@ -973,7 +976,8 @@
    "question": "How do I set up my CSULB email?",
    "coverageBefore": "P",
    "expectedPages": [
-    "student-email"
+    "student-email",
+    "beachid-password"
    ]
   },
   {
@@ -1054,9 +1058,7 @@
    "category": "Library",
    "question": "How do I reserve a study room?",
    "coverageBefore": "M",
-   "expectedPages": [
-    "library-study-areas"
-   ]
+   "expectedPages": []
   },
   {
    "id": 114,
@@ -1276,7 +1278,9 @@
    "category": "Safety",
    "question": "Where is lost and found?",
    "coverageBefore": "M",
-   "expectedPages": []
+   "expectedPages": [
+    "library-circulation-desk"
+   ]
   },
   {
    "id": 138,
@@ -1377,7 +1381,8 @@
    "coverageBefore": "P",
    "expectedPages": [
     "ferpa",
-    "using-academics"
+    "using-academics",
+    "apply-to-graduate"
    ]
   },
   {

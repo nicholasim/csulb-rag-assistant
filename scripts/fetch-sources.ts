@@ -186,6 +186,10 @@ const SOURCES: Source[] = [
   { slug: "guardian-scholars", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/guardian-scholars" },
   { slug: "lgbtq-resource-center", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/lgbtq-resource-center" },
   { slug: "eop", title: "Educational Opportunity Program (EOP)", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/educational-opportunity-program" },
+  // Cleanup round (Entry 24): 3 pages for topics the live bank sample still missed.
+  { slug: "how-to-apply-for-aid", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/how-to-apply-for-aid" },
+  { slug: "commencement-ceremony-schedules", title: "Commencement Ceremony Schedules", category: "Majors & Academics", url: "https://www.csulb.edu/commencement/ceremony-schedules" },
+  { slug: "cross-enrollment", title: "Cross Enrollment (classes at a community college)", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/cross-enrollment" },
 ];
 
 // ---- Office directory (Step B2, prompt log Entry 14) ----

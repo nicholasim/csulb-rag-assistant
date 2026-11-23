@@ -14,6 +14,9 @@ export const CAMPUS_MAP_URL = "https://www.csulb.edu/maps";
 const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 // If the main model is busy or rate-limited, we try this one once. Override with GEMINI_BACKUP_MODEL.
 const DEFAULT_BACKUP_MODEL = "gemini-3.8-flash";
+// How long the main model gets before we switch to the backup. Normal answers take 1-6s; a stuck
+// request once made a student wait 50s (Entry 23), so after 10s we move on (Entry 24).
+const MAIN_TIMEOUT_MS = 10_000;
 // The most tokens Gemini may produce, INCLUDING its hidden "thinking". Our answers are short
 // (about 100-200 tokens), but thinking alone can use about 1,000 tokens on table-heavy questions
 // like parking prices. At the old limit of 2048, a long think sometimes cut the JSON reply off
@@ -48,6 +51,7 @@ SPECIAL CASES
 - Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
 - Where is an office, or how do I reach it: if the sources don't give the office's location but do give its phone, email, website, or how to book an appointment, use type "answer": say our sources don't list where it is, then give that contact and booking information with citations. Never guess a building or room, and don't use a room from an event listing as the office's location.
 - Health and medical questions (symptoms, medicine, getting sick or hurt, vaccines) are always about CSULB students: if you fall back, set about_csulb to true and related_office to Student Health Services.
+- Name what the sources name: when the sources list specific programs, places, or services for what the student needs (for example the Beach Pantry for food), name them in the answer.
 - Advising contacts: if a source lists an advising center with a "Contact & Location" link instead of a phone number or email, name the advising center and give that link. Do not make up contact details.
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
 - Do not give medical, legal, or financial advice. You may describe which CSULB services exist and how to contact them.
@@ -157,16 +161,16 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
   try {
     try {
       try {
-        interaction = await callModel(mainModel, 0, 20_000);
+        interaction = await callModel(mainModel, 0, MAIN_TIMEOUT_MS);
       } catch (err) {
         // "Busy" (503) or a server error (500+) usually clears in a moment, and the error comes
         // back fast, so wait 2 seconds and ask the main model once more (Entry 20: a busy reply
         // from both models was the only reason preset questions failed). We don't retry a
-        // rate limit (429: retrying uses up more quota) or a timeout (the student already waited 20s).
+        // rate limit (429: retrying uses up more quota) or a timeout (the student already waited 10s).
         if (statusOf(err) < 500) throw err;
         console.warn(`[gemini] ${mainModel} busy (${errorKind(err)}), retrying once in 2s`);
         await new Promise((resolve) => setTimeout(resolve, 2_000));
-        interaction = await callModel(mainModel, 0, 20_000);
+        interaction = await callModel(mainModel, 0, MAIN_TIMEOUT_MS);
       }
     } catch (err) {
       // Main model overloaded (503), rate-limited (429), erroring (500+), or timed out (no status)?
@@ -177,7 +181,7 @@ export async function askGemini(input: string): Promise<{ reply: GeminiReply; mo
       if (!worthSwitching || backupModel === mainModel) throw err;
       console.warn(`[gemini] ${mainModel} failed (${errorKind(err)}), trying backup model ${backupModel}`);
       usedModel = backupModel;
-      // One try, 15 seconds max: worst case a student waits about 35 seconds (20 + 15) before
+      // One try, 15 seconds max: worst case a student waits about 25 seconds (10 + 15) before
       // seeing "try again", instead of about 60 with retries.
       interaction = await callModel(backupModel, 0, 15_000);
     }

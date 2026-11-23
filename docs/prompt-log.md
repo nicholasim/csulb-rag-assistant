@@ -1391,4 +1391,70 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 24 (Cleanup round before the feature freeze)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Small cleanup round, then we freeze features. Plan first with the scope check:
+> 1. update out-of-date tests, only after confirming each answer against its source page;
+> 2. rewrite timeout 2s → 3s;
+> 3. a ~10s timeout on the main answer call;
+> 4. the food-help preset must mention the Beach Pantry;
+> 5. check why email setup found the BeachID page;
+> 6. the 4 missing topics: add an official page only if one clearly exists.
+>
+> Rerun only the failed and changed tests.
+>
+> **Team tweak:** the lost-and-found answer must say the Circulation Desk handles items lost in the **Library** (no campus-wide lost and found in our sources).
+
+**What the AI did:**
+- **Scope check:** everything is inside scope (test accuracy, reliability, answer quality, and 3 more official csulb.edu pages).
+- **Test changes**, each answer checked against the source page first:
+  - **Original #20** (SSN for an on-campus job): unsupported → answerable. It's answered from the On-Campus Employment and Social Security Number pages ("secure a written job offer and support letter…"). It must mention SSN and a letter, and cite a source.
+  - **Student #44** (join a club): `Student Life` → any of Student Organizations / BeachSync / Student Life (the page says "Search Student Organizations on BeachSync").
+  - **Bank #61** (student assistant): added the Career Development Center page ("on-campus job… Use CareerLINK").
+  - **Bank #137** (lost and found): fallback → an answer citing the Circulation Desk **and naming the Library**. The page lists "Inquire about lost personal items (Lost and Found)".
+  - **Bank #148** (update address): added Apply to Graduate ("Go to MyCSULB Student Center to maintain your contact information").
+  - **Bank #84** (where is my advising center): an answer or a clarifying question both pass, since advising is by college.
+  - **Bank #104** (email setup): added the BeachID page ("Establish your password for the first time…").
+  - **Not changed: bank #96** (child care). The earlier answer said the center "has expanded…", which no source says; the ASI page only names the Isabel Patterson Child Development Center. It stays a fallback test.
+  - **Question bank #57** (Cal Grant): its expected page was wrong in the audit (the FAFSA page never mentions the Cal Grant). Changed to How to Apply for Aid and Scholarships.
+- **Timeouts:**
+  - rewrite 2s → 3s (`lib/rewrite.ts`);
+  - main answer call 20s → 10s (`MAIN_TIMEOUT_MS` in `lib/gemini.ts`, both tries). The backup stays at 15s, so the worst case drops from about 35s to about 25s.
+- **Pantry:** the Beach Pantry chunk already ranked 1st offline, so Gemini just left it out. New prompt rule: "when the sources list specific programs, places, or services for what the student needs, name them."
+- **Email:** the Student Email page already ranked 1st offline. Gemini picked the BeachID page, which is correct and grounded, so the only fix was accepting it in the test.
+- **The 4 missing topics:**
+  - **3 official pages added:**
+    - How to Apply for Aid ("Submit a FAFSA CSULB School Code 001139");
+    - Commencement Ceremony Schedules (the 2027 schedule, for example College of Business I on May 18);
+    - Cross Enrollment (taking community college classes while at CSULB). Bank #30's expected page changed to this one, because the visitor page is for non-CSULB students.
+  - **Study rooms:** no csulb.edu page (the library uses an outside booking site), so it stays a fallback with University Library.
+- `npm run fetch-sources`, `npm run embeddings` (21 new chunks, 651 total), `npm run check:coverage`.
+
+**Did it work?**
+- **Targeted live rerun: 15 of 16 pass:**
+  - preset #19 (now names the Pantry);
+  - original #20;
+  - student #21 (the follow-up passes with the 3s timeout) and #44;
+  - bank #30, #52, #61, #79, #84, #96, #104, #105 (Canvas, no timeout this time), #113, #137 (mentions the Library) and #148.
+  - Average 2.6-4.0s per set, slowest 5.4s.
+- **Still failing: original #7** (SOAR). The page still says "starting on November 3, 2026", but Gemini leaves the date out, probably because it has passed. Shown, not fixed.
+- **Offline check:** 150 of 151. #7 "cost to apply" misses offline but passed live through the rewrite (Entry 23).
+- tsc, eslint, `npm run build` and `npm run check:presets` pass.
+- **Cost:** about 16 questions ≈ 32 requests ≈ $0.06, plus about 14 requests in planning.
+
+**Troubleshooting or redirection (if any):**
+1. **The refetch also reported a failure:** CSULB changed the College of Natural Sciences and Mathematics advising page, so our office description is no longer on it word for word, and the script dropped that office (41 of 42). Claude restored the last verified office list from git instead of quietly losing an office. **The description needs a new sentence from the current page** (not fixed yet).
+2. **Saving the test JSON reformatted whole files** (850 changed lines). Claude restored them and made text-only edits instead (8 changed lines).
+3. **The refetch rewrote the "retrieved" date on all 118 pages.** Date-only changes were reverted; only Eat and Shop and ASI Maps & Hours had real updates.
+4. **The team tightened the lost-and-found test** to require mentioning the Library.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

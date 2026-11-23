@@ -2,7 +2,7 @@
 title: "Eat and Shop"
 url: https://www.csulb.edu/beach-shops/eat-and-shop
 category: Food Services
-retrieved: 2026-11-22
+retrieved: 2026-11-23
 ---
 
 ## Where to Eat
@@ -375,6 +375,10 @@ Learn about [Food Assistance Programs here](https://www.csulb.edu/student-affair
 
 ### Bliss Coffee
 
+**Fall Break**
+**11/21 - 11/29**
+Closed
+
 **Fall 2026**
 Monday - Thursday 9:30 am - 2 pm
 Friday - Sunday Closed
@@ -382,6 +386,10 @@ Friday - Sunday Closed
 ### [Farmers Market](https://map.concept3d.com/?id=1314#!bm/?ce/41612?ct/72432,91209,91380,91668,95852,91382,91383,42540?m/1105548?s/friend "Friendship Walk")
 
 Friendship Walk
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 Monday - Thursday 10 am - 2 pm
 
@@ -393,6 +401,10 @@ Monday - Thursday 10 am - 2 pm
 -   College of Professional and Continuing Education (CPaCE)
 
 ### [Higher Taste, Plant Based](https://highertasteplantbased.com/)
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 9:30 am - 2 pm

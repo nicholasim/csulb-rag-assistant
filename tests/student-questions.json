@@ -397,9 +397,9 @@
       "question": "how do I join a club",
       "type": "directory",
       "area": "Office directory",
-      "expected_behavior": "No page in our sources answers this, so a fallback (or a short answer) must point to the Student Life & Development (clubs and organizations) office from the office list (Step B2, Entry 14).",
-      "expected_fact": "Student Life & Development (clubs and organizations)",
-      "expect": { "helpOffice": true, "response": ["fallback", "answer"], "mustInclude": ["Student Life"] }
+      "expected_behavior": "Since B3 (Entry 24), the Student Organizations page answers this: join through BeachSync. A fallback must still point to Student Life & Development (Step B2, Entry 14).",
+      "expected_fact": "\"Search Student Organizations on BeachSync\" (Student Organizations page)",
+      "expect": { "helpOffice": true, "response": ["fallback", "answer"], "mustIncludeAny": ["Student Organizations", "BeachSync", "Student Life"] }
     },
     {
       "id": 45,

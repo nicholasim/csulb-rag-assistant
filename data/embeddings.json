@@ -196,15 +196,11 @@
   },
   {
    "id": "asi-maps-hours#1",
-   "hash": "7bb9246dfe18493d"
+   "hash": "3010b710110b3de7"
   },
   {
    "id": "asi-maps-hours#2",
-   "hash": "f628169a84dd425b"
-  },
-  {
-   "id": "asi-maps-hours#3",
-   "hash": "235468208f675992"
+   "hash": "1c2fcaaeba142a7c"
   },
   {
    "id": "basic-needs-financial#1",
@@ -343,6 +339,54 @@
    "hash": "540a1b2957e30715"
   },
   {
+   "id": "commencement-ceremony-schedules#1",
+   "hash": "1443800cb98c2b3b"
+  },
+  {
+   "id": "commencement-ceremony-schedules#2",
+   "hash": "2685439ee5670eea"
+  },
+  {
+   "id": "commencement-ceremony-schedules#3",
+   "hash": "0fe04e569bfd3709"
+  },
+  {
+   "id": "commencement-ceremony-schedules#4",
+   "hash": "d202c3b6fc237f72"
+  },
+  {
+   "id": "commencement-ceremony-schedules#5",
+   "hash": "c7f52ed6d0994180"
+  },
+  {
+   "id": "commencement-ceremony-schedules#6",
+   "hash": "f5956350ba3c0de9"
+  },
+  {
+   "id": "commencement-ceremony-schedules#7",
+   "hash": "91dcf0a600a9ffea"
+  },
+  {
+   "id": "commencement-ceremony-schedules#8",
+   "hash": "6de14286a75e4c4b"
+  },
+  {
+   "id": "commencement-ceremony-schedules#9",
+   "hash": "5013734c9aa92225"
+  },
+  {
+   "id": "commencement-ceremony-schedules#10",
+   "hash": "36470730550b98b7"
+  },
+  {
+   "id": "commencement-ceremony-schedules#11",
+   "hash": "7d952b23a47ff283"
+  },
+  {
+   "id": "commencement-ceremony-schedules#12",
+   "hash": "0982017cbc7927e7"
+  },
+  {
    "id": "commencement-faq#1",
    "hash": "ce45d9540a794fea"
   },
@@ -433,6 +477,10 @@
   {
    "id": "concurrent-enrollment#1",
    "hash": "9b85b44dea956acf"
+  },
+  {
+   "id": "cross-enrollment#1",
+   "hash": "74527469e5746fbd"
   },
   {
    "id": "day-1-textbook-access#1",
@@ -1016,7 +1064,7 @@
   },
   {
    "id": "food-services#7",
-   "hash": "0c43e3b86102bee1"
+   "hash": "f2a6397b895b32c6"
   },
   {
    "id": "fraternities-sororities#1",
@@ -1129,6 +1177,26 @@
   {
    "id": "housing-rates#4",
    "hash": "175763f24ebcdbd4"
+  },
+  {
+   "id": "how-to-apply-for-aid#1",
+   "hash": "eb7c1425deebdeee"
+  },
+  {
+   "id": "how-to-apply-for-aid#2",
+   "hash": "777cb1920c502a78"
+  },
+  {
+   "id": "how-to-apply-for-aid#3",
+   "hash": "03db5bc3c6e8181a"
+  },
+  {
+   "id": "how-to-apply-for-aid#4",
+   "hash": "a2b7c2fd1aba23f0"
+  },
+  {
+   "id": "how-to-apply-for-aid#5",
+   "hash": "1c664f69371bac74"
   },
   {
    "id": "id-card-faqs#1",

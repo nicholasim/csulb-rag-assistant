@@ -85,13 +85,12 @@
    "type": "registration",
    "area": "Registration & unit load",
    "coverage_before": "M",
-   "expected_behavior": "Answers from: Visitor/Concurrent (Non-CSULB Students), Enrollment Options.",
+   "expected_behavior": "Answers from: Cross Enrollment (classes at a community college). (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
-     "Visitor/Concurrent\\ \\(Non\\-CSULB\\ Students\\)",
-     "Enrollment\\ Options"
+     "Cross\\ Enrollment\\ \\(classes\\ at\\ a\\ community\\ college\\)"
     ]
    }
   },
@@ -178,11 +177,12 @@
    "type": "financial",
    "area": "Financial aid & scholarships",
    "coverage_before": "M",
-   "expected_behavior": "Answers from: FAFSA / CADAA Support.",
+   "expected_behavior": "Answers from: How to Apply for Aid, FAFSA / CADAA Support. (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
+     "How\\ to\\ Apply\\ for\\ Aid",
      "FAFSA\\ /\\ CADAA\\ Support"
     ]
    }
@@ -193,13 +193,14 @@
    "type": "campus",
    "area": "Campus jobs",
    "coverage_before": "M",
-   "expected_behavior": "Answers from: Job & Internship Search, Federal Work-Study.",
+   "expected_behavior": "Answers from: Job & Internship Search, Federal Work-Study, Career Development Center. (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
      "Job\\ \\&\\ Internship\\ Search",
-     "Federal\\ Work\\-Study"
+     "Federal\\ Work\\-Study",
+     "Career\\ Development\\ Center"
     ]
    }
   },
@@ -255,11 +256,12 @@
    "type": "graduation",
    "area": "Graduation & commencement",
    "coverage_before": "M",
-   "expected_behavior": "Answers from: Commencement FAQ, Academic Affairs Calendar.",
+   "expected_behavior": "Answers from: Commencement Ceremony Schedules, Commencement FAQ, Academic Affairs Calendar. (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
+     "Commencement\\ Ceremony\\ Schedules",
      "Commencement\\ FAQ",
      "Academic\\ Affairs\\ Calendar"
     ]
@@ -286,12 +288,15 @@
    "type": "advising",
    "area": "Advising & tutoring",
    "coverage_before": "C",
-   "expected_behavior": "Answers from: Academic Advising at CSULB.",
+   "expected_behavior": "Advising is by college, so a clarifying question (which college?) or an answer naming advising centers both pass (Entry 24).",
    "expect": {
-    "response": "answer",
-    "minSources": 1,
+    "response": [
+     "answer",
+     "clarify"
+    ],
     "mustIncludeAny": [
-     "Academic\\ Advising\\ at\\ CSULB"
+     "Advising",
+     "college"
     ]
    }
   },
@@ -375,12 +380,13 @@
    "type": "it",
    "area": "IT",
    "coverage_before": "P",
-   "expected_behavior": "Answers from: Student Email (IT Help Center).",
+   "expected_behavior": "Answers from: Student Email (IT Help Center), BeachID Account Access Help. (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
-     "Student\\ Email\\ \\(IT\\ Help\\ Center\\)"
+     "Student\\ Email\\ \\(IT\\ Help\\ Center\\)",
+     "BeachID\\ Account\\ Access\\ Help"
     ]
    }
   },
@@ -421,13 +427,10 @@
    "type": "library",
    "area": "Library",
    "coverage_before": "M",
-   "expected_behavior": "Answers from: Library Study Areas.",
+   "expected_behavior": "No csulb.edu page explains booking a study room (the library uses an outside booking site): falls back with a Who can help office (Entry 24).",
    "expect": {
-    "response": "answer",
-    "minSources": 1,
-    "mustIncludeAny": [
-     "Library\\ Study\\ Areas"
-    ]
+    "response": "fallback",
+    "helpOffice": true
    }
   },
   {
@@ -514,10 +517,14 @@
    "type": "safety",
    "area": "Safety",
    "coverage_before": "M",
-   "expected_behavior": "No approved source: falls back with a Who can help office.",
+   "expected_behavior": "Answers from the library's Circulation Desk page, which handles items lost in the Library. The answer must say it's the Library's desk: our sources have no campus-wide lost and found (Entry 24).",
    "expect": {
-    "response": "fallback",
-    "helpOffice": true
+    "response": "answer",
+    "minSources": 1,
+    "mustInclude": [
+     "Circulation Desk",
+     "Library"
+    ]
    }
   },
   {
@@ -573,13 +580,14 @@
    "type": "records",
    "area": "Records",
    "coverage_before": "P",
-   "expected_behavior": "Answers from: FERPA for Students, Using Academics.",
+   "expected_behavior": "Answers from: FERPA for Students, Using Academics, Apply to Graduate (Undergraduate). (Expected pages updated in Entry 24.)",
    "expect": {
     "response": "answer",
     "minSources": 1,
     "mustIncludeAny": [
      "FERPA\\ for\\ Students",
-     "Using\\ Academics"
+     "Using\\ Academics",
+     "Apply\\ to\\ Graduate\\ \\(Undergraduate\\)"
     ]
    }
   },
