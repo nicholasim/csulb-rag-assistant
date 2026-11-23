@@ -1,0 +1,617 @@
+{
+ "about": "Live sample of the question bank (tests/question-bank.json): 2 questions per category, mostly ones that were missing or partly covered before coverage round B3 (Entry 22), plus #1, #7 and #19, and 2 with no approved page (must fall back with a Who can help office). An answer passes if it cites a source whose title matches one of the expected pages. ids are the bank ids. Run: TESTS_FILE=tests/bank-live-sample.json RESULTS_FILE=docs/test-results-bank-sample.md npm run test:questions",
+ "tests": [
+  {
+   "id": 1,
+   "question": "How do I apply to CSULB as a first-year student?",
+   "type": "prospective",
+   "area": "Prospective / applying",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: First-Time, First-Year Student Application Process, Key Dates and Deadlines.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "First\\-Time,\\ First\\-Year\\ Student\\ Application\\ Process",
+     "Key\\ Dates\\ and\\ Deadlines"
+    ]
+   }
+  },
+  {
+   "id": 7,
+   "question": "How much does it cost to apply?",
+   "type": "prospective",
+   "area": "Prospective / applying",
+   "coverage_before": "C",
+   "expected_behavior": "Answers from: Key Dates and Deadlines, First-Time, First-Year Student Application Process.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Key\\ Dates\\ and\\ Deadlines",
+     "First\\-Time,\\ First\\-Year\\ Student\\ Application\\ Process"
+    ]
+   }
+  },
+  {
+   "id": 17,
+   "question": "What are the immunization requirements for new students?",
+   "type": "admitted",
+   "area": "Admitted / new students",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Immunizations, Steps for Newly Admitted First-Time, First-Year Students.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Immunizations",
+     "Steps\\ for\\ Newly\\ Admitted\\ First\\-Time,\\ First\\-Year\\ Students"
+    ]
+   }
+  },
+  {
+   "id": 18,
+   "question": "Do new students need to take placement tests for math or English?",
+   "type": "admitted",
+   "area": "Admitted / new students",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Steps for Newly Admitted First-Time, First-Year Students.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Steps\\ for\\ Newly\\ Admitted\\ First\\-Time,\\ First\\-Year\\ Students"
+    ]
+   }
+  },
+  {
+   "id": 19,
+   "question": "How many units is a full-time student?",
+   "type": "registration",
+   "area": "Registration & unit load",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Student Unit Load.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Student\\ Unit\\ Load"
+    ]
+   }
+  },
+  {
+   "id": 30,
+   "question": "How do I take a class at another school (concurrent enrollment)?",
+   "type": "registration",
+   "area": "Registration & unit load",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Visitor/Concurrent (Non-CSULB Students), Enrollment Options.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Visitor/Concurrent\\ \\(Non\\-CSULB\\ Students\\)",
+     "Enrollment\\ Options"
+    ]
+   }
+  },
+  {
+   "id": 36,
+   "question": "When is spring break?",
+   "type": "academic",
+   "area": "Academic calendar & finals",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Academic Affairs Calendar.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Academic\\ Affairs\\ Calendar"
+    ]
+   }
+  },
+  {
+   "id": 37,
+   "question": "What holidays is campus closed?",
+   "type": "academic",
+   "area": "Academic calendar & finals",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Academic Affairs Calendar.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Academic\\ Affairs\\ Calendar"
+    ]
+   }
+  },
+  {
+   "id": 40,
+   "question": "How much is tuition per semester?",
+   "type": "tuition",
+   "area": "Tuition, fees & refunds",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Tuition and Fees.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Tuition\\ and\\ Fees"
+    ]
+   }
+  },
+  {
+   "id": 44,
+   "question": "How do I get a refund if I drop classes?",
+   "type": "tuition",
+   "area": "Tuition, fees & refunds",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Tuition and Fees, Key Dates and Deadlines, How-To Guides.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Tuition\\ and\\ Fees",
+     "Key\\ Dates\\ and\\ Deadlines",
+     "How\\-To\\ Guides"
+    ]
+   }
+  },
+  {
+   "id": 51,
+   "question": "When is the FAFSA / CA Dream Act deadline?",
+   "type": "financial",
+   "area": "Financial aid & scholarships",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: FAFSA / CADAA Support.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "FAFSA\\ /\\ CADAA\\ Support"
+    ]
+   }
+  },
+  {
+   "id": 52,
+   "question": "What is the CSULB school code for the FAFSA?",
+   "type": "financial",
+   "area": "Financial aid & scholarships",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: FAFSA / CADAA Support.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "FAFSA\\ /\\ CADAA\\ Support"
+    ]
+   }
+  },
+  {
+   "id": 61,
+   "question": "How do I become a student assistant?",
+   "type": "campus",
+   "area": "Campus jobs",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Job & Internship Search, Federal Work-Study.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Job\\ \\&\\ Internship\\ Search",
+     "Federal\\ Work\\-Study"
+    ]
+   }
+  },
+  {
+   "id": 64,
+   "question": "Can international students work on campus?",
+   "type": "campus",
+   "area": "Campus jobs",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: On-Campus Employment (International Students), F-1 Rules (International Students).",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "On\\-Campus\\ Employment\\ \\(International\\ Students\\)",
+     "F\\-1\\ Rules\\ \\(International\\ Students\\)"
+    ]
+   }
+  },
+  {
+   "id": 67,
+   "question": "How do I get transfer credit for community college classes?",
+   "type": "academics",
+   "area": "Academics",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Transfer Credit for Incoming Students.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Transfer\\ Credit\\ for\\ Incoming\\ Students"
+    ]
+   }
+  },
+  {
+   "id": 68,
+   "question": "Does CSULB accept AP or IB credit?",
+   "type": "academics",
+   "area": "Academics",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: First-Time, First-Year Student Test and Transfer Credit.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "First\\-Time,\\ First\\-Year\\ Student\\ Test\\ and\\ Transfer\\ Credit"
+    ]
+   }
+  },
+  {
+   "id": 79,
+   "question": "When is commencement?",
+   "type": "graduation",
+   "area": "Graduation & commencement",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Commencement FAQ, Academic Affairs Calendar.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Commencement\\ FAQ",
+     "Academic\\ Affairs\\ Calendar"
+    ]
+   }
+  },
+  {
+   "id": 83,
+   "question": "Can I walk in commencement if I'm missing a class?",
+   "type": "graduation",
+   "area": "Graduation & commencement",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Commencement FAQ.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Commencement\\ FAQ"
+    ]
+   }
+  },
+  {
+   "id": 84,
+   "question": "Where is my advising center?",
+   "type": "advising",
+   "area": "Advising & tutoring",
+   "coverage_before": "C",
+   "expected_behavior": "Answers from: Academic Advising at CSULB.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Academic\\ Advising\\ at\\ CSULB"
+    ]
+   }
+  },
+  {
+   "id": 85,
+   "question": "How do I make an advising appointment?",
+   "type": "advising",
+   "area": "Advising & tutoring",
+   "coverage_before": "C",
+   "expected_behavior": "Answers from: Academic Advising at CSULB.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Academic\\ Advising\\ at\\ CSULB"
+    ]
+   }
+  },
+  {
+   "id": 89,
+   "question": "How do I join a club or student organization?",
+   "type": "campus",
+   "area": "Campus life",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Student Organizations, Student Life & Development.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Student\\ Organizations",
+     "Student\\ Life\\ \\&\\ Development"
+    ]
+   }
+  },
+  {
+   "id": 96,
+   "question": "Is there a child care center for student parents?",
+   "type": "campus",
+   "area": "Campus life",
+   "coverage_before": "M",
+   "expected_behavior": "No approved source: falls back with a Who can help office.",
+   "expect": {
+    "response": "fallback",
+    "helpOffice": true
+   }
+  },
+  {
+   "id": 99,
+   "question": "Are meal plans required?",
+   "type": "housing",
+   "area": "Housing & dining",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Residential Dining Services, Housing Rates.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Residential\\ Dining\\ Services",
+     "Housing\\ Rates"
+    ]
+   }
+  },
+  {
+   "id": 101,
+   "question": "Is there off-campus housing help?",
+   "type": "housing",
+   "area": "Housing & dining",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Basic Needs: Housing Support.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Basic\\ Needs:\\ Housing\\ Support"
+    ]
+   }
+  },
+  {
+   "id": 104,
+   "question": "How do I set up my CSULB email?",
+   "type": "it",
+   "area": "IT",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Student Email (IT Help Center).",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Student\\ Email\\ \\(IT\\ Help\\ Center\\)"
+    ]
+   }
+  },
+  {
+   "id": 105,
+   "question": "How do I log in to Canvas?",
+   "type": "it",
+   "area": "IT",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Academic Technology Resources for Students.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Academic\\ Technology\\ Resources\\ for\\ Students"
+    ]
+   }
+  },
+  {
+   "id": 112,
+   "question": "What are the library hours?",
+   "type": "library",
+   "area": "Library",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Circulation Desk, Research and Information Desk.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Circulation\\ Desk",
+     "Research\\ and\\ Information\\ Desk"
+    ]
+   }
+  },
+  {
+   "id": 113,
+   "question": "How do I reserve a study room?",
+   "type": "library",
+   "area": "Library",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Library Study Areas.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Library\\ Study\\ Areas"
+    ]
+   }
+  },
+  {
+   "id": 122,
+   "question": "How do I appeal a parking citation?",
+   "type": "parking",
+   "area": "Parking & transportation",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Appeal a Citation, Citations FAQ.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Appeal\\ a\\ Citation",
+     "Citations\\ FAQ"
+    ]
+   }
+  },
+  {
+   "id": 124,
+   "question": "Can I ride Long Beach Transit buses for free?",
+   "type": "parking",
+   "area": "Parking & transportation",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Go Beach! Discounted Bus Pass, Permit Information & Regulations.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Go\\ Beach!\\ Discounted\\ Bus\\ Pass",
+     "Permit\\ Information\\ \\&\\ Regulations"
+    ]
+   }
+  },
+  {
+   "id": 126,
+   "question": "How do I make a health appointment?",
+   "type": "health",
+   "area": "Health & wellness",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Student Health Services: Make an Appointment.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Student\\ Health\\ Services:\\ Make\\ an\\ Appointment"
+    ]
+   }
+  },
+  {
+   "id": 127,
+   "question": "Do I need health insurance?",
+   "type": "health",
+   "area": "Health & wellness",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Student Health Services: Health Insurance, Health Insurance (International Students).",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Student\\ Health\\ Services:\\ Health\\ Insurance",
+     "Health\\ Insurance\\ \\(International\\ Students\\)"
+    ]
+   }
+  },
+  {
+   "id": 136,
+   "question": "How do I report sexual harassment or Title IX?",
+   "type": "safety",
+   "area": "Safety",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: Title IX At The Beach.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Title\\ IX\\ At\\ The\\ Beach"
+    ]
+   }
+  },
+  {
+   "id": 137,
+   "question": "Where is lost and found?",
+   "type": "safety",
+   "area": "Safety",
+   "coverage_before": "M",
+   "expected_behavior": "No approved source: falls back with a Who can help office.",
+   "expect": {
+    "response": "fallback",
+    "helpOffice": true
+   }
+  },
+  {
+   "id": 139,
+   "question": "How do I get an I-20 or travel signature?",
+   "type": "international",
+   "area": "International",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Obtain CSULB Form I-20, Travel and Re-Entry Guidance.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Obtain\\ CSULB\\ Form\\ I\\-20",
+     "Travel\\ and\\ Re\\-Entry\\ Guidance"
+    ]
+   }
+  },
+  {
+   "id": 140,
+   "question": "How do I get a Social Security number as an international student?",
+   "type": "international",
+   "area": "International",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Social Security Number (International Students).",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Social\\ Security\\ Number\\ \\(International\\ Students\\)"
+    ]
+   }
+  },
+  {
+   "id": 144,
+   "question": "What is FERPA / who can see my records?",
+   "type": "records",
+   "area": "Records",
+   "coverage_before": "C",
+   "expected_behavior": "Answers from: FERPA for Students, How-To Guides.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "FERPA\\ for\\ Students",
+     "How\\-To\\ Guides"
+    ]
+   }
+  },
+  {
+   "id": 148,
+   "question": "How do I update my address?",
+   "type": "records",
+   "area": "Records",
+   "coverage_before": "P",
+   "expected_behavior": "Answers from: FERPA for Students, Using Academics.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "FERPA\\ for\\ Students",
+     "Using\\ Academics"
+    ]
+   }
+  },
+  {
+   "id": 153,
+   "question": "Is there support for undocumented students?",
+   "type": "support",
+   "area": "Support programs",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Dream Success Center.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Dream\\ Success\\ Center"
+    ]
+   }
+  },
+  {
+   "id": 154,
+   "question": "Is there support for former foster youth (Guardian Scholars)?",
+   "type": "support",
+   "area": "Support programs",
+   "coverage_before": "M",
+   "expected_behavior": "Answers from: Guardian Scholars Resource Center.",
+   "expect": {
+    "response": "answer",
+    "minSources": 1,
+    "mustIncludeAny": [
+     "Guardian\\ Scholars\\ Resource\\ Center"
+    ]
+   }
+  }
+ ]
+}
