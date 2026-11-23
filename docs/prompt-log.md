@@ -1184,4 +1184,60 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 21 (Speed and the last 5 failures)
+
+**Date:** 2026-11-22
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Answers went from ~2.1s to ~5-6s: show where the time goes and propose how to get back near 3s without losing accuracy, with the accuracy and quota cost of each. For the 5 failures:
+> - original #4/#27 (SAP): is the answer wrong, or the test too strict?
+> - #21 (headache medicine): health questions must always show the Student Health card, never example questions.
+> - student #4 (GE units) and #7 (writing center location): propose a fix, e.g. top 8 instead of 5, with the tradeoff.
+>
+> Plan first, with the scope check.
+>
+> **Team decisions:** approved S1, S2, the financial aid test change, top 8 (kept only if no passing test breaks), and the location rule. "cold" and "pain" count as health words only next to another health word. We're near today's quota, so build and run the offline checks now; the live runs come after the midnight Pacific reset.
+
+**What the AI did:**
+- **Measured where the time goes** (5 questions, each step timed directly):
+  - rewrite 0.7-1.0s;
+  - embedding 0.33-0.43s;
+  - keyword search about 1 ms;
+  - answer call 1.0-2.6s.
+- **End to end at the time of measuring:** 1.4-4.1s (about 2.6s average), on both the production and dev servers.
+- **The 5-6s test averages came mostly from Gemini being slow and busy during the runs.** The preset run, which skips the rewrite, still averaged 5.1s, and 15 busy retries happened.
+- **Speed changes:**
+  - **S1 (`lib/rag.ts`):** meaning search for the question as typed now starts at the same time as the rewrite instead of after it (saves about 0.4s). Keyword search still uses every rewritten query.
+  - **S2 (`lib/rewrite.ts`):** rewrite timeout 5s → 2s, so a slow Gemini moment costs at most 2s before we search with the question as typed.
+- **Original #4/#27: the test was too strict, not the answer.**
+  - **The answers were right:** "View Your SAP Status for Financial Aid" is a section of the same page.
+  - **New test:** the To Do List / Student Center steps are required, and SAP may be mentioned only after the To Do List. This uses a new `mustComeBefore` check in `scripts/run-tests.ts`.
+  - **Also fixed:** the pattern now accepts "to-do list".
+  - **Preset #2** (the same question) got the same checks.
+- **#21: `isHealthQuestion()`** (`lib/rag.ts`). Health and medical questions always count as CSULB: a fallback shows Student Health Services, never example questions, whatever Gemini says, and also on the no-AI path.
+  - "cold" and "pain" count only next to a body part or health phrase ("back pain", "cold medicine", "caught a cold").
+  - Matching prompt rule in `lib/gemini.ts`. Still no medical advice.
+- **Student #4:** `TOP_K` 5 → 8. The GE-units section ranked 6th.
+- **Student #7:** the contact section already reached Gemini; the page just doesn't list a location. New prompt rule: for "where is / how do I reach" an office, if there's no location but there is contact or booking info, say the location isn't listed and give the contact info. Never guess a room.
+
+**Did it work?** Offline so far; live runs wait for the quota reset.
+- **Health word list:** 18 of 18 hand-picked cases as expected, including "the library is cold", "parking is a pain" and "cold brew" → not health, and "back pain", "caught a cold" and "flu shot" → health.
+- **`mustComeBefore`:** passes the real #4 answer (To Do List, then SAP) and fails an answer that mentions SAP first.
+- **Retrieval** (embedding calls only, 11 tests whose quoted fact can be located automatically):
+  - right page in the top 5 for 10/11, and in the top 8 for 11/11;
+  - the exact fact chunk reached Gemini for 8/11 with top 5, and 10/11 with top 8.
+- tsc, eslint, `npm run build` and `npm run check:presets` pass.
+- **Live (pending):** presets, the original set and the student set, plus timing.
+
+**Troubleshooting or redirection (if any):**
+1. **The slowdown wasn't where it looked.** Timing each step, and comparing with the preset run (which skips the rewrite), showed most of the 5-6s came from Gemini being slow at test time. Only about 1.3s comes from the new steps.
+2. **Writing center (#7) wasn't a search problem.** The ranking showed the contact section already reached Gemini, so top 8 wouldn't have fixed it; it needed a prompt rule instead.
+3. **The team narrowed the health word list** ("cold", "pain") before it was built.
+
+**Screenshot / commit:** none yet
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

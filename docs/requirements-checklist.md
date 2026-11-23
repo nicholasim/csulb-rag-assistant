@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-22, after fixing the preset questions and the first live runs with A2/A1 (prompt log Entry 20).
+**Last updated:** 2026-11-22, after Entry 21: speed changes, the health rule, top 8 and the location rule are built and checked offline. **Live runs are waiting for the quota reset.**
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 

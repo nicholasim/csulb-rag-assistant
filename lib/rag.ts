@@ -18,7 +18,7 @@ import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
 import { crisisReply, isCrisisMessage } from "./crisis";
-import { officeAt } from "./directory";
+import { officeAt, OFFICES } from "./directory";
 import { CATEGORIES, EXAMPLE_QUESTIONS } from "./categories";
 import { MIN_OFFICE_SIMILARITY, OFF_TOPIC_SIMILARITY, pickHelpOffice, rankOfficesByMeaning, type HelpOffice } from "./help-office";
 import { removePersonalDetails, rewriteQuestion } from "./rewrite";
@@ -27,7 +27,9 @@ import { vectorSearch } from "./vector-search";
 
 export { MAX_QUESTION_LENGTH };
 
-const TOP_K = 5; // how many chunks to give Gemini
+// How many chunks to give Gemini. 8 (was 5, Entry 21): the GE-units section ranked 6th for
+// "what GE classes do i need to take". Costs about 1,000 more tokens per question; no extra requests.
+const TOP_K = 8;
 // If the best chunk scores below this, the question matched almost nothing in our sources
 // (usually just one common word), so we skip the AI and reply with the fallback.
 // We picked 3.0 by testing real questions: answerable ones scored 4 to 21.
@@ -60,6 +62,24 @@ export type ChatResponse = {
 
 // Every question the app offers as a button: sidebar starters and welcome/example questions.
 const PRESET_QUESTIONS = new Set([...CATEGORIES.map((c) => c.starter), ...EXAMPLE_QUESTIONS]);
+
+// Health and medical questions ("what medicine should I take for a headache?") are always about CSULB:
+// the fallback shows Student Health Services, never example questions (team rule, Entry 21). We never
+// give medical advice; the card points to the people who can. "cold" and "pain" count only next to
+// another health word ("cold medicine", "back pain"), so "the library is cold" or "parking is a pain"
+// isn't a health question.
+const HEALTH_WORDS = /\b(medicines?|medications?|meds|sick|ill|illness|doctors?|nurses?|headaches?|migraines?|fever|symptoms?|prescriptions?|pharmacy|vaccines?|vaccinations?|flu shots?|immuni[sz]ations?|injur(y|ies|ed)|flu|covid|allerg(y|ies|ic)|health|medical|clinic|infections?|sore throat|cough(ing)?|nausea|vomit(ing)?|rash|std|sti|birth control|contracepti\w+|pregnan\w+|stomach ?ache|toothache|sprain(ed)?|antibiotics?|ibuprofen|tylenol|advil)\b/i;
+const WEAK_HEALTH_WORDS = /\b(cold|pain|hurts?|aches?)\b/i;
+
+export function isHealthQuestion(text: string) {
+  if (HEALTH_WORDS.test(text)) return true;
+  // "back pain", "cold medicine": a weak word right next to a body part or another health word.
+  return WEAK_HEALTH_WORDS.test(text) && /\b(back|head|neck|chest|stomach|tooth|ear|throat|knee|joint|muscle|chronic|cold (medicine|symptoms)|common cold|caught a cold|have a cold)\b/i.test(text);
+}
+
+function studentHealthOffice() {
+  return OFFICES.find((o) => /^Student Health Services/i.test(o.name)) ?? null;
+}
 
 /** Is the student asking for a map or how to get around? */
 function isMapQuestion(question: string) {
@@ -338,9 +358,10 @@ const MIN_SIMILARITY = Infinity;
  * vector-search.ts). Then merge all the lists into the TOP_K chunks for Gemini (rank-merge.ts).
  * bestScore / bestSimilarity are the best match from each kind: our "did anything really match?" check.
  */
-async function retrieve(queries: string[]) {
+async function retrieve(queries: string[], meaning?: Promise<Awaited<ReturnType<typeof vectorSearch>>>) {
   const keywordLists = queries.map((q) => search(q, RESULTS_PER_QUERY));
-  const { lists: meaningLists, queryVectors } = await vectorSearch(queries, RESULTS_PER_QUERY); // empty if unavailable
+  // Meaning search: already started by the caller (see answerQuestion), or run now. Empty if unavailable.
+  const { lists: meaningLists, queryVectors } = await (meaning ?? vectorSearch(queries, RESULTS_PER_QUERY));
   const bestScore = Math.max(0, ...keywordLists.map((list) => list[0]?.score ?? 0));
   const bestSimilarity = Math.max(0, ...meaningLists.map((list) => list[0]?.similarity ?? 0));
   const results = mergeRankings(
@@ -402,9 +423,14 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   //    Preset questions (sidebar starters, welcome examples) skip the rewrite: they're already
   //    clear, they find the right page as written (tests/preset-questions.json), and skipping
   //    saves one Gemini request per click and one thing that can fail (Entry 20).
+  //    Speed (Entry 21): the meaning search for the question as typed starts right away, at the same
+  //    time as the rewrite, instead of waiting for it (saves about 0.4s). Keyword search still uses
+  //    every rewritten query.
+  const typedQuery = removePersonalDetails(searchText);
+  const meaning = vectorSearch([typedQuery], RESULTS_PER_QUERY);
   const rewritten = PRESET_QUESTIONS.has(question.trim()) ? null : await rewriteQuestion(smallTalk.rest, history);
-  const searchQueries = [...new Set([searchText, ...(rewritten ?? [])].map(removePersonalDetails).filter(Boolean))];
-  let { results, matched, queryVectors, bestSimilarity } = await retrieve(searchQueries);
+  const searchQueries = [...new Set([typedQuery, ...(rewritten ?? []).map(removePersonalDetails)].filter(Boolean))];
+  let { results, matched, queryVectors, bestSimilarity } = await retrieve(searchQueries, meaning);
 
   // If the rewrite failed, a follow-up like "the second one" matches nothing on its own,
   // so if the search is weak we search again together with the previous question (the old way).
@@ -418,15 +444,16 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   // 3. Nothing matched well enough: fall back without calling the AI. If even the closest chunk
   //    is far from the question's meaning, it isn't about CSULB ("capital of France"): no office.
   //    Otherwise point to the office closest in meaning, or Dean of Students.
+  const health = isHealthQuestion(searchText);
   if (!matched) {
     // (A strong office match wins first: "harassment" alone matches few page words but clearly
-    //  belongs to the Title IX office.)
+    //  belongs to the Title IX office. A health question always gets Student Health Services.)
     const strongOffice = (rankOfficesByMeaning(queryVectors, 1)[0]?.similarity ?? 0) >= MIN_OFFICE_SIMILARITY;
-    const offTopic = queryVectors.length > 0 && !strongOffice && bestSimilarity < OFF_TOPIC_SIMILARITY;
+    const offTopic = !health && queryVectors.length > 0 && !strongOffice && bestSimilarity < OFF_TOPIC_SIMILARITY;
     return fallback(
       {
         suggestion: !offTopic && isMapQuestion(searchText) ? MAP_SUGGESTION : null,
-        helpOffice: offTopic ? null : pickHelpOffice(null, queryVectors),
+        helpOffice: offTopic ? null : pickHelpOffice(health ? studentHealthOffice() : null, queryVectors),
       },
       null,
       correctedQuestion,
@@ -440,14 +467,15 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   // 5. Shape the response.
   if (reply.type === "fallback") {
     // Not about CSULB at all (Gemini's about_csulb): no office, show what we can help with.
-    if (reply.about_csulb === false) {
+    // Health and medical questions always count as CSULB (Student Health Services), whatever Gemini says.
+    if (reply.about_csulb === false && !health) {
       return fallback({ suggestion: null, helpOffice: null }, model, correctedQuestion, searchQueries);
     }
     // About CSULB: a related page if we have one (the campus maps page for map questions), and
     // always a "Who can help" office: Gemini's pick, else the closest by meaning, else the default.
     const related = results[reply.related_source - 1]?.chunk;
     const suggestion = isMapQuestion(searchText) ? MAP_SUGGESTION : related ? { title: related.title, url: related.url } : null;
-    const helpOffice = pickHelpOffice(officeAt(reply.related_office), queryVectors);
+    const helpOffice = pickHelpOffice(health ? studentHealthOffice() : officeAt(reply.related_office), queryVectors);
     return fallback({ suggestion, helpOffice }, model, correctedQuestion, searchQueries);
   }
 

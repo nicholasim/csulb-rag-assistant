@@ -37,9 +37,9 @@
       "question": "How do I check my financial aid status?",
       "type": "answerable",
       "area": "Financial Aid",
-      "expected_behavior": "A Must user story in our brief. Answers from the MyCSULB financial aid page's To Do List steps (not the SAP / academic progress section).",
+      "expected_behavior": "A Must user story in our brief. Answers from the MyCSULB financial aid page's To Do List steps first. Mentioning the SAP status (a section of the same page) is fine, but only after the To Do List (Entry 21).",
       "expected_fact": "\"Click on the To Do List link on the right-hand side of your Student Center\" (knowledge/financial-aid.md, View Your Financial Aid To Do List, Step 1)",
-      "expect": { "response": "answer", "mustInclude": ["To\\s+Do\\s+List", "Student\\s+Center"], "mustNotInclude": ["\\bSAP\\b", "Satisfactory Academic Progress"], "minSources": 1 }
+      "expect": { "response": "answer", "mustInclude": ["To[\\s-]+Do\\s+List", "Student\\s+Center"], "mustComeBefore": ["To[\\s-]+Do\\s+List", "\\bSAP\\b|Satisfactory Academic Progress"], "minSources": 1 }
     },
     {
       "id": 5,
@@ -263,7 +263,7 @@
       "area": "Financial Aid",
       "expected_behavior": "Fixes 'finacial' to 'financial' and explains where to check aid status in MyCSULB.",
       "expected_fact": "Corrected to 'financial aid status'; \"To Do List\" (knowledge/financial-aid.md, Step 1)",
-      "expect": { "response": "answer", "correctedQuestion": "financial aid status", "mustInclude": ["To\\s+Do\\s+List"], "mustNotInclude": ["\\bSAP\\b", "Satisfactory Academic Progress"], "minSources": 1 }
+      "expect": { "response": "answer", "correctedQuestion": "financial aid status", "mustInclude": ["To[\\s-]+Do\\s+List"], "mustComeBefore": ["To[\\s-]+Do\\s+List", "\\bSAP\\b|Satisfactory Academic Progress"], "minSources": 1 }
     },
     {
       "id": 28,

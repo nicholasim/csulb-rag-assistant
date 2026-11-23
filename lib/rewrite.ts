@@ -21,7 +21,9 @@ import { errorKind } from "./gemini";
 import type { ChatMessage } from "./rag";
 
 const DEFAULT_REWRITE_MODEL = "gemini-3.5-flash-lite";
-const TIMEOUT_MS = 5_000; // after this, give up and search with the question as typed
+// After this, give up and search with the question as typed. A rewrite normally takes under 1s;
+// 2s (was 5s, Entry 21) keeps a slow Gemini moment from adding much wait.
+const TIMEOUT_MS = 2_000;
 const MAX_QUERIES = 3;
 
 const REWRITE_PROMPT = `You turn a Cal State Long Beach (CSULB) student's message into search queries for a keyword search over official CSULB web pages.

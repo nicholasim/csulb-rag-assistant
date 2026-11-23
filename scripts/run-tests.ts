@@ -33,6 +33,7 @@ type Expect = {
   mustInclude?: string[]; // every pattern must match
   mustIncludeAny?: string[]; // at least one pattern must match
   mustNotInclude?: string[]; // no pattern may match
+  mustComeBefore?: [string, string]; // [first, later]: if `later` appears in the answer, `first` must appear before it (Entry 21)
   minSources?: number;
   errorCode?: string;
   httpStatus?: number;
@@ -154,6 +155,14 @@ function check(test: Test, result: ApiResult): string[] {
   }
   for (const pattern of expect.mustNotInclude ?? []) {
     if (matches(pattern)) problems.push(`should not contain /${pattern}/`);
+  }
+  if (expect.mustComeBefore) {
+    // Checked in the answer text only. "first" must appear, and before the first match of "later".
+    const [first, later] = expect.mustComeBefore;
+    const answer = body.answer ?? "";
+    const firstAt = answer.search(new RegExp(first, "i"));
+    const laterAt = answer.search(new RegExp(later, "i"));
+    if (laterAt !== -1 && (firstAt === -1 || firstAt > laterAt)) problems.push(`/${first}/ must come before /${later}/`);
   }
   return problems;
 }
