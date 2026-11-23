@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-23, after Entry 25. **Feature freeze.** The College of Natural Sciences and Mathematics office is fixed (42 of 42 offices), and the SOAR test checks the sign-up steps instead of a past date (it passes live).
+**Last updated:** 2026-11-23, after Entry 27: follow-up suggestions (the one feature added after the freeze). Original 40/42, student 47/48 in the full rerun.
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -34,6 +34,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 
 ### Chat experience
 - [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5). Every preset (22 sidebar starters, which include the 6 welcome examples) is a permanent live test, passing 22/22 twice (Entry 20). Presets skip the rewrite call, to save quota.
+- [x] **Follow-up suggestions (Entry 27):** 2-3 "You could also ask" questions under the latest normal answer, made in the same Gemini call (no extra request, about $0.00015 per answer). Each is kept only if our pages' keyword search matches one of the pages Gemini was shown. They never appear on fallbacks, clarify, small talk, crisis or errors; every live test checks this. Live: 148 of 169 suggestions kept; in a 5-answer check, 10 of 13 kept were answerable from our pages (`npm run check:follow-ups`, `docs/screenshots/*-19-follow-ups*.png`).
 - [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
 - [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`. Numbered 1, 2, 3 in order with one chip per page; table quotes include column names (Entry 6).
 - [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6). It also cancels an answer that's still loading (Entry 9).
@@ -198,6 +199,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Whether off-campus questions that reach Gemini (tacos, pizza, weather, UCLA) get example questions instead of an office** depends on Gemini's `about_csulb` answer. In the live runs, the unsupported tests passed (Entries 20 and 23). Health questions are always treated as CSULB questions (Entry 21).
   - **Office descriptions can go stale when CSULB edits a page.** Entry 24 found one: the College of Natural Sciences and Mathematics sentence had been hidden in an HTML comment. It was fixed in Entry 25 with a visible sentence (42 of 42 offices). `npm run fetch-sources` reports any future mismatch and leaves that office out until the sentence is updated.
   - **Some source pages still show dates that have already passed**, for example "starting on November 3, 2026" for SOAR reservations, or one-time announcements such as rainy-day study rooms and extended drop-in hours. The assistant repeats dates as the page states them, and Gemini sometimes leaves a past date out. Tests check steps rather than past dates (Entry 25). Re-run `npm run fetch-sources` before the demo to pick up updated pages.
+  - **Follow-up suggestions can be on-topic but not actually answered** (3 of 13 in the Entry 27 check, e.g. "Where is the Center for International Education located?"). The filter checks the suggestion matches a page Gemini was shown, not that the page states the specific fact. Clicking one then gets a normal fallback with the right office.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

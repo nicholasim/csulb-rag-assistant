@@ -39,6 +39,7 @@ type Expect = {
   httpStatus?: number;
   correctedQuestion?: string | null; // pattern the typo-fixed question must match; null = nothing should be fixed
   minExamples?: number; // chat replies: at least this many example-question buttons
+  minFollowUps?: number; // normal answers: at least this many follow-up suggestions (Entry 27)
   maxAnswerChars?: number; // the answer must be at most this long (e.g. a referral, not a written essay)
   searchQueriesMustNotInclude?: string[]; // patterns that must never appear in the queries we searched with (e.g. a student ID)
   // If the reply is a fallback: true = it must show a "Who can help" office (a CSULB question);
@@ -71,6 +72,7 @@ type ApiResult = {
     correctedQuestion?: string | null;
     searchQueries?: string[];
     examples?: string[];
+    followUps?: string[];
     helpOffice?: { name: string; url: string } | null;
     offTopic?: boolean;
     error?: { code: string; message: string };
@@ -125,6 +127,15 @@ function check(test: Test, result: ApiResult): string[] {
   if (expect.correctedQuestion && !new RegExp(expect.correctedQuestion, "i").test(body.correctedQuestion ?? "")) {
     problems.push(`expected the question to be corrected to /${expect.correctedQuestion}/, got ${body.correctedQuestion ? `"${body.correctedQuestion}"` : "no correction"}`);
   }
+  // Follow-ups appear only on normal Gemini answers: never on fallbacks, clarifying questions, small
+  // talk, errors, or crisis replies (which have no model). Checked on every test (Entry 27).
+  const isNormalAnswer = body.type === "answer" && !!body.model;
+  if (!isNormalAnswer && (body.followUps?.length ?? 0) > 0) {
+    problems.push(`follow-up suggestions must not appear on a ${body.error ? "error" : body.model ? body.type : `${body.type} without AI (crisis/small talk)`} reply`);
+  }
+  if (expect.minFollowUps && (body.followUps?.length ?? 0) < expect.minFollowUps) {
+    problems.push(`expected at least ${expect.minFollowUps} follow-up suggestion(s), got ${body.followUps?.length ?? 0}`);
+  }
   if (expect.minExamples && (body.examples?.length ?? 0) < expect.minExamples) {
     problems.push(`expected at least ${expect.minExamples} example question(s), got ${body.examples?.length ?? 0}`);
   }
@@ -176,7 +187,8 @@ function summarize(result: ApiResult) {
   const searched = body.searchQueries?.length ? body.searchQueries : body.correctedQuestion ? [body.correctedQuestion] : [];
   const corrected = searched.length ? `[searched: ${searched.map((q) => `"${q}"`).join(" + ")}] ` : "";
   const help = body.type === "fallback" ? (body.helpOffice ? ` [Who can help: ${body.helpOffice.name}]` : body.offTopic ? " [not about CSULB: example questions]" : "") : "";
-  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}`;
+  const followUps = body.followUps?.length ? ` [follow-ups: ${body.followUps.map((q) => `"${q}"`).join(" | ")}]` : "";
+  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}${followUps}`;
 }
 
 const cell = (text: string | undefined) => (text ?? "-").replace(/\|/g, "\\|").replace(/\n/g, " ");

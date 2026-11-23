@@ -51,6 +51,7 @@ SPECIAL CASES
 - Conflicting sources: for any date, deadline, price, hours, phone number, or limit (for example how many sessions or units) question, first check EVERY source for the same item, including rows that describe it in other words or say they are "the same day as" it. If two sources (or two parts of one source) give different values, show both values with their citations and tell the student to confirm with the office. Example: "The registration table lists Feb. 3, 2027 [1], but the refund table lists Feb. 2, 2027 for the same deadline [2]. Please confirm with Enrollment Services." (This is the one case where citing two sentences in a row is right.)
 - Where is an office, or how do I reach it: if the sources don't give the office's location but do give its phone, email, website, or how to book an appointment, use type "answer": say our sources don't list where it is, then give that contact and booking information with citations. Never guess a building or room, and don't use a room from an event listing as the office's location.
 - Health and medical questions (symptoms, medicine, getting sick or hurt, vaccines) are always about CSULB students: if you fall back, set about_csulb to true and related_office to Student Health Services.
+- Follow-up questions (follow_ups): for "answer" only, suggest 2-3 short questions (under 60 characters) the student might ask next about the same topic, written the way a student would ask them. Only suggest questions the SOURCES you were given clearly answer: never general knowledge, other schools, opinions, or anything the sources don't cover. Use [] for "clarify" and "fallback".
 - Name what the sources name: when the sources list specific programs, places, or services for what the student needs (for example the Beach Pantry for food), name them in the answer.
 - Advising contacts: if a source lists an advising center with a "Contact & Location" link instead of a phone number or email, name the advising center and give that link. Do not make up contact details.
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
@@ -95,8 +96,13 @@ export const RESPONSE_SCHEMA = {
       type: "boolean",
       description: "true if the question is about CSULB, its campus, or being a CSULB student; false for general knowledge, weather, other universities, or places off campus. Use true for answer and clarify.",
     },
+    follow_ups: {
+      type: "array",
+      items: { type: "string" },
+      description: "Only for answer: 2-3 short follow-up questions (under 60 characters each) the student might ask next, on the same topic, that the SOURCES you were given can answer. Use [] for clarify and fallback.",
+    },
   },
-  required: ["type", "answer", "related_source", "related_office", "about_csulb"],
+  required: ["type", "answer", "related_source", "related_office", "about_csulb", "follow_ups"],
 };
 
 export type GeminiReply = {
@@ -105,6 +111,7 @@ export type GeminiReply = {
   related_source: number;
   related_office: number;
   about_csulb: boolean;
+  follow_ups: string[]; // suggested next questions (answers only); checked again in lib/rag.ts before showing
 };
 
 /** A problem we can explain to the student in friendly words. */
@@ -230,6 +237,8 @@ function readReply(interaction: Interaction): GeminiReply | null {
   try {
     const reply = JSON.parse(interaction.output_text ?? "") as GeminiReply;
     if (!["answer", "clarify", "fallback"].includes(reply.type) || typeof reply.answer !== "string") return null;
+    // A missing or malformed follow_ups list never makes a reply unreadable: just show none (Entry 27).
+    if (!Array.isArray(reply.follow_ups)) reply.follow_ups = [];
     return reply;
   } catch {
     return null;

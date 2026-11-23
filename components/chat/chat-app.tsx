@@ -294,7 +294,12 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
                             </MessageContent>
                           </Message>
                         ) : (
-                          <AssistantMessage turn={turn} onAsk={ask} onRetry={retry} />
+                          <AssistantMessage
+                            turn={turn}
+                            onAsk={ask}
+                            onRetry={retry}
+                            isLatest={turn.id === turns[turns.length - 1]?.id}
+                          />
                         )}
                       </MessageScrollerItem>
                     ))}

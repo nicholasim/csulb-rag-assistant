@@ -1533,4 +1533,81 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 27 (Follow-up suggestions: feature freeze lifted for one feature)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Show 2-3 clickable follow-up questions after each normal answer, generated in the same Gemini answer call (a `follow_ups` field, no extra request). They must only suggest things our sources can answer, under ~60 characters. Never on fallbacks, crisis replies, small talk, clarifying questions, or errors; if Gemini returns none or bad ones, show nothing.
+>
+> **Look:** separate from the answer, light and low-contrast with a "You could also ask" label, a stronger color on hover and focus, aria labels, and clean mobile wrapping.
+>
+> Plan first with the scope check; keep existing tests passing; add tests; fake responses for screenshots; a live check of about 5 questions.
+>
+> **Team changes to the plan:**
+> - only under the most recent answer;
+> - report how many follow-ups Gemini suggested vs how many passed the filter (and tell the team before changing the filter if it drops most good ones);
+> - run the full original and student sets afterwards.
+
+**What the AI did:**
+- **Scope check:** inside scope (the brief's onboarding / example-questions idea; no new sources, no extra requests).
+- **`lib/gemini.ts`:**
+  - `follow_ups` (an array of strings) added to the structured-output schema and the reply type, plus one prompt rule (for answers only, 2-3 short questions the given sources answer; `[]` otherwise);
+  - `readReply` turns a missing or malformed list into `[]`, so it can never make a reply "unreadable".
+- **`lib/rag.ts`, `cleanFollowUps()`:** applied only to normal answers. A suggestion is kept only if it:
+  - is a question of 8-70 characters, with citations stripped;
+  - has no link, email, phone number or ID;
+  - isn't crisis wording or small talk, and doesn't repeat the question;
+  - passes **keyword search on our pages** (score ≥ 3.0, the no-AI gate) with its best match being one of the pages Gemini was shown.
+
+  At most 3 are kept; it's local, with no AI call. The server logs `suggested=N kept=M`, and the raw lists only when `DEBUG_FOLLOW_UPS=1` (testing only).
+- **UI (`components/chat/assistant-message.tsx`, `FollowUps`):**
+  - a small muted label "You could also ask", then rounded buttons with a transparent background, a thin light border and smaller muted text;
+  - hover and keyboard focus darken the text and border, add a faint fill, and show the standard focus ring;
+  - `role="group" aria-label="Suggested follow-up questions"`, and each button `aria-label="Ask: …"`;
+  - wrapping text (no mid-word breaks).
+
+  Clicking one sends it like a typed question. **Shown only under the most recent answer** (`isLatest` from `chat-app.tsx`).
+- **Tests:**
+  - **`scripts/run-tests.ts`:** a new check on *every* test: no follow-ups unless the reply is a normal Gemini answer, so fallbacks, clarify, small talk, crisis (no model) and errors are all covered;
+  - new `minFollowUps` (set to 1 on 5 answerable original tests);
+  - the summary shows `[follow-ups: …]`;
+  - **new `npm run check:follow-ups`:** 14 offline checks of the filter (keeps on-topic questions, strips citations; drops weather, "best professor", off-topic, too long, link, phone, a repeat, not a question, crisis wording, non-text; caps at 3; bad input gives none).
+
+**Did it work?**
+- **Offline:** 14/14 filter checks pass; tsc, eslint, build and the preset check pass.
+- **Screenshots** (fake API, no Gemini):
+  - the suggestions look clearly secondary to the answer and wrap cleanly on mobile;
+  - hover and focus are visibly stronger (dark text, faint fill);
+  - after a second answer only the latest one has suggestions;
+  - none appear on a fallback or small talk;
+  - the page still never scrolls.
+- **Live check of 5 answers:** Gemini suggested 14 follow-ups and the filter kept 13. None appeared on the "best professor" fallback or the crisis message.
+  - **Answerable from our pages: 10 of the 13 kept.** For example "What is the CSULB FAFSA school code?" (001139), "How much are guest passes at the SRWC?" ($10), "Can I get a refund on my permit?", "Where is the SRWC located?".
+  - **On-topic but not actually answered: 3.**
+    - "What are the drop-in advising hours?" (the page explains drop-in advising, but no hours were found);
+    - "Where is the Center for International Education located?";
+    - "What are the rules for international students changing majors?".
+
+    **The filter is lenient:** a keyword match on the right page doesn't prove the specific fact is there.
+  - **Good suggestion dropped: 1** ("Can transfer students change their major?"). Its best keyword match was a page Gemini wasn't shown. 1 of 14 is not "most", so the filter wasn't changed.
+- **Full rerun (63 answers):** Gemini suggested 169 and the filter kept 148 (88%).
+  - **Original set: 40/42.** Taco spots (#17) got the dining office instead of example questions; it passed on a rerun.
+  - **Student set: 47/48** (up from 46/48).
+  - The new no-follow-ups-on-non-answers check passed on every test, and all 5 `minFollowUps` tests got suggestions.
+- **Still failing after one rerun (shown, not fixed):**
+  - **Original #3** (last day to drop without a W): first a 90s client timeout with no Gemini warning in the log; on the rerun the answer gave only one of the two conflicting dates. It passed in Entries 23-24, so this may be the extra prompt rule shifting the answer, or normal variation.
+  - **Student #31** ("did my FAFSA go through"): the rewrite timed out at 3s both times (11 rewrite timeouts in the run; Gemini was slow), so the To Do List section never reached Gemini.
+- **Cost:** about +40 output tokens per answer (3 short questions) plus the prompt line, about $0.00015 per answer. Average answer output in this run was 166 tokens. No extra requests.
+
+**Troubleshooting or redirection (if any):**
+1. **The first answerability check said "not found" for several suggestions.** This machine's `grep` gave up on long patterns (a complexity limit) instead of searching. Claude rechecked in Python before reporting.
+2. **The team limited follow-ups to the latest answer** and asked for suggested-vs-kept counts before any filter change.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-19-follow-ups.png`, `desktop-19-follow-ups-hover.png`, `mobile-19-follow-ups-focus.png`, `{desktop,mobile}-19-follow-ups-none-on-fallback-and-chat.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

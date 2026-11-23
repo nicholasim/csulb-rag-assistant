@@ -59,10 +59,12 @@ export function AssistantMessage({
   turn,
   onAsk,
   onRetry,
+  isLatest = false,
 }: {
   turn: AssistantTurn;
-  onAsk: (question: string) => void; // used by clarifying-option buttons
+  onAsk: (question: string) => void; // used by clarifying options, example questions and follow-ups
   onRetry: (turn: AssistantTurn) => void;
+  isLatest?: boolean; // follow-up suggestions show only under the most recent answer
 }) {
   return (
     <Message align="start" className="gap-3">
@@ -77,7 +79,7 @@ export function AssistantMessage({
         )}
         {turn.state === "loading" && <LoadingState />}
         {turn.state === "error" && <ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} />}
-        {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} />}
+        {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} onAsk={onAsk} showFollowUps={isLatest} />}
         {turn.state === "done" && turn.response.type === "clarify" && <ClarifyState response={turn.response} onAsk={onAsk} />}
         {turn.state === "done" && turn.response.type === "fallback" && <FallbackState question={turn.question} response={turn.response} onAsk={onAsk} />}
         {turn.state === "done" && turn.response.type === "chat" && <ChatState response={turn.response} onAsk={onAsk} />}
@@ -99,7 +101,17 @@ function LoadingState() {
   );
 }
 
-function AnswerState({ turn, response }: { turn: AssistantTurn; response: ChatResponse }) {
+function AnswerState({
+  turn,
+  response,
+  onAsk,
+  showFollowUps,
+}: {
+  turn: AssistantTurn;
+  response: ChatResponse;
+  onAsk: (q: string) => void;
+  showFollowUps: boolean;
+}) {
   const [openId, setOpenId] = useState<number | null>(null);
   const ids = response.sources.map((s) => s.id);
   return (
@@ -115,7 +127,36 @@ function AnswerState({ turn, response }: { turn: AssistantTurn; response: ChatRe
         onToggle={(id) => setOpenId((current) => (current === id ? null : id))}
         messageId={turn.id}
       />
+      {showFollowUps && response.followUps && response.followUps.length > 0 && (
+        <FollowUps questions={response.followUps} onAsk={onAsk} />
+      )}
     </>
+  );
+}
+
+/**
+ * "You could also ask": 2-3 suggested next questions under the latest answer (Entry 27). Kept quiet
+ * on purpose (muted text, thin border, no fill) so it doesn't read as part of the answer; hover and
+ * keyboard focus make it stronger. Each one was checked in lib/rag.ts to be answerable by our pages.
+ */
+function FollowUps({ questions, onAsk }: { questions: string[]; onAsk: (q: string) => void }) {
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      <p className="text-xs text-muted-foreground">You could also ask</p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Suggested follow-up questions">
+        {questions.map((question) => (
+          <button
+            key={question}
+            type="button"
+            onClick={() => onAsk(question)}
+            aria-label={`Ask: ${question}`}
+            className="max-w-full rounded-full border border-border/70 bg-transparent px-3 py-1.5 text-left text-sm leading-5 text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 hover:text-foreground focus-visible:border-foreground/30 focus-visible:bg-muted/50 focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <span className={WRAP}>{question}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -8,7 +8,7 @@
       "area": "Parking & Transportation",
       "expected_behavior": "Answers with the semester price and cites a parking source.",
       "expected_fact": "$259",
-      "expect": { "response": "answer", "mustInclude": ["\\$259"], "minSources": 1 }
+      "expect": { "response": "answer", "minFollowUps": 1, "mustInclude": ["\\$259"], "minSources": 1 }
     },
     {
       "id": 2,
@@ -17,7 +17,7 @@
       "area": "International Students",
       "expected_behavior": "Names the three International Student Advisors from the Staff Contacts page.",
       "expected_fact": "Ignacio Castor, Tammy Guzman, Angela Garris",
-      "expect": { "response": "answer", "mustInclude": ["Castor", "Guzman", "Garris"], "minSources": 1 }
+      "expect": { "response": "answer", "minFollowUps": 1, "mustInclude": ["Castor", "Guzman", "Garris"], "minSources": 1 }
     },
     {
       "id": 3,
@@ -48,7 +48,7 @@
       "area": "Technology Help Desk",
       "expected_behavior": "Gives the phone support hours (until 7 p.m. Monday-Thursday).",
       "expected_fact": "7:00 p.m.",
-      "expect": { "response": "answer", "mustInclude": ["7(:00)?\\s*p\\.?\\s*m"], "minSources": 1 }
+      "expect": { "response": "answer", "minFollowUps": 1, "mustInclude": ["7(:00)?\\s*p\\.?\\s*m"], "minSources": 1 }
     },
     {
       "id": 6,
@@ -57,7 +57,7 @@
       "area": "Bookstore",
       "expected_behavior": "Gives the Day 1 Textbook Access bundle price.",
       "expected_fact": "$289",
-      "expect": { "response": "answer", "mustInclude": ["\\$289"], "minSources": 1 }
+      "expect": { "response": "answer", "minFollowUps": 1, "mustInclude": ["\\$289"], "minSources": 1 }
     },
     {
       "id": 7,
@@ -66,7 +66,7 @@
       "area": "Orientation",
       "expected_behavior": "Explains how to sign up: make a SOAR reservation in Single Sign On (SSO) / the SOAR Sign-Up link in MyCSULB Student Center. The November 3, 2026 opening date has passed, so it isn't required (Entry 25).",
       "expected_fact": "\"Incoming students for Spring 2027 will make a SOAR reservation in their Single Sign On (SSO)\"; \"You should see a SOAR Sign-Up link\"",
-      "expect": { "response": "answer", "mustInclude": ["SOAR"], "mustIncludeAny": ["SSO", "Single Sign On", "Student Center", "Sign-Up", "reservation"], "minSources": 1 }
+      "expect": { "response": "answer", "minFollowUps": 1, "mustInclude": ["SOAR"], "mustIncludeAny": ["SSO", "Single Sign On", "Student Center", "Sign-Up", "reservation"], "minSources": 1 }
     },
     {
       "id": 8,

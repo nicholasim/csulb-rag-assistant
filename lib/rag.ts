@@ -58,6 +58,8 @@ export type ChatResponse = {
   // the question isn't about CSULB at all (offTopic), which shows example questions instead.
   helpOffice?: HelpOffice | null;
   offTopic?: boolean;
+  // Normal answers only: 0-3 suggested next questions, each checked against our pages (cleanFollowUps).
+  followUps?: string[];
 };
 
 // Every question the app offers as a button: sidebar starters and welcome/example questions.
@@ -79,6 +81,37 @@ export function isHealthQuestion(text: string) {
 
 function studentHealthOffice() {
   return OFFICES.find((o) => /^Student Health Services/i.test(o.name)) ?? null;
+}
+
+const MAX_FOLLOW_UPS = 3;
+const MAX_FOLLOW_UP_LENGTH = 70; // asked for under 60; a little slack
+
+/**
+ * Check Gemini's suggested follow-up questions before showing them (Entry 27). A suggestion is kept
+ * only if it's a short, clean question that our own pages can answer: keyword search on it must
+ * reach the same bar as the no-AI gate (MIN_SCORE), and its best match must be one of the pages
+ * Gemini was shown for this answer (so it stays on topic). No AI call; anything doubtful is dropped.
+ */
+export function cleanFollowUps(raw: unknown, question: string, results: SearchResult[]): string[] {
+  if (!Array.isArray(raw)) return [];
+  const shownPages = new Set(results.map((r) => r.chunk.url));
+  const seen = new Set([question.trim().toLowerCase()]);
+  const kept: string[] = [];
+  for (const item of raw) {
+    if (kept.length >= MAX_FOLLOW_UPS) break;
+    if (typeof item !== "string") continue;
+    const text = item.replace(/\s*\[\d+(?:\s*,\s*\d+)*\]/g, "").replace(/\s+/g, " ").trim();
+    if (!text.endsWith("?") || text.length < 8 || text.length > MAX_FOLLOW_UP_LENGTH) continue;
+    if (/https?:\/\/|www\./i.test(text) || removePersonalDetails(text) !== text) continue; // links, emails, phone numbers, IDs
+    if (isCrisisMessage(text) || detectSmallTalk(text).kind) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    const best = search(text, 1)[0];
+    if (!best || best.score < MIN_SCORE || !shownPages.has(best.chunk.url)) continue; // not answerable from these pages
+    seen.add(key);
+    kept.push(text);
+  }
+  return kept;
 }
 
 /** Is the student asking for a map or how to get around? */
@@ -494,5 +527,13 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     excerpt: bestExcerpt(chunks, searchText, textCiting(answer, id)),
   }));
 
-  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion, searchQueries };
+  // Follow-up suggestions: only on normal answers, and only ones our pages can answer (Entry 27).
+  const followUps = reply.type === "answer" ? cleanFollowUps(reply.follow_ups, question, results) : [];
+  if (reply.type === "answer") {
+    console.info(`[follow-ups] suggested=${Array.isArray(reply.follow_ups) ? reply.follow_ups.length : 0} kept=${followUps.length}`);
+    // Testing only (off by default): show what Gemini suggested and what the filter kept.
+    if (process.env.DEBUG_FOLLOW_UPS === "1") console.info(`[follow-ups] raw=${JSON.stringify(reply.follow_ups)} kept=${JSON.stringify(followUps)}`);
+  }
+
+  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion, searchQueries, ...(followUps.length ? { followUps } : {}) };
 }
