@@ -2,7 +2,7 @@
 title: "CSULB Computer Labs"
 url: https://www.csulb.edu/academic-technology-services/csulb-computer-labs
 category: Campus Places
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # CSULB Computer Labs

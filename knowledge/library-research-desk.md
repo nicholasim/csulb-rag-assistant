@@ -2,7 +2,7 @@
 title: "Research and Information Desk"
 url: https://www.csulb.edu/university-library/research-and-information-desk
 category: Library
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Research and Information Desk

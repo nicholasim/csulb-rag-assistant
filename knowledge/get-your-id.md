@@ -2,7 +2,7 @@
 title: "Get Your ID"
 url: https://www.csulb.edu/beach-shops/get-your-id
 category: Bookstore
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Get Your ID

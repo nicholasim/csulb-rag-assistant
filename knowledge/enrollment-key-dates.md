@@ -2,7 +2,7 @@
 title: "Key Dates and Deadlines"
 url: https://www.csulb.edu/enrollment-services/key-dates-and-deadlines
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Key Dates and Deadlines

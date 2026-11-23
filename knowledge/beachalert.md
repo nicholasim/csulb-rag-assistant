@@ -2,7 +2,7 @@
 title: "Emergency Notification System"
 url: https://www.csulb.edu/university-police/emergency-notification-system
 category: Safety
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Emergency Notification System

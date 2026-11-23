@@ -2,7 +2,7 @@
 title: "How-To Guides"
 url: https://www.csulb.edu/financial-management/student-financial-services/how-to-guides
 category: Tuition / Payments
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # How-To Guides

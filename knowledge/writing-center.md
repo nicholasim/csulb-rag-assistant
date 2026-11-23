@@ -2,8 +2,12 @@
 title: "University Writing Center"
 url: https://www.csulb.edu/university-writing-center
 category: Tutoring & Writing
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
+
+## **ANNOUNCEMENT**
+
+The UWC will be closed for fall break (Monday, 11/23 - Friday, 11/27). Services will resume Monday, 11/30. To schedule appointments for the week after the fall break, please use the Beach Connect how-to guide: [How to schedule an appointment](https://www.csulb.edu/sites/default/files/2026/documents/UWC%20Scheduling%20on%20BeachConnect%202026.pptx "UWC Scheduling on BeachConnect 2026.pptx"). We wish you a restful break!
 
 ## Welcome!
 
@@ -136,19 +140,6 @@ If the UWC is unavailable during your desired appointment slot, or if you are lo
 Table of UWC Workshops and Events
 | Date | Event |
 | --- | --- |
-| 9/11, Friday | **12:00-1:00 pm** \- [Growth Mindset](https://csulb.qualtrics.com/jfe/form/SV_a9mbwfoWFls4vEW) Workshop |
-| 9/14, Monday | **Evening Hours Launch, Week 4+** |
-| 9/18, Friday | **12:00-1:00 pm** - [Organization in Writing Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy)  |
-| 9/25, Friday | **12:00-1:00 pm** - [Revision Strategies Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy) **1:00-2:30 pm** - [Scholarship Writing Workshop](https://csulb.qualtrics.com/jfe/form/SV_egR9gU7wLK8RSce)  |
-| 10/2, Friday | **12:00-1:00 pm** \- [Proofreading Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy) |
-| 10/9, Friday | **12:00-1:00 pm** - [MLA Format Workshop](https://csulb.qualtrics.com/jfe/form/SV_ewDLby7efJdjr3E) **1:00-2:00 pm** - [APA Format Workshop](https://csulb.qualtrics.com/jfe/form/SV_ewDLby7efJdjr3E) |
-| 10/10, Saturday | **10:00-2:00 pm** - #TheBeachWrites Writing Retreat, co-hosted by the University Writing Center (LA2-200) |
-| 10/16, Friday | **12:00-1:00 pm** - [Writing in the Sciences Workshop](https://csulb.qualtrics.com/jfe/form/SV_0MU3RIQr7Oe6siG) |
-| 10/23, Friday | **12:00-1:00 pm** - [Organization in Writing Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy) (Round 2) |
-| 10/30, Friday | **12:00-1:00 pm** - [Revision Strategies Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy) (Round 2) |
-| 11/06, Friday | **12:00-1:00 pm** - [Proofreading Workshop](https://csulb.qualtrics.com/jfe/form/SV_8D5YI9iW9PZU1Uy) (Round 2) |
-| 11/11, Wednesday | **Veteran's Day, Campus Closed** |
-| 11/13, Friday | **12:00-1:00 pm** - [Research Strategies Workshop](https://csulb.qualtrics.com/jfe/form/SV_cD9mXcYP91btBb0) |
 | 11/20, Friday | **12:00-1:00 pm** - [MLA Format Workshop](https://csulb.qualtrics.com/jfe/form/SV_ewDLby7efJdjr3E) (Round 2) **1:00-2:00 pm** - [APA Format Workshop](https://csulb.qualtrics.com/jfe/form/SV_ewDLby7efJdjr3E) (Round 2) |
 | 11/23, Monday -  11/27, Friday | **Fall Break, UWC Closed** |
 | 12/4, Friday | **12:00-1:00 pm** - [Writing in the Sciences Workshop](https://csulb.qualtrics.com/jfe/form/SV_0MU3RIQr7Oe6siG) (Round 2) |

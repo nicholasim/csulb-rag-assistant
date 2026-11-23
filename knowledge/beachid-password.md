@@ -2,7 +2,7 @@
 title: "BeachID Account Access Help"
 url: https://beachid.csulb.edu/
 category: Technology Help Desk
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # **ACCOUNT ACCESS HELP**

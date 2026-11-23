@@ -2,7 +2,7 @@
 title: "Using Academics"
 url: https://www.csulb.edu/enrollment-services/using-academics
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Using Academics

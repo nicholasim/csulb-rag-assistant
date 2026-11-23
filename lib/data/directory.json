@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-12",
+  "checked": "2026-11-22",
   "offices": [
     {
       "name": "Admissions",
@@ -172,7 +172,8 @@
       "name": "Educational Opportunity Program (EOP)",
       "url": "https://www.csulb.edu/student-affairs/educational-opportunity-program",
       "description": "The Educational Opportunity Program (EOP) at CSULB is dedicated to serving first-generation, historically low-income students by providing access and equity to higher education.",
-      "phone": "562.985.5637"
+      "phone": "562.985.5637",
+      "email": "eop@csulb.edu"
     },
     {
       "name": "Women's and Gender Equity Center",

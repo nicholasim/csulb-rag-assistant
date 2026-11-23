@@ -2,7 +2,7 @@
 title: "ID Card Services FAQs"
 url: https://www.csulb.edu/beach-shops/id-card-services-faqs
 category: Bookstore
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # ID Card Services FAQs

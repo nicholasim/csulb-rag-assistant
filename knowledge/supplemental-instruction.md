@@ -2,7 +2,7 @@
 title: "Supplemental Instruction"
 url: https://www.csulb.edu/learning-assistance-center/supplemental-instruction
 category: Tutoring & Writing
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Supplemental Instruction

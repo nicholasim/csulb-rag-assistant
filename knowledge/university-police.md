@@ -2,7 +2,7 @@
 title: "University Police: Contact Us"
 url: https://www.csulb.edu/university-police/contact-us
 category: Safety
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Contact Us

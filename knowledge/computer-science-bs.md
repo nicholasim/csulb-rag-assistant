@@ -2,7 +2,7 @@
 title: "Bachelor of Science: Computer Science"
 url: https://www.csulb.edu/college-of-engineering/bachelor-of-science-computer-science
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Bachelor of Science: Computer Science

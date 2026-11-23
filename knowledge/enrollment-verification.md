@@ -2,7 +2,7 @@
 title: "FAQs for Enrollment Verification vs. Official Transcripts"
 url: https://www.csulb.edu/student-records/faqs-for-enrollment-verification-vs-official-transcripts
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # FAQs for Enrollment Verification vs. Official Transcripts

@@ -2,7 +2,7 @@
 title: "Change of Major (Undergraduates)"
 url: https://www.csulb.edu/student-records/change-of-major-undergraduates
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Change of Major (Undergraduates)

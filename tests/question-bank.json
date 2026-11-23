@@ -1,0 +1,1465 @@
+{
+ "about": "157 common CSULB student questions across the student journey (coverage round B3, prompt log Entry 22). coverageBefore: C = covered, P = partly covered, M = missing in the 57-page knowledge base before B3 (judged by reading the knowledge files, no AI). expectedPages: knowledge/ file names (slugs) that answer it; empty = no approved source found yet (the question should get the Who can help fallback). Offline check: npm run check:coverage (no Gemini generate calls).",
+ "tests": [
+  {
+   "id": 1,
+   "category": "Prospective / applying",
+   "question": "How do I apply to CSULB as a first-year student?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "first-year-application-process",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 2,
+   "category": "Prospective / applying",
+   "question": "How do I apply as a transfer student?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "transfer-application-process"
+   ]
+  },
+  {
+   "id": 3,
+   "category": "Prospective / applying",
+   "question": "When is the application deadline for fall admission?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "first-year-application-process"
+   ]
+  },
+  {
+   "id": 4,
+   "category": "Prospective / applying",
+   "question": "What are the admission requirements for first-year students?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "first-year-admission-eligibility"
+   ]
+  },
+  {
+   "id": 5,
+   "category": "Prospective / applying",
+   "question": "What GPA do I need to transfer to CSULB?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "transfer-admission-eligibility"
+   ]
+  },
+  {
+   "id": 6,
+   "category": "Prospective / applying",
+   "question": "Is CSULB impacted, and what does that mean?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "impaction",
+    "first-year-admission-eligibility",
+    "transfer-admission-eligibility"
+   ]
+  },
+  {
+   "id": 7,
+   "category": "Prospective / applying",
+   "question": "How much does it cost to apply?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "first-year-application-process"
+   ]
+  },
+  {
+   "id": 8,
+   "category": "Prospective / applying",
+   "question": "How do I check my application status?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "first-year-application-process"
+   ]
+  },
+  {
+   "id": 9,
+   "category": "Prospective / applying",
+   "question": "Can I tour the campus?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "campus-tours"
+   ]
+  },
+  {
+   "id": 10,
+   "category": "Prospective / applying",
+   "question": "Does CSULB accept spring transfer students?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "transfer-application-process"
+   ]
+  },
+  {
+   "id": 11,
+   "category": "Admitted / new students",
+   "question": "How do I accept my offer of admission (intent to enroll)?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "newly-admitted-first-year",
+    "newly-admitted-transfers"
+   ]
+  },
+  {
+   "id": 12,
+   "category": "Admitted / new students",
+   "question": "Is there an enrollment deposit?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "newly-admitted-first-year"
+   ]
+  },
+  {
+   "id": 13,
+   "category": "Admitted / new students",
+   "question": "How do I sign up for SOAR orientation?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "orientation-soar"
+   ]
+  },
+  {
+   "id": 14,
+   "category": "Admitted / new students",
+   "question": "How do I set up my BeachID and MyCSULB account?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "newly-admitted-first-year",
+    "beachid-password",
+    "newly-admitted-transfers"
+   ]
+  },
+  {
+   "id": 15,
+   "category": "Admitted / new students",
+   "question": "How do I get my student ID card?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "get-your-id",
+    "id-card-faqs"
+   ]
+  },
+  {
+   "id": 16,
+   "category": "Admitted / new students",
+   "question": "Do I need to send final transcripts after I'm admitted?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "newly-admitted-first-year",
+    "newly-admitted-transfers"
+   ]
+  },
+  {
+   "id": 17,
+   "category": "Admitted / new students",
+   "question": "What are the immunization requirements for new students?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "immunizations",
+    "newly-admitted-first-year"
+   ]
+  },
+  {
+   "id": 18,
+   "category": "Admitted / new students",
+   "question": "Do new students need to take placement tests for math or English?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "newly-admitted-first-year"
+   ]
+  },
+  {
+   "id": 19,
+   "category": "Registration & unit load",
+   "question": "How many units is a full-time student?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "student-unit-load"
+   ]
+  },
+  {
+   "id": 20,
+   "category": "Registration & unit load",
+   "question": "What is the maximum number of units I can take?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "student-unit-load"
+   ]
+  },
+  {
+   "id": 21,
+   "category": "Registration & unit load",
+   "question": "How do I find my registration appointment?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "using-academics",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 22,
+   "category": "Registration & unit load",
+   "question": "How do I add a class after the semester starts?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "permission-to-add"
+   ]
+  },
+  {
+   "id": 23,
+   "category": "Registration & unit load",
+   "question": "How does the waitlist work?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "waitlisting",
+    "using-academics"
+   ]
+  },
+  {
+   "id": 24,
+   "category": "Registration & unit load",
+   "question": "How do I drop a class?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "dropping-and-withdrawing"
+   ]
+  },
+  {
+   "id": 25,
+   "category": "Registration & unit load",
+   "question": "What is the last day to drop without a W?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "dropping-and-withdrawing",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 26,
+   "category": "Registration & unit load",
+   "question": "How do I withdraw from all my classes?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "dropping-and-withdrawing"
+   ]
+  },
+  {
+   "id": 27,
+   "category": "Registration & unit load",
+   "question": "Can I take a class Credit/No Credit?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 28,
+   "category": "Registration & unit load",
+   "question": "Can I repeat a course to improve my grade?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "repeating-courses",
+    "academic-standing"
+   ]
+  },
+  {
+   "id": 29,
+   "category": "Registration & unit load",
+   "question": "Can I audit a class?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 30,
+   "category": "Registration & unit load",
+   "question": "How do I take a class at another school (concurrent enrollment)?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "concurrent-enrollment",
+    "enrollment-options"
+   ]
+  },
+  {
+   "id": 31,
+   "category": "Registration & unit load",
+   "question": "What is a shopping cart / how do I enroll in MyCSULB?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "using-academics"
+   ]
+  },
+  {
+   "id": 32,
+   "category": "Registration & unit load",
+   "question": "Can I enroll in winter or summer session?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "enrollment-options",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 33,
+   "category": "Academic calendar & finals",
+   "question": "When does the spring semester start?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "academic-calendar"
+   ]
+  },
+  {
+   "id": 34,
+   "category": "Academic calendar & finals",
+   "question": "When are final exams?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "final-exam-schedule"
+   ]
+  },
+  {
+   "id": 35,
+   "category": "Academic calendar & finals",
+   "question": "Where do I find the final exam schedule?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "final-exam-schedule"
+   ]
+  },
+  {
+   "id": 36,
+   "category": "Academic calendar & finals",
+   "question": "When is spring break?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "academic-calendar"
+   ]
+  },
+  {
+   "id": 37,
+   "category": "Academic calendar & finals",
+   "question": "What holidays is campus closed?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "academic-calendar"
+   ]
+  },
+  {
+   "id": 38,
+   "category": "Academic calendar & finals",
+   "question": "When are grades posted?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 39,
+   "category": "Academic calendar & finals",
+   "question": "Where is the academic calendar?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "academic-calendar"
+   ]
+  },
+  {
+   "id": 40,
+   "category": "Tuition, fees & refunds",
+   "question": "How much is tuition per semester?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "tuition-and-fees"
+   ]
+  },
+  {
+   "id": 41,
+   "category": "Tuition, fees & refunds",
+   "question": "When is tuition due?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-key-dates",
+    "tuition-and-fees"
+   ]
+  },
+  {
+   "id": 42,
+   "category": "Tuition, fees & refunds",
+   "question": "How do I pay my fees?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 43,
+   "category": "Tuition, fees & refunds",
+   "question": "Is there a payment plan?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 44,
+   "category": "Tuition, fees & refunds",
+   "question": "How do I get a refund if I drop classes?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "tuition-and-fees",
+    "enrollment-key-dates",
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 45,
+   "category": "Tuition, fees & refunds",
+   "question": "How do I sign up for direct deposit / e-refund?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tuition-payments",
+    "financial-aid"
+   ]
+  },
+  {
+   "id": 46,
+   "category": "Tuition, fees & refunds",
+   "question": "What is the Student Involvement Representation Fee and can I opt out?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 47,
+   "category": "Tuition, fees & refunds",
+   "question": "What happens if I don't pay my fees on time?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "tuition-and-fees",
+    "using-academics"
+   ]
+  },
+  {
+   "id": 48,
+   "category": "Tuition, fees & refunds",
+   "question": "Do I qualify for in-state tuition / California residency?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "residency-for-tuition"
+   ]
+  },
+  {
+   "id": 49,
+   "category": "Tuition, fees & refunds",
+   "question": "Can I get a 1098-T tax form?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 50,
+   "category": "Financial aid & scholarships",
+   "question": "How do I check my financial aid status?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "financial-aid",
+    "holds-and-to-do-lists"
+   ]
+  },
+  {
+   "id": 51,
+   "category": "Financial aid & scholarships",
+   "question": "When is the FAFSA / CA Dream Act deadline?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "fafsa-cadaa"
+   ]
+  },
+  {
+   "id": 52,
+   "category": "Financial aid & scholarships",
+   "question": "What is the CSULB school code for the FAFSA?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "fafsa-cadaa"
+   ]
+  },
+  {
+   "id": 53,
+   "category": "Financial aid & scholarships",
+   "question": "When will my financial aid be disbursed?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "financial-aid",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 54,
+   "category": "Financial aid & scholarships",
+   "question": "How do I apply for scholarships?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "scholarships"
+   ]
+  },
+  {
+   "id": 55,
+   "category": "Financial aid & scholarships",
+   "question": "What is SAP and how do I appeal?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "sap-financial-aid",
+    "financial-aid"
+   ]
+  },
+  {
+   "id": 56,
+   "category": "Financial aid & scholarships",
+   "question": "How do I accept or decline my aid?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "financial-aid"
+   ]
+  },
+  {
+   "id": 57,
+   "category": "Financial aid & scholarships",
+   "question": "What is the Cal Grant?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "fafsa-cadaa"
+   ]
+  },
+  {
+   "id": 58,
+   "category": "Financial aid & scholarships",
+   "question": "Can I get emergency money / an emergency grant?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "basic-needs-financial"
+   ]
+  },
+  {
+   "id": 59,
+   "category": "Financial aid & scholarships",
+   "question": "How does work-study work?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "federal-work-study"
+   ]
+  },
+  {
+   "id": 60,
+   "category": "Campus jobs",
+   "question": "How do I find an on-campus job?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "job-internship-search",
+    "career-development-center"
+   ]
+  },
+  {
+   "id": 61,
+   "category": "Campus jobs",
+   "question": "How do I become a student assistant?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "job-internship-search",
+    "federal-work-study"
+   ]
+  },
+  {
+   "id": 62,
+   "category": "Campus jobs",
+   "question": "How do I get paid / timesheets for student jobs?",
+   "coverageBefore": "M",
+   "expectedPages": []
+  },
+  {
+   "id": 63,
+   "category": "Campus jobs",
+   "question": "Are there internships through CSULB?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "job-internship-search",
+    "career-development-center"
+   ]
+  },
+  {
+   "id": 64,
+   "category": "Campus jobs",
+   "question": "Can international students work on campus?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "international-campus-employment",
+    "f1-rules"
+   ]
+  },
+  {
+   "id": 65,
+   "category": "Academics",
+   "question": "What GPA do I need to stay in good standing?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "academic-standing"
+   ]
+  },
+  {
+   "id": 66,
+   "category": "Academics",
+   "question": "What is academic probation / warning?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "academic-standing"
+   ]
+  },
+  {
+   "id": 67,
+   "category": "Academics",
+   "question": "How do I get transfer credit for community college classes?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "transfer-credit"
+   ]
+  },
+  {
+   "id": 68,
+   "category": "Academics",
+   "question": "Does CSULB accept AP or IB credit?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "test-credit-ap-ib"
+   ]
+  },
+  {
+   "id": 69,
+   "category": "Academics",
+   "question": "How do I join the Honors Program?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "university-honors"
+   ]
+  },
+  {
+   "id": 70,
+   "category": "Academics",
+   "question": "How do I declare a minor?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "change-of-major"
+   ]
+  },
+  {
+   "id": 71,
+   "category": "Academics",
+   "question": "How do I change my major?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "change-of-major"
+   ]
+  },
+  {
+   "id": 72,
+   "category": "Academics",
+   "question": "How do I get an Incomplete?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 73,
+   "category": "Academics",
+   "question": "How is my GPA calculated?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 74,
+   "category": "Academics",
+   "question": "What is the Dean's List?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 75,
+   "category": "Academics",
+   "question": "How do I file a grade appeal?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "academic-standing"
+   ]
+  },
+  {
+   "id": 76,
+   "category": "Academics",
+   "question": "What are the GE requirements?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "ge-requirements"
+   ]
+  },
+  {
+   "id": 77,
+   "category": "Graduation & commencement",
+   "question": "How do I apply to graduate?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "apply-to-graduate"
+   ]
+  },
+  {
+   "id": 78,
+   "category": "Graduation & commencement",
+   "question": "When is the deadline to apply for graduation?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "apply-to-graduate",
+    "enrollment-key-dates"
+   ]
+  },
+  {
+   "id": 79,
+   "category": "Graduation & commencement",
+   "question": "When is commencement?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "commencement-faq",
+    "academic-calendar"
+   ]
+  },
+  {
+   "id": 80,
+   "category": "Graduation & commencement",
+   "question": "How do I get my diploma?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "commencement-faq",
+    "apply-to-graduate"
+   ]
+  },
+  {
+   "id": 81,
+   "category": "Graduation & commencement",
+   "question": "How many units do I need to graduate?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "change-of-major",
+    "declare-a-major"
+   ]
+  },
+  {
+   "id": 82,
+   "category": "Graduation & commencement",
+   "question": "What is a degree audit / how do I check my progress?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "apply-to-graduate",
+    "declare-a-major"
+   ]
+  },
+  {
+   "id": 83,
+   "category": "Graduation & commencement",
+   "question": "Can I walk in commencement if I'm missing a class?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "commencement-faq"
+   ]
+  },
+  {
+   "id": 84,
+   "category": "Advising & tutoring",
+   "question": "Where is my advising center?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "academic-advising"
+   ]
+  },
+  {
+   "id": 85,
+   "category": "Advising & tutoring",
+   "question": "How do I make an advising appointment?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "academic-advising"
+   ]
+  },
+  {
+   "id": 86,
+   "category": "Advising & tutoring",
+   "question": "Where can I get free tutoring?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "tutoring"
+   ]
+  },
+  {
+   "id": 87,
+   "category": "Advising & tutoring",
+   "question": "How do I book a Writing Center appointment?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "writing-center"
+   ]
+  },
+  {
+   "id": 88,
+   "category": "Advising & tutoring",
+   "question": "What is Supplemental Instruction?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "supplemental-instruction"
+   ]
+  },
+  {
+   "id": 89,
+   "category": "Campus life",
+   "question": "How do I join a club or student organization?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "student-organizations",
+    "student-life-development"
+   ]
+  },
+  {
+   "id": 90,
+   "category": "Campus life",
+   "question": "What is ASI?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "about-asi"
+   ]
+  },
+  {
+   "id": 91,
+   "category": "Campus life",
+   "question": "How do I join a fraternity or sorority?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "fraternities-sororities"
+   ]
+  },
+  {
+   "id": 92,
+   "category": "Campus life",
+   "question": "Where is the University Student Union?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "asi-maps-hours"
+   ]
+  },
+  {
+   "id": 93,
+   "category": "Campus life",
+   "question": "Is the rec center free for students?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "srwc-membership"
+   ]
+  },
+  {
+   "id": 94,
+   "category": "Campus life",
+   "question": "How do I get tickets to athletics games?",
+   "coverageBefore": "M",
+   "expectedPages": []
+  },
+  {
+   "id": 95,
+   "category": "Campus life",
+   "question": "Is there a pool or intramural sports?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "srwc-membership",
+    "club-sports"
+   ]
+  },
+  {
+   "id": 96,
+   "category": "Campus life",
+   "question": "Is there a child care center for student parents?",
+   "coverageBefore": "M",
+   "expectedPages": []
+  },
+  {
+   "id": 97,
+   "category": "Housing & dining",
+   "question": "How do I apply for on-campus housing?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "apply-for-housing"
+   ]
+  },
+  {
+   "id": 98,
+   "category": "Housing & dining",
+   "question": "How much does housing cost?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "housing-rates"
+   ]
+  },
+  {
+   "id": 99,
+   "category": "Housing & dining",
+   "question": "Are meal plans required?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "residential-dining",
+    "housing-rates"
+   ]
+  },
+  {
+   "id": 100,
+   "category": "Housing & dining",
+   "question": "When can I move in?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "apply-for-housing"
+   ]
+  },
+  {
+   "id": 101,
+   "category": "Housing & dining",
+   "question": "Is there off-campus housing help?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "basic-needs-housing"
+   ]
+  },
+  {
+   "id": 102,
+   "category": "Housing & dining",
+   "question": "Where can I eat on campus?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "food-services"
+   ]
+  },
+  {
+   "id": 103,
+   "category": "Housing & dining",
+   "question": "Where is the food pantry?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "food-services",
+    "basic-needs"
+   ]
+  },
+  {
+   "id": 104,
+   "category": "IT",
+   "question": "How do I set up my CSULB email?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "student-email"
+   ]
+  },
+  {
+   "id": 105,
+   "category": "IT",
+   "question": "How do I log in to Canvas?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "technology-for-students"
+   ]
+  },
+  {
+   "id": 106,
+   "category": "IT",
+   "question": "How do I connect to campus Wi-Fi?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "eduroam-wifi"
+   ]
+  },
+  {
+   "id": 107,
+   "category": "IT",
+   "question": "Where can I print on campus?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "technology-for-students",
+    "computer-labs",
+    "horn-center"
+   ]
+  },
+  {
+   "id": 108,
+   "category": "IT",
+   "question": "How do I reset my BeachID password?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "beachid-password"
+   ]
+  },
+  {
+   "id": 109,
+   "category": "IT",
+   "question": "How do I set up multi-factor authentication (Duo)?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "beachid-password"
+   ]
+  },
+  {
+   "id": 110,
+   "category": "IT",
+   "question": "Can I get free Microsoft Office or Adobe?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "technology-for-students"
+   ]
+  },
+  {
+   "id": 111,
+   "category": "IT",
+   "question": "Can I borrow a laptop?",
+   "coverageBefore": "M",
+   "expectedPages": []
+  },
+  {
+   "id": 112,
+   "category": "Library",
+   "question": "What are the library hours?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "library-circulation-desk",
+    "library-research-desk"
+   ]
+  },
+  {
+   "id": 113,
+   "category": "Library",
+   "question": "How do I reserve a study room?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "library-study-areas"
+   ]
+  },
+  {
+   "id": 114,
+   "category": "Library",
+   "question": "How long can I borrow books?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "library-services-for-students"
+   ]
+  },
+  {
+   "id": 115,
+   "category": "Library",
+   "question": "How do I get research help from a librarian?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "library-research-desk"
+   ]
+  },
+  {
+   "id": 116,
+   "category": "Library",
+   "question": "Can I get textbooks on reserve?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "library-reserves"
+   ]
+  },
+  {
+   "id": 117,
+   "category": "Library",
+   "question": "Where can I study late at night?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "library-study-spaces"
+   ]
+  },
+  {
+   "id": 118,
+   "category": "Parking & transportation",
+   "question": "How much is a student parking permit?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "parking-permit-fees",
+    "parking-permit-information"
+   ]
+  },
+  {
+   "id": 119,
+   "category": "Parking & transportation",
+   "question": "How do I buy a parking permit?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "parking-permit-information"
+   ]
+  },
+  {
+   "id": 120,
+   "category": "Parking & transportation",
+   "question": "Where can students park?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "parking-permit-information"
+   ]
+  },
+  {
+   "id": 121,
+   "category": "Parking & transportation",
+   "question": "Is there a daily parking permit?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "parking-permit-information",
+    "parking-permit-fees"
+   ]
+  },
+  {
+   "id": 122,
+   "category": "Parking & transportation",
+   "question": "How do I appeal a parking citation?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "parking-citation-appeal",
+    "parking-citations-faq"
+   ]
+  },
+  {
+   "id": 123,
+   "category": "Parking & transportation",
+   "question": "Is the campus shuttle free?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "parking-shuttle"
+   ]
+  },
+  {
+   "id": 124,
+   "category": "Parking & transportation",
+   "question": "Can I ride Long Beach Transit buses for free?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "go-beach-bus-pass",
+    "parking-permit-information"
+   ]
+  },
+  {
+   "id": 125,
+   "category": "Health & wellness",
+   "question": "What services does Student Health offer?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "student-health-services"
+   ]
+  },
+  {
+   "id": 126,
+   "category": "Health & wellness",
+   "question": "How do I make a health appointment?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "shs-make-appointment"
+   ]
+  },
+  {
+   "id": 127,
+   "category": "Health & wellness",
+   "question": "Do I need health insurance?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "shs-health-insurance",
+    "international-health-insurance"
+   ]
+  },
+  {
+   "id": 128,
+   "category": "Health & wellness",
+   "question": "Is counseling free?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "caps-contact-faq"
+   ]
+  },
+  {
+   "id": 129,
+   "category": "Health & wellness",
+   "question": "What should I do in a mental health crisis?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "caps-crisis-intervention",
+    "caps"
+   ]
+  },
+  {
+   "id": 130,
+   "category": "Health & wellness",
+   "question": "Where can I get a flu shot or vaccines?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "immunizations"
+   ]
+  },
+  {
+   "id": 131,
+   "category": "Health & wellness",
+   "question": "Does Student Health have a pharmacy?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "shs-pharmacy"
+   ]
+  },
+  {
+   "id": 132,
+   "category": "Health & wellness",
+   "question": "How do I get disability accommodations?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "bob-murphy-access-center"
+   ]
+  },
+  {
+   "id": 133,
+   "category": "Safety",
+   "question": "What is the campus police number?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "university-police"
+   ]
+  },
+  {
+   "id": 134,
+   "category": "Safety",
+   "question": "Can I get a safety escort at night?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "night-safety-escort"
+   ]
+  },
+  {
+   "id": 135,
+   "category": "Safety",
+   "question": "How do I sign up for emergency alerts?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "beachalert"
+   ]
+  },
+  {
+   "id": 136,
+   "category": "Safety",
+   "question": "How do I report sexual harassment or Title IX?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "title-ix"
+   ]
+  },
+  {
+   "id": 137,
+   "category": "Safety",
+   "question": "Where is lost and found?",
+   "coverageBefore": "M",
+   "expectedPages": []
+  },
+  {
+   "id": 138,
+   "category": "International",
+   "question": "Who are the international student advisors?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "international-staff-contacts",
+    "international-student-advising"
+   ]
+  },
+  {
+   "id": 139,
+   "category": "International",
+   "question": "How do I get an I-20 or travel signature?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "obtain-i-20",
+    "travel-reentry"
+   ]
+  },
+  {
+   "id": 140,
+   "category": "International",
+   "question": "How do I get a Social Security number as an international student?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "social-security-number"
+   ]
+  },
+  {
+   "id": 141,
+   "category": "International",
+   "question": "What is OPT / CPT?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "optional-practical-training"
+   ]
+  },
+  {
+   "id": 142,
+   "category": "International",
+   "question": "How many units must F-1 students take?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "f1-rules"
+   ]
+  },
+  {
+   "id": 143,
+   "category": "International",
+   "question": "How do I study abroad?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "study-abroad"
+   ]
+  },
+  {
+   "id": 144,
+   "category": "Records",
+   "question": "What is FERPA / who can see my records?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "ferpa",
+    "tuition-payments"
+   ]
+  },
+  {
+   "id": 145,
+   "category": "Records",
+   "question": "How do I change my name on my records?",
+   "coverageBefore": "P",
+   "expectedPages": []
+  },
+  {
+   "id": 146,
+   "category": "Records",
+   "question": "How do I get an enrollment verification letter?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "enrollment-verification",
+    "transcripts"
+   ]
+  },
+  {
+   "id": 147,
+   "category": "Records",
+   "question": "How do I order a transcript?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "transcripts"
+   ]
+  },
+  {
+   "id": 148,
+   "category": "Records",
+   "question": "How do I update my address?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "ferpa",
+    "using-academics"
+   ]
+  },
+  {
+   "id": 149,
+   "category": "Records",
+   "question": "How do I check if I have a hold?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "holds-and-to-do-lists"
+   ]
+  },
+  {
+   "id": 150,
+   "category": "Records",
+   "question": "How do I check my grades?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "grades-and-grading"
+   ]
+  },
+  {
+   "id": 151,
+   "category": "Support programs",
+   "question": "Where can I get help if I can't afford food?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "basic-needs"
+   ]
+  },
+  {
+   "id": 152,
+   "category": "Support programs",
+   "question": "Is there help for veterans and GI Bill?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "veterans-services"
+   ]
+  },
+  {
+   "id": 153,
+   "category": "Support programs",
+   "question": "Is there support for undocumented students?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "dream-success-center"
+   ]
+  },
+  {
+   "id": 154,
+   "category": "Support programs",
+   "question": "Is there support for former foster youth (Guardian Scholars)?",
+   "coverageBefore": "M",
+   "expectedPages": [
+    "guardian-scholars"
+   ]
+  },
+  {
+   "id": 155,
+   "category": "Support programs",
+   "question": "Is there an LGBTQ+ resource center?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "lgbtq-resource-center"
+   ]
+  },
+  {
+   "id": 156,
+   "category": "Support programs",
+   "question": "Is there help for first-generation or EOP students?",
+   "coverageBefore": "P",
+   "expectedPages": [
+    "eop"
+   ]
+  },
+  {
+   "id": 157,
+   "category": "Support programs",
+   "question": "What should I do if I'm struggling and need support (CARES)?",
+   "coverageBefore": "C",
+   "expectedPages": [
+    "cares-team"
+   ]
+  }
+ ]
+}

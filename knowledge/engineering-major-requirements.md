@@ -2,7 +2,7 @@
 title: "Fall 2026 Major-Specific Degree Requirements (Hung Family College of Engineering)"
 url: https://www.csulb.edu/student-records/fall-2026-major-specific-degree-requirements-hung-family-college-of-engineering
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Fall 2026 Major-Specific Degree Requirements (Hung Family College of Engineering)

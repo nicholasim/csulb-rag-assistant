@@ -2,7 +2,7 @@
 title: "Staff Contacts"
 url: https://www.csulb.edu/international/staff-contacts
 category: International Students
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Staff Contacts
@@ -72,7 +72,7 @@ The Center for International Education is open Monday through Friday. 
 -   Monday-Thursday:
     9am-12pm and 1-4pm
 -   Fridays:
-    9am-12pm and 1-3pm
+    Advising and Services by Appointment Only
 
 _The office is closed during all campus_ [_academic holidays_](https://www.csulb.edu/academic-affairs/academic-affairs-calendar)_._ 
 

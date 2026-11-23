@@ -114,6 +114,78 @@ const SOURCES: Source[] = [
   // Student ID card (run by Beach Shops, like the bookstore)
   { slug: "get-your-id", category: "Bookstore", url: "https://www.csulb.edu/beach-shops/get-your-id" },
   { slug: "id-card-faqs", category: "Bookstore", url: "https://www.csulb.edu/beach-shops/id-card-services-faqs" },
+
+  // ---- Coverage round B3 (prompt log Entry 22): pages that answer questions from the 157-question
+  // bank (tests/question-bank.json) that our sources didn't cover. All official csulb.edu pages,
+  // plus CSULB's official IT help center (csulb.teamdynamix.com) and one ASI page (team-approved).
+  // Admissions (prospective and newly admitted students)
+  { slug: "first-year-application-process", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/first-time-first-year-student-application-process" },
+  { slug: "first-year-admission-eligibility", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/first-time-first-year-student-admission-eligibility" },
+  { slug: "transfer-application-process", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/transfer-application-process" },
+  { slug: "transfer-admission-eligibility", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/transfer-admission-eligibility" },
+  { slug: "impaction", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/impaction" },
+  { slug: "newly-admitted-first-year", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/steps-for-newly-admitted-first-time-first-year-students" },
+  { slug: "newly-admitted-transfers", category: "Enrollment / Registration", url: "https://www.csulb.edu/admissions/steps-for-newly-admitted-transfers" },
+  { slug: "residency-for-tuition", category: "Tuition / Payments", url: "https://www.csulb.edu/admissions/residency-for-tuition-purposes" },
+  { slug: "transfer-credit", category: "Majors & Academics", url: "https://www.csulb.edu/admissions/transfer-credit-for-incoming-students" },
+  { slug: "test-credit-ap-ib", category: "Majors & Academics", url: "https://www.csulb.edu/admissions/first-time-first-year-student-test-and-transfer-credit" },
+  { slug: "campus-tours", title: "Campus Tours", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/university-outreach-school-relations/tours" },
+  // Registration, unit load, calendar
+  { slug: "student-unit-load", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/student-unit-load" },
+  { slug: "waitlisting", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/waitlisting-for-classes" },
+  { slug: "repeating-courses", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/repeating-courses" },
+  { slug: "enrollment-options", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/enrollment-options" },
+  { slug: "concurrent-enrollment", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/visitorconcurrent-non-csulb-students" },
+  { slug: "final-exam-schedule", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/final-exam-schedule" },
+  { slug: "academic-calendar", category: "Enrollment / Registration", url: "https://www.csulb.edu/academic-affairs/academic-affairs-calendar" },
+  // Tuition and financial aid
+  { slug: "tuition-and-fees", category: "Tuition / Payments", url: "https://www.csulb.edu/student-records/tuition-and-fees" },
+  { slug: "fafsa-cadaa", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/fafsa-cadaa-support" },
+  { slug: "scholarships", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/scholarships" },
+  { slug: "sap-financial-aid", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/understanding-satisfactory-academic-progress-sap" },
+  { slug: "federal-work-study", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/federal-work-study" },
+  { slug: "basic-needs-financial", title: "Basic Needs: Emergency Grants and Financial Support", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/basic-needs/financial" },
+  { slug: "basic-needs-housing", title: "Basic Needs: Housing Support", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/basic-needs/housing" },
+  // Jobs, graduation, campus life
+  { slug: "job-internship-search", category: "Career Development Center", url: "https://www.csulb.edu/career-development-center/students/job-internship-search" },
+  { slug: "commencement-faq", title: "Commencement FAQ", category: "Majors & Academics", url: "https://www.csulb.edu/commencement/frequently-asked-questions" },
+  { slug: "university-honors", category: "Majors & Academics", url: "https://www.csulb.edu/university-honors" },
+  { slug: "student-life-development", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development" },
+  { slug: "student-organizations", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/student-organizations" },
+  { slug: "fraternities-sororities", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/about-fraternities-and-sororities" },
+  { slug: "club-sports", category: "Recreation", url: "https://www.csulb.edu/student-affairs/student-life-development/club-sports-recreation" },
+  { slug: "about-asi", title: "About ASI (Associated Students, Inc.)", category: "Campus Places", url: "https://www.asicsulb.org/corporate/resources/about-us" },
+  { slug: "residential-dining", category: "Housing", url: "https://www.csulb.edu/student-affairs/student-housing/residential-dining-services" },
+  // Library, IT, parking
+  { slug: "library-circulation-desk", category: "Library", url: "https://www.csulb.edu/university-library/circulation-desk" },
+  { slug: "library-reserves", category: "Library", url: "https://www.csulb.edu/university-library/reserves-services" },
+  { slug: "library-study-areas", title: "Library Study Areas", category: "Library", url: "https://www.csulb.edu/university-library/study-areas" },
+  { slug: "student-email", title: "Student Email (IT Help Center)", category: "Technology Help Desk", url: "https://csulb.teamdynamix.com/TDClient/1993/Portal/Requests/ServiceDet?ID=28187", contentSelector: "#ctl00_ctl00_cpContent_cpContent_divDescription" },
+  { slug: "eduroam-wifi", title: "Connect to Campus Wi-Fi (eduroam, IT Help Center)", category: "Technology Help Desk", url: "https://csulb.teamdynamix.com/TDClient/1993/Portal/KB/ArticleDet?ID=163830", contentSelector: "#ctl00_ctl00_cpContent_cpContent_divBody" },
+  { slug: "parking-citation-appeal", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/appeal-a-citation" },
+  { slug: "parking-citations-faq", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/citations-faq" },
+  { slug: "go-beach-bus-pass", category: "Parking & Transportation", url: "https://www.csulb.edu/parking-and-transportation-services/go-beach-discounted-bus-pass" },
+  // Health
+  { slug: "shs-make-appointment", title: "Student Health Services: Make an Appointment", category: "Student Health Services", url: "https://www.csulb.edu/student-affairs/student-health-services/make-an-appointment" },
+  { slug: "shs-health-insurance", title: "Student Health Services: Health Insurance", category: "Student Health Services", url: "https://www.csulb.edu/student-affairs/student-health-services/health-insurance" },
+  { slug: "shs-pharmacy", title: "Student Health Services: Pharmacy", category: "Student Health Services", url: "https://www.csulb.edu/student-affairs/student-health-services/pharmacy" },
+  { slug: "immunizations", category: "Student Health Services", url: "https://www.csulb.edu/student-affairs/immunizations" },
+  // Safety, international, records, support programs
+  { slug: "title-ix", category: "Safety", url: "https://www.csulb.edu/equity-compliance/title-ix-at-the-beach" },
+  { slug: "f1-rules", title: "F-1 Rules (International Students)", category: "International Students", url: "https://www.csulb.edu/international/current-students/f-1-rules" },
+  { slug: "international-campus-employment", title: "On-Campus Employment (International Students)", category: "International Students", url: "https://www.csulb.edu/international/current-students/campus-employment" },
+  { slug: "optional-practical-training", category: "International Students", url: "https://www.csulb.edu/international/current-students/optional-practical-training" },
+  { slug: "travel-reentry", category: "International Students", url: "https://www.csulb.edu/international/current-students/travel-and-re-entry-guidance" },
+  { slug: "obtain-i-20", category: "International Students", url: "https://www.csulb.edu/international/newly-admitted-students/obtain-csulb-form-i-20" },
+  { slug: "social-security-number", title: "Social Security Number (International Students)", category: "International Students", url: "https://www.csulb.edu/international/current-students/social-security-number" },
+  { slug: "international-health-insurance", title: "Health Insurance (International Students)", category: "International Students", url: "https://www.csulb.edu/international/current-students/health-insurance" },
+  { slug: "study-abroad", category: "International Students", url: "https://www.csulb.edu/international/csulb-study-abroad-programs" },
+  { slug: "ferpa", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/ferpa-for-students" },
+  { slug: "veterans-services", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/veterans-services" },
+  { slug: "dream-success-center", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/dream-success-center" },
+  { slug: "guardian-scholars", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/guardian-scholars" },
+  { slug: "lgbtq-resource-center", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/lgbtq-resource-center" },
+  { slug: "eop", title: "Educational Opportunity Program (EOP)", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/educational-opportunity-program" },
 ];
 
 // ---- Office directory (Step B2, prompt log Entry 14) ----

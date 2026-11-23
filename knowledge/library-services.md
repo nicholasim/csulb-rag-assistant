@@ -2,7 +2,7 @@
 title: "University Library Services"
 url: https://www.csulb.edu/university-library/university-library-services
 category: Library
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # University Library Services

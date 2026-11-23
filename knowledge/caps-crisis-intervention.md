@@ -2,7 +2,7 @@
 title: "CAPS Crisis Intervention"
 url: https://www.csulb.edu/student-affairs/counseling-and-psychological-services/crisis-intervention
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Crisis Intervention

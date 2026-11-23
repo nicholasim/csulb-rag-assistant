@@ -2,7 +2,7 @@
 title: "Eat and Shop"
 url: https://www.csulb.edu/beach-shops/eat-and-shop
 category: Food Services
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## Where to Eat
@@ -21,12 +21,20 @@ retrieved: 2026-11-12
 
 #### [Art Store Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
 
+**Fall Break** 
+**11/21 - 11/29**
+Closed
+
 **Fall 2026**
 Monday - Thursday 8 am - 7 pm
 Friday 8 am - 3 pm
 Saturday - Sunday Closed
 
 #### [Beach Hut Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
+
+**Fall Break** 
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 8 pm
@@ -36,6 +44,13 @@ Sunday Closed
 
 #### [Corner Market Convenience Store](https://www.csulb.edu/node/29561 "Convenience Stores and More")
 
+**Fall Break** 
+**11/21 - 11/29**
+Saturday - Sunday Closed
+Monday - Tuesday 9 am - 5 pm
+Wednesday 9 am - 2:30 pm
+Thursday - Sunday Closed
+
 **Fall 2026**
 Monday - Thursday 7:30 am - 7 pm
 Friday 7:30 am - 4 pm
@@ -43,6 +58,12 @@ Saturday 11 am - 4 pm
 Sunday Closed
 
 #### [Caffeine Lab](https://www.csulb.edu/node/29561 "Convenience Stores and More")
+
+**Fall Break**
+**11/21 - 11/29**
+Saturday - Sunday Closed
+Monday - Tuesday 8 am - 2 pm
+Wednesday - Sunday Closed
 
 **Fall 2026**
 Monday - Thursday 8 am - 8 pm
@@ -52,17 +73,28 @@ Sunday 1 pm - 6 pm
 
 #### Playa Tacos and Mas
 
+**Fall Break 11/21 - 11/29**
+Closed
+
 **Fall 2026**
-Monday - Thursday 10 am - 2 pm
+Monday - Thursday 9 am - 2 pm
 Friday - Sunday Closed
 
 #### [The Habit Grill Truck](https://map.concept3d.com/?id=1314#!ct/72432,91209,91380,91668,95852,91382,91383?m/1075952?s/habit "Habit Food Truck on CSULB Interactive Map")
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 9 am - 2 pm
 Friday - Sunday Closed
 
 #### [Subway Trailer](https://map.concept3d.com/?id=1314#!ce/42540?ct/41689,42539,42540,42541,42542,44590,99323?m/1075951?s/subway "Subway Trailer on CSULB Interactive Map")
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 8 am - 8 pm
@@ -75,12 +107,20 @@ Saturday - Sunday Closed
 
 #### [CHillside Cafe](https://www.csulb.edu/node/29561 "Convenience Stores")
 
+**Fall Break**
+**11/21 - 11/29**
+Closed
+
 **Fall 2026**
 Monday - Thursday 9 pm - 12 am
 Friday - Sunday Closed
  
 
 #### [Coastal Coffee](https://www.csulb.edu/beach-shops/coastal-coffee "Coastal Coffee")
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 4:00 pm
@@ -89,12 +129,25 @@ Saturday - Sunday Closed
 
 #### [Coffee Bean and Tea Leaf](https://www.csulb.edu/node/29561 "Convenience Stores and More")
 
+**Fall Break**
+**11/21 - 11/29**
+Closed
+
 **Fall 2026**
 Monday - Thursday 6:30  am - 6 pm
 Friday 6:30 am - 4:30 pm
 Saturday - Sunday Closed
 
 #### [Hillside Dining Hall](https://www.csulb.edu/node/28901 "Hillside Dining Hall")
+
+**Fall Break**
+**11/21 - 11/29**
+Saturday - Tuesday
+9:30 am - 7:30 pm
+Wednesday
+9:30 am - 1:30 pm
+Thursday - Sunday
+Closed
 
 **Fall 2026**
 Monday - Friday 
@@ -109,12 +162,23 @@ Closed
 
 #### [Nugget Grill Express](https://www.csulb.edu/beach-shops/nugget-grill-express "Nugget Grill Express")
 
+**Fall Break**
+**11/21 - 11/29**
+Closed
+Re-opens Monday 11/30 at 10 am
+
 **Fall 2026**
 Monday - Thursday 9 am - 3 pm
 Friday 9 am - 2 pm
 Saturday - Sunday Closed
 
 #### [Outpost Grill](https://www.csulb.edu/node/14851 "Outpost Grill")
+
+**Fall Break**
+**11/21 - 11/29**
+Saturday - Sunday Closed
+Monday - Wednesday 8 am - 3 pm
+Thursday - Sunday Closed
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 7 pm
@@ -123,6 +187,10 @@ Saturday - Sunday Closed
 
 #### [Outpost Convenience Store](https://www.csulb.edu/beach-shops/convenience-stores-more "Convenience Stores")
 
+**Fall Break 11/21 - 11/29**
+Monday - Wednesday 9 am - 2 pm
+Thursday - Sunday Closed
+
 **Fall 2026**
 Monday - Thursday 7:30 am - 7:30 pm
 Friday 7:30 am - 4 pm
@@ -130,6 +198,12 @@ Saturday 9 am - 2 pm
 Sunday Closed
 
 #### [Parkside Dining Hall](https://www.csulb.edu/node/28231 "Parkside Dining Hall")
+
+**Fall break**
+**November 21 - 28**
+Closed
+**Sunday 11/29**
+4 pm - 7:30 pm
 
 **Fall 2026**
 Monday - Friday 
@@ -145,12 +219,20 @@ Sunday
 
 #### [Shake Smart](https://asicsulb.org/corporate/discover/futureu/future-u-food-relocation-1 "ASI Food and Vendors")
 
+**Fall Break**
+**11/21 - 11/29**
+Closed
+
 **Fall 2026**
 Monday - Thursday 7 am - 10 pm
 Friday 7 am - 8 pm
 Saturday - Sunday Closed
 
 #### [WallstrEAT Cafe Convenience Store](https://www.csulb.edu/beach-shops/convenience-stores-more "Convenience Stores")
+
+**Fall Break**
+**11/21 - 11/29**
+Closed
 
 **Fall 2026**
 Monday - Thursday 7:30 am - 7 pm
@@ -162,6 +244,17 @@ Saturday - Sunday Closed
 ### Off Campus
 
 #### [Beachside Dining Hall](https://www.csulb.edu/node/28241 "Beachside Dining Hall")
+
+**Fall Break**
+**11/21 - 11/29**
+Saturday - Tuesday
+10 am - 7:30 pm
+Wednesday
+10 am - 1:30 pm
+Thursday - Saturday
+Closed
+Sunday
+5 pm - 7:30 pm
 
 **Fall 2026**
 Monday - Friday 

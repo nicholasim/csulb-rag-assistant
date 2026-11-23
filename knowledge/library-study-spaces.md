@@ -2,7 +2,7 @@
 title: "Study & Seating Spaces"
 url: https://www.asicsulb.org/corporate/enjoy/study-seating-spaces
 category: Library
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Find Your Seat on Campus

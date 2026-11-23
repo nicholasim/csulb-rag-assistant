@@ -2,7 +2,7 @@
 title: "Meet with an Advisor"
 url: https://www.csulb.edu/international/current-students/meet-an-advisor
 category: International Students
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Meet with an Advisor
@@ -65,7 +65,7 @@ The Center for International Education is open Monday through Friday. For email 
 -   Monday-Thursday:
     9am-12pm and 1-4pm
 -   Fridays:
-    9am-12pm and 1-3pm
+    Advising and Services by Appointment Only
 
 _The office is closed during all campus_ [_academic holidays_](https://www.csulb.edu/academic-affairs/academic-affairs-calendar)_._ 
 

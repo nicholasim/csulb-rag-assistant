@@ -2,7 +2,7 @@
 title: "Academic Standing and Appeals"
 url: https://www.csulb.edu/student-records/academic-standing-and-appeals
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Academic Standing and Appeals

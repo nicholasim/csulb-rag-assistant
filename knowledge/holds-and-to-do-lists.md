@@ -2,7 +2,7 @@
 title: "Holds and To Do Lists"
 url: https://www.csulb.edu/enrollment-services/holds-and-to-do-lists
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Holds and To Do Lists

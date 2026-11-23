@@ -2,7 +2,7 @@
 title: "Permission to Add"
 url: https://www.csulb.edu/student-records/permission-to-add
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Permission to Add

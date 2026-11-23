@@ -2,7 +2,7 @@
 title: "Academic Technology Resources for Students"
 url: https://www.csulb.edu/academic-technology-services/academic-technology-resources-for-students
 category: Technology Help Desk
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Academic Technology Resources for Students

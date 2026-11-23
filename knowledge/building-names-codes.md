@@ -2,7 +2,7 @@
 title: "Building Names & Codes"
 url: https://www.csulb.edu/maps/building-names-codes
 category: Campus Places
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Building Names & Codes

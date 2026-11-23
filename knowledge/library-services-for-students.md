@@ -2,7 +2,7 @@
 title: "Services for Students"
 url: https://www.csulb.edu/university-library/services-for-students
 category: Library
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Services for Students

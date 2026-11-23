@@ -2,7 +2,7 @@
 title: "Declare a Major (Pre-Majors/Undeclared)"
 url: https://www.csulb.edu/student-records/declare-a-major-pre-majorsundeclared
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Declare a Major (Pre-Majors/Undeclared)

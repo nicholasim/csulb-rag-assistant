@@ -2,30 +2,30 @@
 title: "ASI Maps & Hours"
 url: https://www.asicsulb.org/corporate/resources/maps-hours
 category: Campus Places
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 Rainy Day Notification
 
-Due to rainy weather on Monday, Oct. 12, ASI and campus partners are opening additional indoor seating and study spaces to give students a warm, dry place to study, relax, and recharge between classes.
+Due to rainy weather on Monday, Nov. 20, ASI and campus partners are opening additional indoor seating and study spaces to give students a warm, dry place to study, relax, and recharge between classes.
 
 These spaces are available for a limited time and may change based on room availability and campus operations. Please check the [**Study & Seating Spaces**](https://www.asicsulb.org/corporate/enjoy/study-seating-spaces) page for the most up-to-date locations and hours.
 
 ### Available Spaces
 
-**Monday, Oct. 12:**
+**Friday, Nov. 20:**
 
--   COB 122 — 8 - 10 AM
--   HHS1 205 — 8 - 10 AM
--   CINE 207 — 8 AM - 12 PM
--   PSY 320 — 8 AM - 12 PM
--   LAB 128 — 12 - 4 PM
--   ED2 158 — 12 - 4 PM
--   PH1 140 — 8 AM - 5 PM
--   PH1 141 — 8 AM - 5 PM
--   PH1 214 — 8 AM - 5 PM
--   PH1 219 — 8 AM - 5 PM
--   PH1 231 — 8 AM - 5 PM
+-   PH1 140 – 8 a.m. - 5 p.m.
+-   PH1 141 – 8 a.m. - 5 p.m.
+-   PH1 214 – 8 a.m. - 5 p.m.
+-   PH1 219 – 8 a.m. - 5 p.m.
+-   PH1 231 – 8 a.m. - 5 p.m.
+-   COB 114 – 8 a.m. - 4 p.m.
+-   FCS 106 – 8 a.m. - 4 p.m.
+-   ET 009 – 8 a.m. - 4 p.m.
+-   HC 134 – 8 a.m. - 4 p.m.
+-   KIN 058 – 8 a.m. - 4 p.m.
+-   PSY 154 – 8 a.m. - 4 p.m.
 
 University Student Union
 

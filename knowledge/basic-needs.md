@@ -2,7 +2,7 @@
 title: "Basic Needs"
 url: https://www.csulb.edu/student-affairs/basic-needs
 category: Basic Student Support
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## Basic Needs

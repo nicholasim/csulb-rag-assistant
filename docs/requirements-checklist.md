@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-22, after Entry 21: speed changes, the health rule, top 8 and the location rule are built and checked offline. **Live runs are waiting for the quota reset.**
+**Last updated:** 2026-11-22, after Entry 22 (coverage round B3: 61 more official pages, 118 in total). Entry 21 and 22 changes are built and checked offline. **The combined live run is waiting for the quota reset and the team's go-ahead.**
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -128,6 +128,13 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   Every new file was checked against its live page (Entry 13).
 
 ### Brief items decided by the team (Entry 4)
+- [x] **Step B3 coverage round (Entry 22): 61 more pages, 118 in total (634 chunks).**
+  - **Question bank:** a 157-question bank covering the whole student journey (`tests/question-bank.json`). Before B3, 82 were covered, 34 partly covered and 41 missing (judged by reading the knowledge files, no AI).
+  - **New pages:** 58 official csulb.edu pages, 2 CSULB IT help center articles (csulb.teamdynamix.com: student email, eduroam Wi-Fi) and ASI's About Us page (asicsulb.org). The team approved all of them.
+  - **Offline retrieval** (`npm run check:coverage`, no generate calls): the expected page reaches Gemini's top 8 for **150 of 151** questions that have an approved page, up from 98.
+  - **Regression:** #7 "How much does it cost to apply?" is crowded out by the new cost and tuition pages.
+  - **6 questions have no approved page** and get the Who can help fallback: student pay, athletics tickets, child care, laptop loans, lost and found, name change.
+  - **Live run:** pending.
 - [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
 - **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Decision: **not built; future work.** It conflicts with our official-sources-only rule. Mention it on the "next steps" slide.
 

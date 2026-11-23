@@ -2,7 +2,7 @@
 title: "Understanding Grades and Grading"
 url: https://www.csulb.edu/student-records/understanding-grades-and-grading
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Understanding Grades and Grading

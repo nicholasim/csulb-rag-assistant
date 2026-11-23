@@ -11,6 +11,7 @@
     "screenshots": "tsx scripts/take-screenshots.ts",
     "test:questions": "tsx scripts/run-tests.ts",
     "check:presets": "tsx scripts/check-presets.ts",
+    "check:coverage": "tsx scripts/check-coverage.ts",
     "test:stop-edit": "tsx scripts/test-stop-edit.ts",
     "english-words": "tsx scripts/build-english-words.ts",
     "explain": "tsx scripts/explain.ts",

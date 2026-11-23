@@ -2,18 +2,8 @@
 title: "Bob Murphy Access Center"
 url: https://www.csulb.edu/student-affairs/bob-murphy-access-center
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
-
-**Submit Final Exam Requests by Friday, November 13th, 2026 at 5:00 PM**
-
-* * *
-
-**Requests submitted after the 11/13 deadline are subject to BMAC’s remaining availability.**
-
-Please visit the [BMAC Finals Exam Request Reminders](https://www.csulb.edu/student-affairs/bob-murphy-access-center/bmac-finals-exam-request-reminders) page for details.
-
-* * *
 
 The **Bob Murphy Access Center (BMAC)** is a department under CSULB Student Affairs that provides educational access for students with disabilities by working with campus and community partners to provide accommodations, resources, and assistive technology. Through these efforts, BMAC supports students with meeting their academic goals and completing their degree programs. 
 
@@ -43,6 +33,16 @@ BMAC supports a universally accessible campus that provides an equitable educati
 * * *
 
 ## Sidebar
+
+[
+
+Dec
+
+14 - 18
+
+### BMAC Finals Fall 2026
+
+](https://www.csulb.edu/student-affairs/bob-murphy-access-center/event/bmac-finals-fall-2026)
 
 [Outreach Request](https://csulb.sharepoint.com/:l:/s/DSA-BMAC/JAAWUoWIt3G_R7KDW_ZcszWpAcK1hI5RszYETxvTHKv-CIs?nav=MGRjZDNiNTktNGE3NS00YWFiLWI2NGYtODcyZjBjN2ZiODBi)
 

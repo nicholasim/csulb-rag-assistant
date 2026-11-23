@@ -2,7 +2,7 @@
 title: "Apply to Graduate (Undergraduate)"
 url: https://www.csulb.edu/student-records/apply-to-graduate-undergraduate
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Apply to Graduate (Undergraduate)

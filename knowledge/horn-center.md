@@ -2,7 +2,7 @@
 title: "Horn Center"
 url: https://www.csulb.edu/academic-technology-services/horn-center
 category: Campus Places
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## The Horn Center

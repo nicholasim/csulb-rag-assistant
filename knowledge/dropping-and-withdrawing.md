@@ -2,7 +2,7 @@
 title: "Dropping and Withdrawing"
 url: https://www.csulb.edu/student-records/dropping-and-withdrawing
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Dropping and Withdrawing

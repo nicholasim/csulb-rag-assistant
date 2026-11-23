@@ -2,7 +2,7 @@
 title: "CARES Team"
 url: https://www.csulb.edu/student-affairs/cares
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## About CARES
@@ -35,7 +35,7 @@ Referrals are not disciplinary; they are simply about care and connection. A CAR
 
 [REFER A STUDENT TO CARES](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=1)
 
-[Submit a Self-Referral to CARES](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=6)
+[CARES Self-Referral Form](https://cm.maxient.com/reportingform.php?CSULongBeach&layout_id=6)
 
 **We monitor referrals during business hours M-F 8 a.m. - 5 p.m.**
 If this is an emergency, please call **9.1.1.** or University Police **562.985.4101**.

@@ -2,7 +2,7 @@
 title: "Day 1 Textbook Access"
 url: https://www.csulb.edu/beach-shops/day-1-textbook-access
 category: Bookstore
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## **Fall 2026 Update:** 

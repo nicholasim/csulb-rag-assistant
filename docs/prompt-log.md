@@ -1240,4 +1240,70 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 22 (Coverage round B3: answer more real student questions)
+
+**Date:** 2026-11-22
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Goal: answer as many real CSULB student questions as possible ("How many units is a full time student?" and "How do I apply to CSULB?" fall back today). Scope note: the assignment requires at least 5 official sources, with no maximum, so more csulb.edu pages are in scope; only non-csulb.edu or non-official pages get flagged. Plan first, without using Gemini for the audit:
+> 1. a bank of about 150 student questions across the student journey;
+> 2. mark each covered, partly covered or missing against our 57 files;
+> 3. find official csulb.edu pages for the gaps, ranked by how many questions each answers;
+> 4. the scope check.
+>
+> After approval: fetch, rebuild embeddings, run the offline retrieval check, and save the bank to tests/. Live tests wait.
+>
+> **Team changes to the plan:**
+> - add CSULB's official IT help center articles for email and Wi-Fi (show the URLs first);
+> - add one ASI "About" page; skip athletics;
+> - after the quota reset, run one combined live test (presets, both sets, ~40 bank questions; count first, stay under 450).
+
+**What the AI did:**
+- **Audit without AI:** wrote 157 questions in 20 categories, matched each against all 57 knowledge files with targeted text patterns, and judged the matching passages by hand.
+  - **Before:** 82 covered (52%), 34 partly (22%), 41 missing (26%).
+  - **Biggest gaps:** international (1 of 6 covered), campus jobs (0 of 5), campus life, financial aid, and the academic calendar.
+- **Finding pages:** csulb.edu's sitemap lists only the homepage, so candidate URLs came from links inside our pages and on parent pages (admissions, financial aid, international, health, parking, police, Student Life & Development).
+  - Every candidate was checked live (status, title, amount of text).
+  - Spot checks confirmed the answers are on the page: maximum 18 units, the F-1 12-unit rule, the March 2 FAFSA/CADAA deadline, tuition amounts, emergency grants.
+- **IT help center:** its search needs JavaScript, so the 2 articles were found by web search and shown to the team before fetching (both server-rendered):
+  - Student Email, ServiceDet?ID=28187;
+  - Eduroam Wi-Fi Manual Configuration, ArticleDet?ID=163830, chosen over the eduroam overview page because it explains how to connect.
+- **Fetched 61 new pages** (`scripts/fetch-sources.ts`), all into existing sidebar categories, so there are no new presets:
+  - 58 csulb.edu pages;
+  - 2 IT help center pages, using their own content selectors;
+  - ASI About Us.
+  - Knowledge base: 57 → 118 pages, 290 → 634 chunks.
+- **Refetching also picked up CSULB's own updates** to 11 existing pages: Eat and Shop fall-break hours, CAPS staff names, an ASI rainy-day study-space notice, a BMAC finals reminder, and the Writing Center events list.
+- **`npm run embeddings`:** 365 new vectors. Two per-minute rate limits were waited out automatically.
+- **New `tests/question-bank.json`:** the 157 questions, each with `coverageBefore` and `expectedPages`. 6 have no approved page.
+- **New `npm run check:coverage`** (`scripts/check-coverage.ts`): for every bank question, keyword + meaning search on the question as typed, merged into the top 8, exactly as the app does without the rewrite.
+  - It reports by category, before and after B3. **No generate calls;** it uses embedding calls only, paced for the free tier's 100 per minute.
+
+**Did it work?** Offline, yes. Live tests are waiting for the quota reset.
+
+| | Before B3 (57 pages) | After B3 (118 pages) |
+|---|---|---|
+| Expected page in the top 8 sent to Gemini | 98 of 151 | **150 of 151** |
+| International | 1/6 | 6/6 |
+| Financial aid | 4/10 | 10/10 |
+| Academic calendar & finals | 3/7 | 7/7 |
+| Support programs | 2/7 | 7/7 |
+
+- **The two examples:** "How many units is a full time student?" (Student Unit Load) and "How do I apply to CSULB?" (First-Time, First-Year Application Process) now reach Gemini.
+- **One regression:** #7 "How much does it cost to apply?" was in the top 8 before and isn't now. The new cost and tuition pages outrank Key Dates (which says "The CSU Application Fee is $70").
+- **6 questions have no approved source** and keep the Who can help fallback: student pay/timesheets, athletics tickets, child care, laptop loans, lost and found, name change.
+- tsc, eslint, `npm run build` and `npm run check:presets` pass. The Vercel bundle lists all 118 knowledge files and the embeddings.
+
+**Troubleshooting or redirection (if any):**
+1. **The sitemap was useless** (one URL), so Claude collected official links from our own pages and their parent pages instead, and checked each one live.
+2. **The coverage check first failed with 429:** the free tier counts each text in an embedding batch as one request, 100 per minute. The script now paces its batches and waits out a 429.
+3. **The plan's summary said 44 (then 47) pages, but its page table actually listed 56.** Claude fetched the table's pages, plus 2 detail pages the question list pointed to (waitlisting, repeating courses), plus the 3 team additions: 61 in total. Claude reported the miscount to the team.
+4. **The team added the IT help center and ASI pages** and asked to see the 2 IT URLs before fetching.
+
+**Screenshot / commit:** none yet
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

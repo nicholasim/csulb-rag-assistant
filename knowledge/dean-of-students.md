@@ -2,7 +2,7 @@
 title: "Dean of Students"
 url: https://www.csulb.edu/student-affairs/dean-of-students
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## Dean of Students

@@ -2,7 +2,7 @@
 title: "Transcripts for Current Students, Former Students, and Alumni"
 url: https://www.csulb.edu/student-records/transcripts-for-current-students-former-students-and-alumni
 category: Enrollment / Registration
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Transcripts for Current Students, Former Students, and Alumni

@@ -2,7 +2,7 @@
 title: "The Learning Center: Tutoring"
 url: https://www.csulb.edu/academic-affairs/undergraduate-studies/the-learning-center/tutoring
 category: Tutoring & Writing
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Tutoring
@@ -21,7 +21,7 @@ If you would like to further assistance to make an appointment, please use our [
 
 \- [Economics](https://www.csulb.edu/sites/default/files/2026/documents/Economics%20-%20Fall%202026.pdf): **ECON** 100, 101, 300
 
-\- [Humanities and Social Sciences](https://www.csulb.edu/sites/default/files/2026/documents/Humanities%20and%20Social%20Sciences%20-%20Fall%202026_0.pdf): **PSY** various courses and **SOC** 170
+\- [Humanities and Social Sciences](https://www.csulb.edu/sites/default/files/2026/documents/Humanities%20and%20Social%20Sciences%20-%20Fall%202026_1.pdf): **Comm** 200, 300, 306, 307, 330 **PSY** 100, 110, 220, 241, 310 **SOC** 170
 
 \- [Math](https://www.csulb.edu/sites/default/files/2026/documents/Math%20-%20Fall%202026.pdf): **MATH** 111, 112A/B, 113, 119A/B, 122, 123, 224, 247, 347, 364A, 370A
 

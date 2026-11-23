@@ -2,7 +2,7 @@
 title: "Housing Rates"
 url: https://www.csulb.edu/student-affairs/university-housing-residential-life/housing-rates
 category: Housing
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Housing Rates

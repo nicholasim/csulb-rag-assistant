@@ -2,7 +2,7 @@
 title: "Apply for Housing"
 url: https://www.csulb.edu/student-affairs/university-housing-residential-life/apply-for-housing
 category: Housing
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Apply for Housing

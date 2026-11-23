@@ -2,7 +2,7 @@
 title: "Information Technology"
 url: https://www.csulb.edu/information-technology
 category: Technology Help Desk
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## [Secure Your Sign In](https://www.csulb.edu/information-technology/secure-your-sign-before-january-4-2027)

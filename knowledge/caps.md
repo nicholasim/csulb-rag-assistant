@@ -2,7 +2,7 @@
 title: "Counseling and Psychological Services"
 url: https://www.csulb.edu/student-affairs/counseling-and-psychological-services
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 ## About CAPS
@@ -25,7 +25,7 @@ The mission of Counseling and Psychological Services (CAPS) is to support our st
 
 [Drop-In Spaces](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/drop-spaces "Drop-in Spaces")
 
-[After Hours or Emergency Services](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/after-hours-or-crisis-services "After Hours or Crisis Services")
+[After Hours or Crisis Services](https://www.csulb.edu/student-affairs/counseling-and-psychological-services/after-hours-or-crisis-services "After Hours or Crisis Services")
 
 * * *
 

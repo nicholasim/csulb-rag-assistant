@@ -2,14 +2,14 @@
 title: "CAPS Contact Us & FAQ"
 url: https://www.csulb.edu/student-affairs/counseling-and-psychological-services/contact-us-faq
 category: Wellness & Access
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Contact Us & FAQ
 
 ## Meet the Team
 
-The following team members are not pictured in this photo, Diane Hayashino, Ph.D., Domonique Rood, DrPH., LMFT, Ferdinand Arcinue, Ph.D., Judy Prince, Psy.D., Kirstyn Chun, Ph.D., Margarita Calzadilla-Kishimoto, LCSW, Megan Brown, M.A., Nina King, LCSW, Nishan Palayandi, LCSW, Rachelle Ang, LCSW., and Rosa Moreno, Ph.D.
+The following team members are not pictured in this photo, Diane Hayashino, Ph.D., Domonique Rood, DrPH., LMFT, Ferdinand Arcinue, Ph.D., Kirstyn Chun, Psy.D., Margarita Calzadilla-Kishimoto, LCSW, Nishan Palaniyandi, LCSW, Evelyn Ro LCSW, Abby Bradecich, Psy. D., Christina Zavalza Psy. D., Rosa Lagunas. 
 
 * * *
 
@@ -118,41 +118,51 @@ Counselor
 Counselor
 [Shelly.Collins@csulb.edu](mailto:Shelly.Collins@csulb.edu)
 
-**Yuset Nevarez**
-CAPS/SHS Administrative Support
+**Waynette Wasano-Jones, LCSW**
+Counselor
+[Waynette.Wasano-Jones@csulb.edu](mailto:Waynette.Wasano-Jones@csulb.edu) 
 
 **Margarita Calzadilla-Kishimoto, LCSW**
-Counselor 
+Counselor
 
 **Marni Wratchford, LMFT**
-Counselor 
+Counselor
 [Marni.Wratchford@csulb.edu](mailto:Marni.Wratchford@csulb.edu) 
 
 **Nishan Palaniyandi,LCSW**
 Counselor 
 [Nishan.Palaniyandi@csulb.edu](mailto:Nishan.Palaniyandi@csulb.edu) 
 
-**Waynette Wasano-Jones, LCSW**
-Counselor
-[Waynette.Wasano-Jones@csulb.edu](mailto:Waynette.Wasano-Jones@csulb.edu) 
+**Edilu Medina-Arias**
+Peer Program Coordinator
+[CAPS-RisingTides@csulb.edu](mailto:CAPS-RisingTides@csulb.edu)
 
 **Victoria Esparza**
 Operations Coordinator
 
-**Edilu Medina-Arias**
-Peer Program Coordinator
-[CAPS-RisingTides@csulb.edu](mailto:CAPS-RisingTides@csulb.edu) 
+**Jordan Rollerson**
+Pre-Doctoral Counselor Intern
+[Jordan.Rollerson@csulb.edu](mailto:jordan.rollerson@csulb.edu)
 
-## Doctoral Interns
+**Manuel Teran, M.A.**
+Pre-Doctoral Counselor Intern
+[Manuel.Teran@csulb.edu](mailto:Manuel.Teran@csulb.edu)
 
-**TBA**
-Doctoral Intern
+**Yae Ji Kim, M.A.**
+Pre-Doctoral Counselor Intern
+[YaeJi.Kim2@csulb.edu](mailto:YaeJi.Kim2@csulb.edu)
 
-**TBA**
-Doctoral Intern
+**Alanna Simmons, LCSW**
+Counselor
+[Alanna.Criswell@csulb.edu](mailto:Alanna.Criswell@csulb.edu)
 
-**TBA**
-Doctoral Intern
+**Sara Ahumada, LMFT**
+Counselor
+[Sara.Ahumada@csulb.edu](mailto:Sara.Ahumada@csulb.edu)
+
+**Amanee Izhaq, CAPS/SHS**
+Administrative Support
+ 
 
 ## Frequently Asked Questions
 

@@ -2,7 +2,7 @@
 title: "Night Safety Escort Program"
 url: https://www.csulb.edu/university-police/night-safety-escort-program
 category: Safety
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Night Safety Escort Program

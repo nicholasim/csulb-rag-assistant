@@ -2,7 +2,7 @@
 title: "Fall 2025 GE Requirements"
 url: https://www.csulb.edu/student-records/fall-2025-ge-requirements
 category: Majors & Academics
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Fall 2025 GE Requirements

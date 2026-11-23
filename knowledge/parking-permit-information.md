@@ -2,7 +2,7 @@
 title: "Permit Information & Regulations"
 url: https://www.csulb.edu/parking-and-transportation-services/permit-information
 category: Parking & Transportation
-retrieved: 2026-11-12
+retrieved: 2026-11-22
 ---
 
 # Permit Information & Regulations
