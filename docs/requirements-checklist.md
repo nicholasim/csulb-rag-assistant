@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-24, after Entry 32: a copy button on answers, "checked" dates on sources, and the shark handoff.
+**Last updated:** 2026-11-24, after Entry 33: the chat route's hosting limit was raised to 40s (28s budget + 12s of headroom).
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -203,7 +203,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Every question finishes within about 28 seconds** (Entry 28): an answer, or the friendly "Gemini is having trouble" error. Before that, the Gemini SDK ignored our timeout option names, so a slow or stuck Gemini could hold a request for over a minute. Hidden SDK retries also spent extra requests on busy errors.
   - **Conflicting dates are not always both shown.** Original #3 (last day to drop without a W) gave both dates in 2 of 3 tries with the current prompt, and 1 of 3 without the follow-up rule. Gemini applies the conflict rule inconsistently (Entry 28).
   - **Trademark:** the shark mascots and "LB" are Long Beach State's official athletics marks, used for a class project (Entry 30). The footer says it's a student class project and not an official CSULB service, and the site asks search engines not to list it (`noindex`). Confirm with the instructor before any public sharing.
-  - **The 28s time budget has only 2s of margin** under the 30s hosting limit. On a busy machine, timers can fire late: one offline `check:timeouts` run took 31.4s, then passed twice at 28.0-28.2s when idle (Entry 32). Lowering the budget to 25s would add margin, but each Gemini step would get less time.
+  - **Every question finishes within about 28 seconds,** and the hosting limit (`maxDuration`) is 40s, so there are 12s of headroom (Entry 33). On a busy machine, timers can fire a few seconds late: one offline `check:timeouts` run took 31.4s (Entry 32), which would have hit the old 30s limit. 40s is allowed on every current Vercel plan (Hobby: 60s, or 300s with Fluid compute). Confirm it in the Vercel project (Settings → Functions) after deploying.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)

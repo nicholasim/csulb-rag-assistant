@@ -14,8 +14,10 @@ import { answerQuestion } from "@/lib/rag";
 import { FriendlyError } from "@/lib/gemini";
 
 // Hosting limit for this route (seconds). lib/rag.ts already answers or gives a friendly error
-// within 28s (Entry 28); this stops the platform from holding a request any longer.
-export const maxDuration = 30;
+// within 28s (Entry 28). The limit is 40, not 30 (Entry 33): on a busy server, timers can fire a few
+// seconds late, and the host must never cut in before our own friendly error. 40s is allowed on
+// every current Vercel plan (Hobby: 60s, or 300s with Fluid compute; Pro: up to 800s).
+export const maxDuration = 40;
 
 export async function POST(request: Request) {
   let body: { question?: unknown; history?: unknown };

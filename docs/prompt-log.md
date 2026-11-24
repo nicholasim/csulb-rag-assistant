@@ -1907,4 +1907,30 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 33 (More headroom before the hosting limit)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> For the timeout cushion: keep the 28s budget and raise maxDuration on the chat route from 30 to 40, so the hosting limit never cuts in before our own friendly error. Check this Vercel plan allows 40s. Run check:timeouts again and update the limitations note. No Gemini calls.
+
+**What the AI did:**
+- **Plan check:** this repo isn't linked to a Vercel project locally (no `.vercel/` folder, no Vercel CLI), so the team's exact plan couldn't be read. According to Vercel's current docs, 40s is allowed on every plan: Hobby 60s (300s with Fluid compute, the default for new projects), Pro and Enterprise up to 800s.
+- **Change:** `app/api/chat/route.ts`: `maxDuration` 30 → **40**, with a comment explaining why. The 28s request budget is unchanged.
+- **Limitations note:** now says 12s of headroom, and asks the team to confirm the limit in Vercel (Settings → Functions) after deploying.
+
+**Did it work?**
+- **Build:** the function config (`.next/server/functions-config-manifest.json`) lists `/api/chat` with `maxDuration: 40`.
+- **`npm run check:timeouts`** (offline, fake Gemini): 28.2s, 28.0s and 2.0s, all ending in the friendly error, well under 40s. The check keeps its own 30s target, so it still flags any drift in our budget.
+- tsc, eslint and build pass.
+
+**Troubleshooting or redirection (if any):**
+1. **The plan couldn't be confirmed from the repo,** so the answer relies on Vercel's published limits, plus a step for the team to check the real project.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
