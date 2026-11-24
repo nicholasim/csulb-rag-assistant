@@ -104,6 +104,13 @@ async function main() {
       expected: "You can buy it online through the Parking Portal [6].",
     },
   ];
+  // Entry 39: a list sentence combining clubs from three pages keeps all three (each page names one).
+  citeCases.push({
+    label: "a list sentence with clubs from three pages keeps every page that names one",
+    answer: "CSULB features several Latino student organizations, including the Latinx Student Union, the Association of Latino Professionals for America (ALPFA), the Hispanic Students Business Association (HSBA), and the National Association of Hispanic Journalists (NAHJ) [1, 2, 3].",
+    results: asResults(["business-student-organizations#1", "liberal-arts-clubs#2", "nuestra-graduacion#1"]),
+    expected: "CSULB features several Latino student organizations, including the Latinx Student Union, the Association of Latino Professionals for America (ALPFA), the Hispanic Students Business Association (HSBA), and the National Association of Hispanic Journalists (NAHJ) [1, 2, 3].",
+  });
   // Two parking pages that both support a sentence keep both.
   const parking = search("How much is a semester student parking permit and where do I buy it?", 8);
   const parkingPages = [...new Set(parking.map((r) => r.chunk.url))];

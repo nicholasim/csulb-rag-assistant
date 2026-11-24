@@ -117,6 +117,45 @@ function getIndex(): Index {
   return index;
 }
 
+/**
+ * Entry 39: in how many sections a word appears (0 if none), after the same tokenizing and
+ * stemming the search uses. A word found in only a few sections ("latinx", "fo4") is a specific
+ * detail; the citation filter uses it to keep a page that really supports part of a sentence.
+ */
+export function wordFrequency(word: string) {
+  const [token] = tokenize(word);
+  return token ? (getIndex().docFreq.get(token) ?? 0) : 0;
+}
+
+/** The words of a text that appear in at most `maxSections` sections (but at least one). */
+export function rareWords(text: string, maxSections = 5) {
+  const { docFreq } = getIndex();
+  return [...new Set(tokenize(text))].filter((w) => {
+    const n = docFreq.get(w) ?? 0;
+    return n > 0 && n <= maxSections;
+  });
+}
+
+const flat = (s: string) => ` ${s.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9']+/g, " ").trim()} `;
+let flatTexts: string[] | null = null;
+/** In how many sections an exact phrase appears (case and punctuation ignored). */
+export function phraseFrequency(phrase: string) {
+  if (!flatTexts) flatTexts = getIndex().chunks.map((c) => flat(`${c.title} ${c.text}`));
+  const p = flat(phrase);
+  return flatTexts.filter((t) => t.includes(p)).length;
+}
+/** Does this text contain the phrase (case and punctuation ignored)? */
+export function textHasPhrase(text: string, phrase: string) {
+  return flat(text).includes(flat(phrase));
+}
+
+/** Does a chunk contain this (already tokenized) word? */
+export function chunkHasWord(chunkId: string, token: string) {
+  const { chunks, termCounts } = getIndex();
+  const i = chunks.findIndex((c) => c.id === chunkId);
+  return i >= 0 && (termCounts[i].get(token) ?? 0) > 0;
+}
+
 export type SearchResult = { chunk: Chunk; score: number };
 
 /**

@@ -12,7 +12,7 @@
  *            -> 5. return the answer + the sources it cited
  */
 import { knowledgePageCount, type Chunk } from "./knowledge";
-import { search, tokenize, type SearchResult } from "./retrieval";
+import { chunkHasWord, phraseFrequency, rareWords, search, textHasPhrase, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
 import { REQUEST_BUDGET_MS } from "./deadline";
 import pageChecks from "./data/page-checks.json";
@@ -352,6 +352,24 @@ const safeHost = (url: string) => {
  * Works on Gemini's numbering (before renumberCitations), so dropped pages get no chip.
  */
 const SUPPORT_RATIO = 0.5;
+const SPECIFIC_MAX_SECTIONS = 5;
+
+/**
+ * Entry 39: the specific details in a piece of answer text: names (runs of 2+ capitalized words,
+ * not counting each sentence's first word, e.g. "Latinx Student Union") and rare words, each found
+ * in at most 5 of our sections. Common names like "Student Life" don't count.
+ */
+function specificDetails(text: string) {
+  const plain = text.replace(/[*_`#>]/g, " ").replace(/\[([^\]]*)\]/g, "$1");
+  const names = new Set<string>();
+  for (const sentence of plain.split(/(?<=[.!?])\s+/)) {
+    const body = sentence.replace(/^\s*\S+/, ""); // skip the sentence's first word
+    for (const m of body.matchAll(/\b[A-Z][\w'’-]*(?:\s+(?:(?:of|for|and|the|&)\s+)?[A-Z][\w'’-]*)+/g)) {
+      if (phraseFrequency(m[0]) > 0 && phraseFrequency(m[0]) <= SPECIFIC_MAX_SECTIONS) names.add(m[0]);
+    }
+  }
+  return { names: [...names], words: rareWords(plain, SPECIFIC_MAX_SECTIONS) };
+}
 export function keepSupportedCitations(answer: string, results: SearchResult[]) {
   return answer
     .split(/(\n{2,})/)
@@ -371,9 +389,19 @@ export function keepSupportedCitations(answer: string, results: SearchResult[]) 
         }
         const best = Math.max(0, ...pageScore.values());
         if (best === 0) return match; // nothing to compare by: leave Gemini's citation alone
+        // Entry 39: a list sentence can combine facts from several pages ("the Latinx Student Union,
+        // ALPFA, and HSBA"), so a page that scores lower overall still supports its part. Keep a page
+        // that contains a specific name (2+ capitalized words found in at most 5 sections) or a rare
+        // word (found in at most 5 sections) from the cited text.
+        const specific = specificDetails(cited);
+        const supportsPart = (url: string) =>
+          numbers.some((m) => {
+            const c = results[m - 1]?.chunk;
+            return !!c && c.url === url && (specific.names.some((p) => textHasPhrase(`${c.title} ${c.text}`, p)) || specific.words.some((w) => chunkHasWord(c.id, w)));
+          });
         const kept = numbers.filter((n) => {
           const chunk = results[n - 1]?.chunk;
-          return !chunk || (pageScore.get(chunk.url) ?? 0) >= best * SUPPORT_RATIO;
+          return !chunk || (pageScore.get(chunk.url) ?? 0) >= best * SUPPORT_RATIO || supportsPart(chunk.url);
         });
         if (kept.length < numbers.length) console.info(`[cite] kept ${kept.length} of ${numbers.length} cited sources`);
         return `[${kept.join(", ")}]`;

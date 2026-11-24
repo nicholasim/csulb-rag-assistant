@@ -2295,4 +2295,46 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 39 (Citation filter keeps pages with specific names; full regression)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Make the citation filter fix: keep any cited page that contains a specific name or rare word from the sentence. Then, since Entries 36-38 changed shared code, run a full regression: the 22 presets, the original 42, the student 48, and the 17 club tests once. Compare to the last results (presets 22/22, original 41/42, student 47/48), and show anything that got worse before fixing it.
+
+**Scope check:** Inside the assignment: an answer-quality fix and testing. About 129 live questions (about 260 Gemini requests).
+
+**What the AI did:**
+- **New helpers in `lib/retrieval.ts`:** `rareWords` (words in at most 5 sections, read from the keyword index's existing counts), `phraseFrequency`, `textHasPhrase` and `chunkHasWord`.
+- **`keepSupportedCitations` (`lib/rag.ts`):** besides scoring at least half of the best page, a cited page is now also kept if it contains a specific name from the cited text (2+ capitalized words, not the sentence's first word, found in at most 5 sections) or a rare word. Common names like "Student Life" don't count.
+- **New unit case:** the Entry 38 Latino list sentence citing the Business, Liberal Arts and Nuestra Graduación pages keeps all three. The Entry 35 cases still drop the Engineering and Liberal Arts pages.
+
+**Did it work?**
+- **Offline:** all unit checks pass; coverage is still 150/151; copy, presets, stream, eslint and build pass.
+- **Full regression** (fresh production build):
+
+  | Set | Last | Now |
+  |---|---|---|
+  | Presets (22) | 22/22 | 21/22 (#2 failed) |
+  | Original (42) | 41/42 (#3) | 41/42 (#29 failed; #3 passed) |
+  | Student (48) | 47/48 (#31) | 47/48 (#6 failed) |
+  | Club and community (17) | 33/34 over two runs | 17/17 |
+- **The 3 tests that got worse**, each rerun twice and passing both times:
+  - Preset #2 "How do I check my financial aid status?": one answer didn't say "To Do List";
+  - Original #29 "how do i reserve a studdy room": answered with the iSpace podcast studios instead of falling back;
+  - Student #6 "send my transcripts to another school": didn't mention Parchment.
+
+  None of them had a citation trimmed (checked in the server log), and none involves the synonyms or the BeachSync sentence removal. They're Gemini's run-to-run variation, not caused by Entries 36-39.
+- **Citation filter activity:** it trimmed 3 times in about 135 answers. Two were preset #1 (add/drop deadline), where a 2-page citation became 1; that test still passed each time.
+
+**Troubleshooting or redirection (if any):**
+1. **Run-to-run variation** made 3 different tests fail than last time, though each set's count stayed the same or was off by one. Reruns showed they pass, so nothing was changed.
+2. **Preset #1's citation is trimmed most of the time.** The add/drop answer usually cites 2 pages and the filter keeps 1. The test passes, but which page is dropped wasn't checked. Left for the team.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
