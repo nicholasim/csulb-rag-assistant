@@ -15,6 +15,7 @@ import { knowledgePageCount, type Chunk } from "./knowledge";
 import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
 import { REQUEST_BUDGET_MS } from "./deadline";
+import pageChecks from "./data/page-checks.json";
 import { MAX_QUESTION_LENGTH } from "./limits";
 import { correctSpelling } from "./spelling";
 import { detectSmallTalk, smallTalkReply } from "./small-talk";
@@ -44,6 +45,7 @@ export type Source = {
   url: string;
   category: string;
   excerpt: string; // a short quote from the page (one or two lines, separated by "\n")
+  checked?: string; // when we last fetched and checked the page, "2026-11-23" (lib/data/page-checks.json)
 };
 
 export type ChatResponse = {
@@ -115,6 +117,11 @@ export function cleanFollowUps(raw: unknown, question: string, results: SearchRe
     kept.push(text);
   }
   return kept;
+}
+
+/** When the page a chunk came from was last checked (chunk ids look like "parking-permit-fees#2"). */
+function checkedDate(chunkId: string): string | undefined {
+  return (pageChecks as Record<string, string>)[chunkId.split("#")[0]];
 }
 
 /** Is the student asking for a map or how to get around? */
@@ -447,7 +454,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   if (isCrisisMessage(question)) {
     const { answer, chunks } = crisisReply();
     const sources = chunks.length
-      ? [{ id: 1, title: chunks[0].title, url: chunks[0].url, category: chunks[0].category, excerpt: bestExcerpt(chunks, question, answer) }]
+      ? [{ id: 1, title: chunks[0].title, url: chunks[0].url, category: chunks[0].category, excerpt: bestExcerpt(chunks, question, answer), checked: checkedDate(chunks[0].id) }]
       : [];
     return { type: "answer", answer, sources, suggestion: null, model: null, correctedQuestion: null, crisis: true };
   }
@@ -557,6 +564,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     url: chunks[0].url,
     category: chunks[0].category,
     excerpt: bestExcerpt(chunks, searchText, textCiting(answer, id)),
+    checked: checkedDate(chunks[0].id),
   }));
 
   // Follow-up suggestions: only on normal answers, and only ones our pages can answer (Entry 27).

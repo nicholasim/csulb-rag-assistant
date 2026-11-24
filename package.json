@@ -15,6 +15,7 @@
     "check:follow-ups": "tsx scripts/check-follow-ups.ts",
     "check:timeouts": "tsx scripts/check-timeouts.ts",
     "check:stream": "tsx scripts/check-stream.ts",
+    "check:copy": "tsx scripts/check-copy-text.ts",
     "test:stop-edit": "tsx scripts/test-stop-edit.ts",
     "english-words": "tsx scripts/build-english-words.ts",
     "explain": "tsx scripts/explain.ts",

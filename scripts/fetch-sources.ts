@@ -10,7 +10,7 @@
  * Run it with:  npm run fetch-sources
  * Re-running it refreshes every file with the current version of each page.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import * as cheerio from "cheerio";
 import TurndownService from "turndown";
@@ -253,6 +253,7 @@ const USER_AGENT = "Mozilla/5.0 (CSULB IS300 class project)";
 const LIST_ITEM = ".views-view-responsive-grid__item";
 
 const OUTPUT_DIR = path.join(process.cwd(), "knowledge");
+const CHECKS_FILE = path.join(process.cwd(), "lib", "data", "page-checks.json");
 
 // Turndown converts HTML into Markdown. The GFM plugin keeps tables as tables.
 const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced" });
@@ -413,6 +414,10 @@ async function main() {
   await mkdir(OUTPUT_DIR, { recursive: true });
   // Today's date in local time, formatted YYYY-MM-DD ("en-CA" happens to use that format).
   const today = new Date().toLocaleDateString("en-CA");
+  // When each page was last fetched and checked (Entry 32). Shown as "checked Nov 23" on source chips.
+  // Pages that fail this run keep their previous date.
+  const checks: Record<string, string> = JSON.parse(await readFile(CHECKS_FILE, "utf8").catch(() => "{}"));
+  const changed: string[] = [];
 
   for (const source of SOURCES) {
     try {
@@ -426,13 +431,26 @@ async function main() {
         `retrieved: ${today}`,
         "---",
       ].join("\n");
-      await writeFile(path.join(OUTPUT_DIR, `${source.slug}.md`), `${header}\n\n${markdown}\n`);
-      console.log(`OK    ${source.slug.padEnd(32)} ${markdown.split(/\s+/).length} words`);
+      // Only rewrite the file when the page's text (or title, URL, category) changed, so a file's
+      // "retrieved" date means "when this text was copied". A page that's unchanged keeps its file.
+      const file = path.join(OUTPUT_DIR, `${source.slug}.md`);
+      const next = `${header}\n\n${markdown}\n`;
+      const previous = await readFile(file, "utf8").catch(() => null);
+      const withoutDate = (text: string) => text.replace(/^retrieved: .*$/m, "");
+      if (previous === null || withoutDate(previous) !== withoutDate(next)) {
+        await writeFile(file, next);
+        changed.push(source.slug);
+      }
+      checks[source.slug] = today;
+      console.log(`OK    ${source.slug.padEnd(32)} ${markdown.split(/\s+/).length} words${changed.at(-1) === source.slug ? "  (changed, saved)" : ""}`);
     } catch (err) {
       // Never invent content: if a page fails, report it and skip it.
       console.error(`FAIL  ${source.slug.padEnd(32)} ${(err as Error).message}`);
     }
   }
+  const sorted = Object.fromEntries(Object.entries(checks).sort(([a], [b]) => a.localeCompare(b)));
+  await writeFile(CHECKS_FILE, `${JSON.stringify(sorted, null, 2)}\n`);
+  console.log(`\n${changed.length} page(s) changed and were saved${changed.length ? `: ${changed.join(", ")}` : ""}. Check dates saved to lib/data/page-checks.json.`);
   await buildDirectory(today);
 }
 

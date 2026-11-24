@@ -67,6 +67,11 @@ export function SourceChips({
           <div className="flex flex-col gap-0.5">
             <p className="text-sm font-semibold">{open.title}</p>
             <p className="text-xs text-muted-foreground">{open.category}</p>
+            {/* When we last fetched this page and checked it (Entry 32, lib/data/page-checks.json). */}
+            <p className="text-xs text-muted-foreground/80">
+              {new URL(open.url).hostname.replace(/^www\./, "")}
+              {open.checked && <> · checked {shortDate(open.checked)}</>}
+            </p>
           </div>
           <blockquote className="flex flex-col gap-1.5 text-sm leading-6 text-foreground/90">
             {open.excerpt.split("\n").map((line) => (
@@ -88,4 +93,9 @@ export function SourceChips({
       )}
     </div>
   );
+}
+
+/** "2026-11-23" -> "Nov 23" (read at noon, so no time zone can move it to another day). */
+function shortDate(isoDate: string) {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

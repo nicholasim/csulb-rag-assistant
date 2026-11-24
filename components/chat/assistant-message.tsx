@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertCircleIcon, CheckIcon, HeartHandshakeIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircleIcon, CheckIcon, CopyIcon, HeartHandshakeIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { ChatResponse, Stage } from "@/lib/rag";
 import { cn } from "@/lib/utils";
 import { CHIPS_START_MS, ENTER_STEP_MS, enterDelay } from "@/lib/enter";
+import { plainTextForCopy } from "@/lib/copy-text";
 import type { HelpOffice } from "@/lib/help-office";
 import { AnswerText } from "./answer-text";
 import { SourceChips } from "./source-chips";
@@ -63,15 +64,7 @@ function avatarFor(turn: AssistantTurn): keyof typeof SHARKS | "support" {
   return "main";
 }
 
-function AssistantAvatar({ turn }: { turn: AssistantTurn }) {
-  const kind = avatarFor(turn);
-  if (kind === "support") {
-    return (
-      <div aria-hidden className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <HeartHandshakeIcon className="size-4" />
-      </div>
-    );
-  }
+function SharkImage({ kind, className }: { kind: keyof typeof SHARKS; className?: string }) {
   const file = SHARKS[kind];
   return (
     // eslint-disable-next-line @next/next/no-img-element -- tiny pre-sized PNGs with our own 1x/2x/3x files
@@ -82,9 +75,35 @@ function AssistantAvatar({ turn }: { turn: AssistantTurn }) {
       srcSet={`/brand/${file}-32.png 1x, /brand/${file}-64.png 2x, /brand/${file}-96.png 3x`}
       width={32}
       height={32}
-      className={cn("mt-0.5 size-8 shrink-0 select-none", kind === "working" && "animate-shark-bob")}
+      className={cn("size-8 select-none", className)}
       draggable={false}
     />
+  );
+}
+
+function AssistantAvatar({ turn }: { turn: AssistantTurn }) {
+  const kind = avatarFor(turn);
+  // Shark handoff (Entry 32): only when this message changes from "working" to a normal answer
+  // while on screen. The working shark swims out and the pointing shark pops in (app/globals.css),
+  // inside the fixed 32px box, so nothing else moves. Every other change is an instant swap.
+  const [previousKind, setPreviousKind] = useState(kind);
+  const [handoff, setHandoff] = useState(false);
+  if (kind !== previousKind) {
+    setPreviousKind(kind);
+    setHandoff(previousKind === "working" && kind === "answer");
+  }
+  if (kind === "support") {
+    return (
+      <div aria-hidden className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <HeartHandshakeIcon className="size-4" />
+      </div>
+    );
+  }
+  return (
+    <div className="relative mt-0.5 size-8 shrink-0">
+      {handoff && <SharkImage kind="working" className="shark-out absolute inset-0" />}
+      <SharkImage kind={kind} className={cn(kind === "working" && "animate-shark-bob", handoff && "shark-in")} />
+    </div>
   );
 }
 
@@ -206,14 +225,56 @@ function AnswerState({
         onToggle={(id) => setOpenId((current) => (current === id ? null : id))}
         messageId={turn.id}
       />
+      {/* Copy: normal answers only, never on crisis replies (Entry 32). */}
+      {!response.crisis && <CopyAnswer response={response} delayMs={CHIPS_START_MS + (response.sources.length + 1) * ENTER_STEP_MS} />}
       {showFollowUps && response.followUps && response.followUps.length > 0 && (
         <FollowUps
           questions={response.followUps}
           onAsk={onAsk}
-          startMs={CHIPS_START_MS + (response.sources.length + 1) * ENTER_STEP_MS}
+          startMs={CHIPS_START_MS + (response.sources.length + 2) * ENTER_STEP_MS}
         />
       )}
     </>
+  );
+}
+
+/**
+ * Copy the answer as clean plain text plus its sources (Entry 32, lib/copy-text.ts). Always visible
+ * (not hover-only) so it works on touch screens. "Copied" shows for 1.5s; if the browser blocks the
+ * clipboard, a short "Couldn't copy" note shows instead of failing silently.
+ */
+function CopyAnswer({ response, delayMs }: { response: ChatResponse; delayMs: number }) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  async function copy() {
+    clearTimeout(timer.current);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(plainTextForCopy(response.answer, response.sources));
+      setState("copied");
+      timer.current = setTimeout(() => setState("idle"), 1500);
+    } catch {
+      setState("failed");
+      timer.current = setTimeout(() => setState("idle"), 3000);
+    }
+  }
+  return (
+    <div className="enter flex items-center gap-2" style={enterDelay(delayMs)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={copy}
+        aria-label={state === "copied" ? "Copied" : "Copy answer"}
+        className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+      >
+        {state === "copied" ? <CheckIcon data-icon="inline-start" className="text-gold-ink" /> : <CopyIcon data-icon="inline-start" />}
+        {state === "copied" && <span className="text-xs">Copied</span>}
+      </Button>
+      <span aria-live="polite" className="text-xs text-muted-foreground">
+        {state === "failed" ? "Couldn't copy" : <span className="sr-only">{state === "copied" ? "Answer copied" : ""}</span>}
+      </span>
+    </div>
   );
 }
 

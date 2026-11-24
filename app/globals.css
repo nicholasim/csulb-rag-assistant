@@ -184,3 +184,34 @@
     animation: none;
   }
 }
+
+/* Shark handoff (Entry 32): when an answer arrives, the working shark swims out and the pointing
+   shark pops in, inside the avatar's fixed 32px box (no layout shift), about 0.37s in all.
+   With reduced motion the working shark is simply hidden: an instant swap. */
+.shark-out {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes swim-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+  .shark-out {
+    animation: swim-out 0.2s ease-in forwards;
+  }
+  .shark-in {
+    animation: pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+  }
+}

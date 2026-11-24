@@ -1851,4 +1851,60 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 32 (Copy button, source "checked" dates, shark handoff)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> 1. A copy button on normal answers: clean plain text (no [1] markers) plus a "Sources:" list with titles and links; a checkmark and "Copied" for about 1.5s; an aria label, keyboard accessible, visible on mobile; a "Couldn't copy" note if the browser blocks it.
+> 2. Source freshness in the source panel (e.g. "csulb.edu · checked Nov 23"). Since we reverted date-only file changes, check what the stored date really means, and label it honestly or propose how to keep it accurate (tell us before choosing).
+> 3. A shark handoff when an answer arrives: the working shark swims out and the pointing shark pops in, about 0.4s, only on normal answers; instant swap otherwise; nothing on crisis replies; respects reduced motion.
+>
+> No Gemini calls; plan first with the scope check.
+>
+> **Team decision:** track check dates accurately.
+
+**What the AI did:**
+- **Scope check:** UI polish, inside scope. Feature 2 also changes how `fetch-sources` saves pages (small, explainable).
+- **What the stored dates meant:** each knowledge file's `retrieved` date was the date of the copy we kept, not the last check. 116 files said Nov 22 because B3 saved every file, but all pages were re-checked Nov 23 and date-only changes were reverted. Claude explained this and asked before choosing; the team chose accurate tracking.
+- **`scripts/fetch-sources.ts`:**
+  - a page file is now only rewritten when its text (or title, URL, category) changes, so `retrieved` means "when this text was copied" and **no manual reverts are needed anymore**;
+  - every successful check is recorded in **`lib/data/page-checks.json`**; a failed page keeps its previous date.
+  - **One run:** 121 pages checked, **0 changed** (no knowledge file rewritten), all dated 2026-11-23.
+- **Source panel:** `Source.checked` comes from `page-checks.json` (`lib/rag.ts`); the open panel shows a muted line, "csulb.edu · checked Nov 23".
+- **Copy button:**
+  - `lib/copy-text.ts` (`plainTextForCopy`) strips `[1]` and `[2, 3]`, turns Markdown into plain text, keeps links as "text (url)", and adds "Sources:" with "1. Title - URL";
+  - a ghost icon button under the chips (always visible), on normal answers only, not on crisis replies;
+  - check icon and "Copied" for 1.5s, or "Couldn't copy" for 3s, with an `aria-live` message;
+  - it joins the Entry 31 entrance sequence (after the chips, before the follow-ups).
+- **Shark handoff:** `AssistantAvatar` remembers the previous kind (React's "store previous value during render" pattern). Only working → answer plays it:
+  - the working shark slides 10px right and fades (0.2s);
+  - the pointing shark scales up from 0.8 and fades in (0.22s, starting at 0.15s).
+
+  It plays inside the fixed 32px box, so there's no layout shift. With reduced motion, the outgoing shark is simply hidden (an instant swap).
+
+**Did it work?**
+- **`npm run check:copy` (new, offline):** 5/5.
+  - The first version **turned a "* " bullet plus later *italic* text into a broken line**; the check caught it, and converting bullets before italics fixed it.
+- **Browser** (fake responses, no Gemini, desktop and mobile):
+  - **Copy:** the copied text is exactly the expected plain text plus Sources; "Copied" showed and was gone after 1.8s; "Couldn't copy" showed when the clipboard was blocked; it works from the keyboard. There's no copy button on fallback, crisis or small talk.
+  - **Source panel:** "csulb.edu · checked Nov 23".
+  - **Handoff:** answers ran swim-out and pop-in; the fallback and reduced motion ran none.
+  - **Layout shift:** 0 on desktop; 0.001 on mobile (the before run measured 0.013, from the header's "New chat" button).
+- **Checks:** `check:presets`, `check:follow-ups`, `check:stream`, tsc, eslint and build pass, and `test:stop-edit` passes all checks.
+- **`check:timeouts` failed once:** case (a) took 31.4s, because timers fired about 3s late while the machine was busy (load average about 4, the server and browser runs still going). It passed twice in a row with nothing else running (28.0-28.2s every case). It's not caused by this change, but it shows **the 28s budget leaves only 2s of margin** under the 30s limit on a loaded machine (see the limitations list).
+
+**Troubleshooting or redirection (if any):**
+1. **The first handoff check falsely reported a handoff on fallbacks:** finished animations stay in the browser's animation list. The check now only counts running animations on the newest message.
+2. **The stored-date question was raised before building,** as requested, rather than showing misleading "checked" dates.
+3. **The `check:timeouts` failure was shown first, rerun while idle, and explained,** not hidden.
+
+**Screenshot / commit:**
+- **screenshots:** `docs/screenshots/{desktop,mobile}-23-{answer,copied,copy-failed,source-panel}-{before,after}.png` (before has no copy button);
+- **handoff:** `{desktop,mobile}-23-handoff-{before,after}.gif`, `-handoff-frames-{before,after}.png`, `-handoff-{before,after}.webm`.
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

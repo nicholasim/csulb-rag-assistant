@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-23, after Entry 31: smooth message entrance (plain CSS, off for reduced motion).
+**Last updated:** 2026-11-24, after Entry 32: a copy button on answers, "checked" dates on sources, and the shark handoff.
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -42,7 +42,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 - [x] **Edit the latest question:** the pencil icon (on hover; always visible on touch screens) puts the question back in the box and removes it and its answer (Entry 9; `docs/screenshots/*-08-edit-icon.png`).
 - [x] **Stop and edit keep follow-up history correct:** history is rebuilt from the messages on screen. Checked by `npm run test:stop-edit` (32 checks, all passing).
 - [x] **Welcome trust line:** "Searches 18 official CSULB pages · Every answer links to its source." (count read from `knowledge/`; Entry 6).
-- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`). Text wraps at word boundaries everywhere; long URLs and long unbroken strings wrap inside their box instead of overflowing (Entry 19, `docs/screenshots/*-14..17-wrap-*.png`). **Progress steps (Entry 29):** the server streams the real steps, "Searching 121 CSULB pages…" then "Reading 8 matching sections…" (the actual count), and the page shows them after 400ms. Instant replies show none, and fallbacks never show a writing step (`npm run check:stream`). **Message entrance (Entry 31):** new messages fade in and slide up 6px. An answer's text, source chips and follow-ups appear in order, all done by 0.7s. They animate only when they first appear, with no layout shift, and not at all with reduced motion.
+- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`). Text wraps at word boundaries everywhere; long URLs and long unbroken strings wrap inside their box instead of overflowing (Entry 19, `docs/screenshots/*-14..17-wrap-*.png`). **Progress steps (Entry 29):** the server streams the real steps, "Searching 121 CSULB pages…" then "Reading 8 matching sections…" (the actual count), and the page shows them after 400ms. Instant replies show none, and fallbacks never show a writing step (`npm run check:stream`). **Message entrance (Entry 31):** new messages fade in and slide up 6px. An answer's text, source chips and follow-ups appear in order, all done by 0.7s. They animate only when they first appear, with no layout shift, and not at all with reduced motion. **Copy and freshness (Entry 32):** answers have a copy button (clean text plus Sources). Each source panel shows when the page was last checked (`lib/data/page-checks.json`). `npm run fetch-sources` only rewrites pages whose text changed.
 - [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
 
 ### Answer behavior
@@ -203,6 +203,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Every question finishes within about 28 seconds** (Entry 28): an answer, or the friendly "Gemini is having trouble" error. Before that, the Gemini SDK ignored our timeout option names, so a slow or stuck Gemini could hold a request for over a minute. Hidden SDK retries also spent extra requests on busy errors.
   - **Conflicting dates are not always both shown.** Original #3 (last day to drop without a W) gave both dates in 2 of 3 tries with the current prompt, and 1 of 3 without the follow-up rule. Gemini applies the conflict rule inconsistently (Entry 28).
   - **Trademark:** the shark mascots and "LB" are Long Beach State's official athletics marks, used for a class project (Entry 30). The footer says it's a student class project and not an official CSULB service, and the site asks search engines not to list it (`noindex`). Confirm with the instructor before any public sharing.
+  - **The 28s time budget has only 2s of margin** under the 30s hosting limit. On a busy machine, timers can fire late: one offline `check:timeouts` run took 31.4s, then passed twice at 28.0-28.2s when idle (Entry 32). Lowering the budget to 25s would add margin, but each Gemini step would get less time.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)
