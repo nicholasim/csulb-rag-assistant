@@ -14,7 +14,7 @@ import {
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import type { ChatMessage, ChatResponse } from "@/lib/rag";
+import type { ChatMessage, ChatResponse, Stage } from "@/lib/rag";
 import { AssistantMessage, type AssistantTurn } from "./assistant-message";
 import { ChatInput } from "./chat-input";
 import { CategoryList, Wordmark } from "./sidebar-nav";
@@ -40,6 +40,34 @@ function historyFrom(turns: Turn[]): ChatMessage[] {
 }
 
 /**
+ * Read the progress stream: one JSON object per line. Stage lines go to onStage as they arrive;
+ * the final line holds the reply ({ event: "result", data }) or a friendly error ({ event: "error" }).
+ * Returns the reply object, or { error } like the plain JSON API, or null if the stream broke off.
+ */
+async function readStream(res: Response, onStage: (stage: Stage) => void) {
+  const reader = res.body?.getReader();
+  if (!reader) return null;
+  const decoder = new TextDecoder();
+  let buffered = "";
+  let final: unknown = null;
+  for (;;) {
+    const { done, value } = await reader.read(); // throws if the student pressed Stop
+    if (value) buffered += decoder.decode(value, { stream: true });
+    let newline;
+    while ((newline = buffered.indexOf("\n")) >= 0) {
+      const line = buffered.slice(0, newline).trim();
+      buffered = buffered.slice(newline + 1);
+      if (!line) continue;
+      const event = JSON.parse(line) as { event: string; data?: unknown; error?: unknown } & Stage;
+      if (event.event === "stage") onStage(event.stage === "searching" ? { stage: "searching", pages: event.pages } : { stage: "reading", sections: event.sections });
+      else if (event.event === "result") final = event.data;
+      else if (event.event === "error") final = { error: event.error };
+    }
+    if (done) return final;
+  }
+}
+
+/**
  * Ask the API. Resolves to a finished assistant turn (an answer or a friendly error),
  * or to null if the student pressed Stop (the request was cancelled).
  */
@@ -48,15 +76,19 @@ async function fetchAnswer(
   question: string,
   history: ChatMessage[],
   signal: AbortSignal,
+  onStage: (stage: Stage) => void,
 ): Promise<AssistantTurn | null> {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Ask for progress steps (Entry 29): the server sends each step as it starts, then the reply.
+      headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
       body: JSON.stringify({ question, history }),
       signal,
     });
-    const data = await res.json().catch(() => null);
+    const data = res.headers.get("content-type")?.includes("application/x-ndjson")
+      ? await readStream(res, onStage)
+      : await res.json().catch(() => null); // a plain JSON reply still works
     if (res.ok && data?.answer) {
       return { id, role: "assistant", question, state: "done", response: data as ChatResponse };
     }
@@ -99,7 +131,10 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
   async function request(id: string, question: string, history: ChatMessage[]) {
     const controller = new AbortController();
     requestRef.current = controller;
-    const finished = await fetchAnswer(id, question, history, controller.signal);
+    // Each progress step the server sends is added to the loading turn, so the page can show it.
+    const onStage = (stage: Stage) =>
+      setTurns((t) => t.map((x) => (x.id === id && x.role === "assistant" && x.state === "loading" ? { ...x, stages: [...(x.stages ?? []), stage] } : x)));
+    const finished = await fetchAnswer(id, question, history, controller.signal, onStage);
     if (requestRef.current === controller) requestRef.current = null;
     return finished;
   }

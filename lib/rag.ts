@@ -11,7 +11,7 @@
  *            -> 4. otherwise ask Gemini, giving it ONLY those chunks (gemini.ts)
  *            -> 5. return the answer + the sources it cited
  */
-import type { Chunk } from "./knowledge";
+import { knowledgePageCount, type Chunk } from "./knowledge";
 import { search, tokenize, type SearchResult } from "./retrieval";
 import { askGemini, CAMPUS_MAP_URL, FALLBACK_SENTENCE, FriendlyError } from "./gemini";
 import { REQUEST_BUDGET_MS } from "./deadline";
@@ -409,7 +409,15 @@ async function retrieve(queries: string[], meaning?: Promise<Awaited<ReturnType<
 const MAP_SUGGESTION = { title: "CSULB Campus Maps", url: CAMPUS_MAP_URL };
 
 /** Answer one student question. Throws FriendlyError for problems we can explain. */
-export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown = []): Promise<ChatResponse> {
+/**
+ * A progress step, sent to the page while a question is being answered (Entry 29). Only steps that
+ * really happen, in order: "searching" when the search starts, "reading" when the retrieved sections
+ * go to Gemini. Crisis replies, small talk and input errors send none; a fallback that never reaches
+ * Gemini only sends "searching".
+ */
+export type Stage = { stage: "searching"; pages: number } | { stage: "reading"; sections: number };
+
+export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown = [], onStage: (stage: Stage) => void = () => {}): Promise<ChatResponse> {
   // 1. Check the input.
   if (typeof rawQuestion !== "string" || rawQuestion.trim() === "") {
     throw new FriendlyError("empty_question", "Please type a question first.", 400);
@@ -453,6 +461,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // Fix typos ("parkng" -> "parking") so the word-matching search can find the right pages.
   // We search with the fixed question; Gemini sees both versions (see buildInput).
+  onStage({ stage: "searching", pages: knowledgePageCount() });
   const spelling = correctSpelling(smallTalk.rest);
   const searchText = spelling.corrected;
   const correctedQuestion = spelling.changes.length ? searchText : null;
@@ -505,6 +514,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   }
 
   // 4. Ask Gemini, giving it only the retrieved chunks.
+  onStage({ stage: "reading", sections: results.length });
   const answerStart = Date.now();
   let reply: Awaited<ReturnType<typeof askGemini>>["reply"];
   let model: string;

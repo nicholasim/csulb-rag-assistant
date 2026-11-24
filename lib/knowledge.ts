@@ -158,6 +158,12 @@ function chunkFile(slug: string, file: string): Chunk[] {
 let cache: Chunk[] | null = null;
 
 /** All chunks from every file in knowledge/. Loaded once, then kept in memory. */
+/** How many pages are in the knowledge base (one .md file each). Shown on the welcome screen and in
+ *  the "Searching N CSULB pages…" progress step, so both always match knowledge/. */
+export function knowledgePageCount() {
+  return readdirSync(KNOWLEDGE_DIR).filter((f) => f.endsWith(".md")).length;
+}
+
 export function loadChunks(): Chunk[] {
   if (cache) return cache;
   const files = readdirSync(KNOWLEDGE_DIR).filter((f) => f.endsWith(".md")).sort();

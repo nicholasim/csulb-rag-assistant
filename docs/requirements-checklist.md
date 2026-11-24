@@ -2,7 +2,7 @@
 
 Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution Design Brief (`docs/IS300 – Solution Design Brief.pdf`). Updated at the end of every phase, together with `docs/prompt-log.md`.
 
-**Last updated:** 2026-11-23, after Entry 28: hard 28s limit per question (proved offline with `npm run check:timeouts`), stricter follow-ups, and a FAFSA-status search shortcut.
+**Last updated:** 2026-11-23, after Entry 29: honest progress steps (streamed from the server) and a grouped, softer sidebar.
 
 **Legend:** `[x]` done (with where) · `[ ]` not done yet. Items that are partly done stay unchecked, with a "Partly:" note saying what's left.
 
@@ -35,14 +35,14 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
 ### Chat experience
 - [x] **Welcome message with clickable example questions** (brief: Onboarding, "Should"). `components/chat/welcome.tsx`; all 6 examples tested end to end (Entry 5). Every preset (22 sidebar starters, which include the 6 welcome examples) is a permanent live test, passing 22/22 twice (Entry 20). Presets skip the rewrite call, to save quota.
 - [x] **Follow-up suggestions (Entry 27):** 2-3 "You could also ask" questions under the latest normal answer, made in the same Gemini call (no extra request, about $0.00015 per answer). Each is kept only if our pages' keyword search matches one of the pages Gemini was shown. They never appear on fallbacks, clarify, small talk, crisis or errors; every live test checks this. Live: 148 of 169 suggestions kept; in a 5-answer check, 10 of 13 kept were answerable from our pages (`npm run check:follow-ups`, `docs/screenshots/*-19-follow-ups*.png`).
-- [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`).
+- [x] **Sidebar with service categories as quick-select buttons** (brief: UI Sketch). 15 categories in `lib/categories.ts`; clicking one fills a starter question. Slide-out menu on mobile (`docs/screenshots/mobile-01b-menu.png`). **Grouped (Entry 29):** Academics, Money, Campus Life, Support & Wellness, and Career & Services, on a softer near-black panel (#141416; text 16.7:1, gold 9.6:1).
 - [x] **Source chips under every answer; clicking one shows the excerpt and a link to the CSULB page** (brief: Display source, "Must"). `components/chat/source-chips.tsx`. Numbered 1, 2, 3 in order with one chip per page; table quotes include column names (Entry 6).
 - [x] **"New chat" button** clears the conversation and returns to the welcome screen (desktop sidebar + mobile header; Entry 6). It also cancels an answer that's still loading (Entry 9).
 - [x] **Stop:** while an answer loads, the send button becomes a Stop button (Esc works too). It cancels the request, removes the loading bubble, and puts the question back in the box with a gray "Stopped" note, with no error card (Entry 9; `docs/screenshots/*-07-stop-button.png`).
 - [x] **Edit the latest question:** the pencil icon (on hover; always visible on touch screens) puts the question back in the box and removes it and its answer (Entry 9; `docs/screenshots/*-08-edit-icon.png`).
 - [x] **Stop and edit keep follow-up history correct:** history is rebuilt from the messages on screen. Checked by `npm run test:stop-edit` (32 checks, all passing).
 - [x] **Welcome trust line:** "Searches 18 official CSULB pages · Every answer links to its source." (count read from `knowledge/`; Entry 6).
-- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`). Text wraps at word boundaries everywhere; long URLs and long unbroken strings wrap inside their box instead of overflowing (Entry 19, `docs/screenshots/*-14..17-wrap-*.png`).
+- [x] **Loading state, mobile-friendly layout, CSULB black and gold look.** Gold typing dots; tested at 390px and 1440px wide (`docs/screenshots/`). Text wraps at word boundaries everywhere; long URLs and long unbroken strings wrap inside their box instead of overflowing (Entry 19, `docs/screenshots/*-14..17-wrap-*.png`). **Progress steps (Entry 29):** the server streams the real steps, "Searching 121 CSULB pages…" then "Reading 8 matching sections…" (the actual count), and the page shows them after 400ms. Instant replies show none, and fallbacks never show a writing step (`npm run check:stream`).
 - [x] **Follow-up after a clarifying question works** ("How do I apply?" -> "Graduation" button -> cited graduation deadlines). `docs/screenshots/desktop-06-clarify-follow-up.png`.
 
 ### Answer behavior

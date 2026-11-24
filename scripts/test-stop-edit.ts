@@ -35,7 +35,7 @@ async function send(page: Page, question: string) {
 
 /** Wait for the answer. If Gemini was too busy to answer (error card), say so clearly and stop. */
 async function waitForReply(page: Page) {
-  await page.getByText("Checking official CSULB pages…").waitFor({ state: "detached", timeout: ANSWER_TIMEOUT });
+  await page.locator("[data-slot=progress-steps]").waitFor({ state: "detached", timeout: ANSWER_TIMEOUT });
   if (await page.getByText("No answer this time").count()) {
     console.log("STOPPED: Gemini was too busy to answer (rate-limited/overloaded). Wait a minute and rerun.");
     process.exit(2);
@@ -55,7 +55,7 @@ async function checkStopped(page: Page, label: string, question: string, aborted
   // The browser reports the cancelled request a moment after the screen updates, so wait up to 3s.
   for (let i = 0; i < 30 && !aborted(); i++) await page.waitForTimeout(100);
   check(`${label}: request was cancelled`, aborted());
-  check(`${label}: loading bubble removed`, (await page.getByText("Checking official CSULB pages…").count()) === 0);
+  check(`${label}: loading bubble removed`, (await page.locator("[data-slot=progress-steps]").count()) === 0);
   check(`${label}: no error card`, (await page.getByText("No answer this time").count()) === 0);
   check(`${label}: question removed from chat (back to welcome screen)`, await page.getByRole("heading", { level: 1 }).isVisible());
   const value = await box(page).inputValue();
@@ -136,13 +136,17 @@ async function main() {
   await page.getByRole("button", { name: "New chat" }).click();
   await send(page, "How do I apply?");
   await waitForReply(page);
-  await page.getByRole("group", { name: "Choose one" }).getByRole("button", { name: /graduation/i }).click();
+  // Click the first option Gemini offers. (Its wording changes as our sources grow: it offered
+  // "graduation" before B3 and "admission" after, Entry 29. This test is about editing, not wording.)
+  const option = page.getByRole("group", { name: "Choose one" }).getByRole("button").first();
+  const picked = ((await option.textContent()) ?? "").trim();
+  await option.click();
   await waitForReply(page);
   check("C: edit button only on the latest question", (await edit.count()) === 1);
-  // Hover the student's "graduation" bubble (not the "Graduation" option button).
-  await page.locator('[data-slot="bubble-content"]', { hasText: /^graduation$/ }).hover();
+  // Hover the student's follow-up bubble (not the option button with the same words).
+  await page.locator('[data-slot="bubble-content"]', { hasText: new RegExp(`^${picked}$`, "i") }).hover();
   await edit.click();
-  check("C: follow-up is back in the box", (await box(page).inputValue()) === "graduation");
+  check("C: follow-up is back in the box", (await box(page).inputValue()).toLowerCase() === picked.toLowerCase(), `"${picked}"`);
   const items = await page.locator('[data-slot="message-scroller-item"]').count();
   check("C: original question + clarifying reply kept (2 messages)", items === 2, `${items} messages`);
   sent.length = 0;
@@ -152,7 +156,7 @@ async function main() {
   const history = sent[0]?.history ?? [];
   const historyText = JSON.stringify(history);
   check("C: history still has 'How do I apply?' and the clarifying reply", history.length === 2 && historyText.includes("How do I apply?") && historyText.includes("Do you mean"), historyText.slice(0, 160));
-  check("C: history does NOT contain the edited-away 'graduation' follow-up", !history.some((m) => m.role === "user" && m.content === "graduation"));
+  check(`C: history does NOT contain the edited-away '${picked}' follow-up`, !history.some((m) => m.role === "user" && m.content.toLowerCase() === picked.toLowerCase()));
   const scholarship = await page.locator('[data-slot="message-scroller-item"]').last().innerText();
   check("C: new follow-up answered about scholarships", /scholarship/i.test(scholarship), scholarship.replace(/\s+/g, " ").slice(0, 120));
   await desktop.close();
@@ -168,6 +172,9 @@ async function main() {
   await phone.screenshot({ path: `${OUT_DIR}/mobile-07-stop-button.png`, caret: "initial" });
   console.log(`      saved ${OUT_DIR}/mobile-07-stop-button.png`);
   await phone.getByRole("button", { name: "Stop" }).tap();
+  // After a tap, the app moves focus back to the box a moment later. Wait for it before pressing
+  // Enter; pressing sooner sends the key to the page body (a test race, Entry 29, not an app bug).
+  await phone.waitForFunction(() => document.activeElement?.id === "question", undefined, { timeout: 3000 }).catch(() => box(phone).focus());
   await phone.unroute("**/api/chat");
   await phone.route("**/api/chat", (route) =>
     route.fulfill({

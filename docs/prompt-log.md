@@ -1674,4 +1674,72 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 29 (Honest progress steps + organized sidebar)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> 1. Replace the typing dots with short, honest progress steps (only steps that really happen, in order, with real numbers). Compare (a) the server streaming real stages vs (b) timed steps in the browser, and recommend one. Small talk, crisis replies and instant fallbacks skip the steps; a fallback never shows "Writing your answer". Subtle style; must work with Stop and on mobile.
+> 2. Group the 22 sidebar categories under a few section headers, and lighten the all-black panel while keeping CSULB black and gold and good contrast. Keep presets, the mobile menu, keyboard navigation and the scroll fix.
+>
+> No new Gemini calls; all tests and checks keep passing; before/after screenshots with fake responses. Plan first with the scope check.
+>
+> **Team decisions:** option (a); rename "Tech & Services" to "Career & Services"; the team will check on Vercel that steps arrive one at a time.
+
+**What the AI did:**
+- **Plan and scope:** UX polish, inside scope. Mild flag: streaming adds some complexity, but it's explainable in one sentence ("the server tells the page which step it's on, then sends the answer").
+- **Recommended (a):** (b) would guess. It can't know the section count, can't tell an instant reply from a slow one, and could say "Reading" when nothing was found.
+- **Honest steps** (from the real order in `answerQuestion`):
+  - **"Searching 121 CSULB pages…"** while rewriting and searching;
+  - **"Reading 8 matching sections…"** during the Gemini call (8 = the sections actually sent).
+  - **No "Writing your answer" step:** the same Gemini call can turn out to be a fallback or a clarifying question, so that label would sometimes be untrue.
+- **Server:**
+  - `answerQuestion(question, history, onStage?)` reports each stage (`lib/rag.ts`);
+  - **`app/api/chat/route.ts`:** streams NDJSON (one JSON line per event, then the result or error) **only when the page sends `Accept: application/x-ndjson`**, with `Cache-Control: no-cache, no-transform` and `X-Accel-Buffering: no` so hosts don't hold the lines back;
+  - everyone else (the test runner, scripts) still gets plain JSON;
+  - the page count helper moved to `lib/knowledge.ts`.
+- **Page:**
+  - **Stream handling:** `fetchAnswer` reads the stream and adds each stage to the loading turn. A plain JSON reply still works.
+  - **New `ProgressSteps`:** nothing for the first 400ms, so instant replies show no steps; then a small list in muted text. The current step has a softly pulsing gold dot; finished steps get a check and fade.
+  - **Accessibility:** `role="status"`, `aria-live="polite"`, and "(done)" for screen readers.
+- **Sidebar:** 5 groups (`lib/categories.ts`, `CATEGORY_GROUPS`):
+  - **Academics:** Enrollment / Registration, Academic Advising, Majors & Academics, Tutoring & Writing, Library, Orientation;
+  - **Money:** Financial Aid, Tuition / Payments;
+  - **Campus Life:** Parking & Transportation, Campus Maps, Campus Places, Housing, Recreation, Food Services;
+  - **Support & Wellness:** Student Health Services, Wellness & Access, Safety, Basic Student Support, International Students;
+  - **Career & Services:** Career Development Center, Technology Help Desk, Bookstore.
+
+  Each group has a small header with its own labelled list, and thin dividers between groups. **Panel colors:**
+  - panel #000000 → #141416;
+  - hover #1f1f1f → #232327;
+  - dividers #2a2a2a → #2c2c31.
+
+  **Contrast checked:** text 16.7:1, gold icons 9.6:1, group headers 6.6:1, hover 14.2:1. Starter questions, the mobile menu (same `CategoryList`), keyboard order and the scroll fix are unchanged.
+
+**Did it work?**
+- **New `npm run check:stream`** (offline, fake busy Gemini), 6/6:
+  - answerable question: `searching(121) → reading(8) → …`;
+  - no-match fallback: `searching(121) → result:fallback` (no "reading");
+  - small talk, crisis message and empty question: no steps;
+  - no `Accept` header: plain JSON as before.
+- **Screenshots** (fake streaming in the page, no Gemini): "Searching 121 CSULB pages…" → "Reading 8 matching sections…" (first step checked) → the answer. The fallback showed only "Searching". Small talk showed no steps at 450ms. Stop mid-steps left no error, and page overflow was still 0, on desktop and mobile.
+- **Live** (2 questions on the production build), lines arriving one at a time:
+  - answer: searching 0.0s → reading 0.4s → result 3.8s;
+  - Gemini fallback: searching 0.0s → reading 3.0s → result 5.2s.
+- **Checks:** `check:presets`, `check:follow-ups`, `check:timeouts` (28.1 / 28.0 / 2.0s), tsc, eslint and build pass. `npm run test:stop-edit`: all checks pass, after the two test fixes below.
+
+**Troubleshooting or redirection (if any):**
+1. **The dev server kept serving the old sidebar color** (the CSS variable still read `#000`) after `globals.css` changed. A fresh production build had the new color, so the "after" screenshots were taken on the production build.
+2. **`test:stop-edit` part C** waited for a "graduation" option in the "How do I apply?" clarifying question. Since B3, Gemini offers "admission, housing, financial aid". The test now clicks the first offered option (it tests editing, not wording).
+3. **`test:stop-edit` mobile part** pressed Enter right after tapping Stop, before the app had moved focus back to the box. The same race happens on the previous commit's build (1 of 3 runs worked there), so it's an old test-timing issue, not caused by this change. The test now waits for focus first (up to 3s).
+4. **To compare with the previous commit,** Claude built it in a temporary git worktree. Turbopack couldn't find Next.js through a symlinked `node_modules`, so that one-off build used `next build --webpack`. The worktree was removed afterwards.
+5. **Team rename:** "Tech & Services" → "Career & Services".
+6. **For the team's Vercel check:** if the steps arrive all at once there, first confirm the response headers above reach the browser (DevTools → Network → the `/api/chat` request), and that the route isn't switched to the Edge runtime.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-20-*-{before,after}.png` (sidebar / menu, step-searching, step-reading, answer, fallback-searching)
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

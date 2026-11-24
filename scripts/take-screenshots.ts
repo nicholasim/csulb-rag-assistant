@@ -28,7 +28,7 @@ async function ask(page: Page, question: string) {
 
 /** Wait until the assistant finishes (an answer, clarifying question, fallback, or error). */
 async function waitForReply(page: Page) {
-  await page.getByText("Checking official CSULB pages…").waitFor({ state: "detached", timeout: ANSWER_TIMEOUT });
+  await page.locator("[data-slot=progress-steps]").waitFor({ state: "detached", timeout: ANSWER_TIMEOUT });
 }
 
 async function shot(page: Page, viewport: string, name: string) {

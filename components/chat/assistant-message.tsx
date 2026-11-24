@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircleIcon, CheckIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Message, MessageContent } from "@/components/ui/message";
 import { Spinner } from "@/components/ui/spinner";
-import type { ChatResponse } from "@/lib/rag";
+import type { ChatResponse, Stage } from "@/lib/rag";
+import { cn } from "@/lib/utils";
 import type { HelpOffice } from "@/lib/help-office";
 import { AnswerText } from "./answer-text";
 import { SourceChips } from "./source-chips";
@@ -17,7 +18,7 @@ export type AssistantTurn = {
   role: "assistant";
   question: string; // the question this turn answers (used for Retry and "Request this topic")
 } & (
-  | { state: "loading" }
+  | { state: "loading"; stages?: Stage[] } // progress steps received so far (Entry 29)
   | { state: "done"; response: ChatResponse }
   | { state: "error"; error: { code: string; message: string } }
 );
@@ -77,7 +78,7 @@ export function AssistantMessage({
             Showing results for: <span className="font-medium text-foreground">{turn.response.correctedQuestion}</span>
           </p>
         )}
-        {turn.state === "loading" && <LoadingState />}
+        {turn.state === "loading" && <ProgressSteps stages={turn.stages ?? []} />}
         {turn.state === "error" && <ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} />}
         {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} onAsk={onAsk} showFollowUps={isLatest} />}
         {turn.state === "done" && turn.response.type === "clarify" && <ClarifyState response={turn.response} onAsk={onAsk} />}
@@ -88,15 +89,58 @@ export function AssistantMessage({
   );
 }
 
-function LoadingState() {
+// Replies that arrive within this time (small talk, crisis replies, quick fallbacks) show no steps.
+const STEPS_DELAY_MS = 400;
+
+function stageLabel(stage: Stage) {
+  return stage.stage === "searching"
+    ? `Searching ${stage.pages} CSULB pages…`
+    : `Reading ${stage.sections} matching section${stage.sections === 1 ? "" : "s"}…`;
+}
+
+/**
+ * Progress steps while an answer loads (Entry 29). Only steps the server really reached, in order,
+ * with real numbers: "Searching N CSULB pages…" then "Reading N matching sections…" (while Gemini
+ * reads them). There's no "Writing your answer" step: the same Gemini call may end up as a fallback.
+ * The newest step is current (a softly pulsing dot); earlier steps are checked off and faded.
+ */
+function ProgressSteps({ stages }: { stages: Stage[] }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), STEPS_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const steps = stages.length ? stages.map(stageLabel) : ["Sending your question…"];
   return (
-    <div className="flex items-center gap-3 py-1.5" role="status">
-      <span className="flex gap-1" aria-hidden>
-        <span className="size-2 animate-bounce rounded-full bg-gold [animation-delay:-0.3s] motion-reduce:animate-none" />
-        <span className="size-2 animate-bounce rounded-full bg-gold [animation-delay:-0.15s] motion-reduce:animate-none" />
-        <span className="size-2 animate-bounce rounded-full bg-gold motion-reduce:animate-none" />
-      </span>
-      <span className="text-sm text-muted-foreground">Checking official CSULB pages…</span>
+    <div data-slot="progress-steps" role="status" aria-live="polite" className="py-1">
+      {!visible ? (
+        <span className="sr-only">Working on your answer</span>
+      ) : (
+        <ol className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          {steps.map((label, i) => {
+            const current = i === steps.length - 1;
+            return (
+              <li
+                key={label}
+                className={cn(
+                  "flex items-center gap-2 duration-300 animate-in fade-in-0 slide-in-from-bottom-1 motion-reduce:animate-none",
+                  !current && "opacity-60",
+                )}
+              >
+                {current ? (
+                  <span aria-hidden className="flex size-3.5 shrink-0 items-center justify-center">
+                    <span className="size-2 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
+                  </span>
+                ) : (
+                  <CheckIcon aria-hidden className="size-3.5 shrink-0 text-gold-ink" />
+                )}
+                <span className={WRAP}>{label}</span>
+                {!current && <span className="sr-only">(done)</span>}
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }
