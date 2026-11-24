@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertCircleIcon, CheckIcon, CopyIcon, HeartHandshakeIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
+import { AlertCircleIcon, CheckIcon, CopyIcon, HeartHandshakeIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SearchIcon, SendIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Message, MessageContent } from "@/components/ui/message";
 import { Spinner } from "@/components/ui/spinner";
 import type { ChatResponse, Stage } from "@/lib/rag";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { CHIPS_START_MS, ENTER_STEP_MS, enterDelay } from "@/lib/enter";
 import { plainTextForCopy } from "@/lib/copy-text";
 import type { HelpOffice } from "@/lib/help-office";
+import type { BeachSyncSearch } from "@/lib/club-search";
 import { AnswerText } from "./answer-text";
 import { SourceChips } from "./source-chips";
 
@@ -209,6 +210,7 @@ function AnswerState({
 }) {
   const [openId, setOpenId] = useState<number | null>(null);
   const ids = response.sources.map((s) => s.id);
+  const extra = response.beachsyncSearch ? 1 : 0; // the BeachSync button takes one entrance step
   return (
     <>
       {/* Answer parts enter in order (Entry 31): text, then each source chip, then each follow-up. */}
@@ -225,13 +227,19 @@ function AnswerState({
         onToggle={(id) => setOpenId((current) => (current === id ? null : id))}
         messageId={turn.id}
       />
+      {/* Club questions: search BeachSync for the rest of the clubs (Entry 34). */}
+      {response.beachsyncSearch && (
+        <div className="enter" style={enterDelay(CHIPS_START_MS + (response.sources.length + 1) * ENTER_STEP_MS)}>
+          <BeachSyncButton search={response.beachsyncSearch} />
+        </div>
+      )}
       {/* Copy: normal answers only, never on crisis replies (Entry 32). */}
-      {!response.crisis && <CopyAnswer response={response} delayMs={CHIPS_START_MS + (response.sources.length + 1) * ENTER_STEP_MS} />}
+      {!response.crisis && <CopyAnswer response={response} delayMs={CHIPS_START_MS + (response.sources.length + 1 + extra) * ENTER_STEP_MS} />}
       {showFollowUps && response.followUps && response.followUps.length > 0 && (
         <FollowUps
           questions={response.followUps}
           onAsk={onAsk}
-          startMs={CHIPS_START_MS + (response.sources.length + 2) * ENTER_STEP_MS}
+          startMs={CHIPS_START_MS + (response.sources.length + 2 + extra) * ENTER_STEP_MS}
         />
       )}
     </>
@@ -378,6 +386,7 @@ function FallbackState({ question, response, onAsk }: { question: string; respon
             </div>
           </div>
         )}
+        {response.beachsyncSearch && <BeachSyncButton search={response.beachsyncSearch} />}
         <div className="flex flex-wrap items-center gap-2">
           {response.suggestion && (
             <Button
@@ -395,6 +404,31 @@ function FallbackState({ question, response, onAsk }: { question: string; respon
         </div>
       </BubbleContent>
     </Bubble>
+  );
+}
+
+/**
+ * "Search BeachSync for "chess"" (Entry 34): opens CSULB's full club list (BeachSync, run by Campus
+ * Labs) searched for the student's topic. The link is built by our code (lib/club-search.ts), not
+ * the AI. The note says where those listings come from, since student organizations write them.
+ */
+function BeachSyncButton({ search }: { search: BeachSyncSearch }) {
+  return (
+    <div className="flex flex-col items-start gap-1">
+      {/* A plain link styled as a button, so screen readers announce it as a link. */}
+      <a
+        href={search.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-auto min-h-8 max-w-full whitespace-normal bg-background py-1.5 text-left")}
+      >
+        <SearchIcon data-icon="inline-start" />
+        <span className={WRAP}>Search BeachSync for &ldquo;{search.term}&rdquo;</span>
+        <ExternalLinkIcon data-icon="inline-end" />
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+      <p className="text-xs text-muted-foreground">Club listings on BeachSync are written by student organizations and may change.</p>
+    </div>
   );
 }
 

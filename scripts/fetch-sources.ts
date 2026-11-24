@@ -30,6 +30,9 @@ type Source = {
   // A clearer name for the source chip when the page's own heading is vague ("Contact Us").
   // Only the label changes; the page text is still copied word for word.
   title?: string;
+  // Entry 34: remove email addresses, phone numbers, and staff contact lines before saving, so no
+  // officer or staff contact details are stored (used for the club and student-org pages).
+  stripContacts?: boolean;
 };
 
 // The approved sources from the "CSULB Sources" table in our brief, plus the pages we
@@ -190,6 +193,21 @@ const SOURCES: Source[] = [
   { slug: "how-to-apply-for-aid", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/how-to-apply-for-aid" },
   { slug: "commencement-ceremony-schedules", title: "Commencement Ceremony Schedules", category: "Majors & Academics", url: "https://www.csulb.edu/commencement/ceremony-schedules" },
   { slug: "cross-enrollment", title: "Cross Enrollment (classes at a community college)", category: "Financial Aid", url: "https://www.csulb.edu/financial-aid-and-scholarships/cross-enrollment" },
+
+  // ---- Clubs and gaming (prompt log Entry 34, team-approved list). Official club and student-org
+  // lists from csulb.edu, plus ASI's Games Area page. Contact details are stripped (stripContacts).
+  // BeachSync (csulb.campuslabs.com) is NOT fetched: its robots.txt disallows automated access to
+  // its data, so the app only links to its search page instead.
+  { slug: "engineering-student-clubs", title: "Engineering Student Clubs & Organizations", category: "Campus Places", url: "https://www.csulb.edu/hung-family-college-of-engineering/student-clubs-orgs", stripContacts: true },
+  { slug: "chhs-student-organizations", title: "Health & Human Services Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/college-of-health-human-services/student-organizations", stripContacts: true },
+  { slug: "business-student-organizations", title: "College of Business Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/college-of-business/student-organizations", stripContacts: true },
+  { slug: "arts-student-organizations", title: "College of the Arts Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/college-of-the-arts/student-organizations", stripContacts: true },
+  { slug: "liberal-arts-clubs", title: "College of Liberal Arts Clubs", category: "Campus Places", url: "https://www.csulb.edu/college-of-liberal-arts/discover-cla/clubs", stripContacts: true },
+  { slug: "cultural-resource-centers", title: "Student Cultural Resource Centers", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/office-of-belonging-and-inclusion/resource-centers", stripContacts: true },
+  { slug: "american-indian-student-organizations", title: "American Indian Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/american-indian-student-organizations", stripContacts: true },
+  { slug: "physics-astronomy-student-organizations", title: "Physics & Astronomy Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/physics-astronomy/student-organizations", stripContacts: true },
+  { slug: "liberal-studies-student-association", title: "Liberal Studies Student Association (LSSA)", category: "Campus Places", url: "https://www.csulb.edu/college-of-education/liberal-studies/peer-mentors-liberal-studies-student-association-lssa", stripContacts: true },
+  { slug: "asi-games-area", title: "ASI Games Area (Esports Lounge)", category: "Campus Places", url: "https://www.asicsulb.org/corporate/discover/campus-events-office/games-area", stripContacts: true },
 ];
 
 // ---- Office directory (Step B2, prompt log Entry 14) ----
@@ -244,7 +262,7 @@ const DIRECTORY: { name: string; url: string; description: string; phone?: strin
   { name: "University Police", url: "https://www.csulb.edu/university-police", description: "It is the Mission of the California State University Long Beach Police Department to safeguard the lives and property of the campus community that we serve." , phone: "562.985.4101" },
   { name: "Division of Information Technology (Technology Help Desk)", url: "https://www.csulb.edu/information-technology", description: "is CSU Long Beach's enterprise technology organization and is responsible for providing high-quality, reliable, and secure information and technology services" , phone: "562.985.4959", email: "helpdesk@csulb.edu" },
   { name: "Academic Technology Services (Horn Center, computer labs, software)", url: "https://www.csulb.edu/academic-technology-services", description: "Academic Technology Services (ATS) leads the CSULB campus in leveraging technology that effectively supports and inspires instruction, online and in-person learning environments, business processes, and student learning." },
-  { name: "Associated Students, Inc. (ASI)", url: "https://www.asicsulb.org/", description: "Associated Students, Inc. is a nonprofit membership association and auxiliary organization of California State University, Long Beach." },
+  { name: "Associated Students, Inc. (ASI)", url: "https://www.asicsulb.org/", description: "Associated Students, Inc. is a nonprofit membership association and auxiliary organization of California State University, Long Beach." , keywords: ["video games", "gaming", "esports", "games"] },
   { name: "Student Recreation and Wellness Center (SRWC)", url: "https://asirecreation.org/", description: "The Student Recreation and Wellness Center (SRWC) is a 126,500-square-foot, two-story, state-of-the-art recreation facility" },
 ];
 
@@ -267,7 +285,7 @@ async function download(url: string) {
 }
 
 /** Download one page and turn its main content into Markdown. */
-async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main" }: Source) {
+async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main", stripContacts = false }: Source) {
   const $ = cheerio.load(await download(url));
 
   // "Load More" pages: download each extra batch and add its list entries after ours.
@@ -344,7 +362,11 @@ async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main" }:
     try { $(a).attr("href", new URL(href, url).toString()); } catch { /* leave odd links alone */ }
   });
 
-  const markdown = turndown
+  // Contact details: email and phone links are removed (their text is usually the address).
+  // A marker takes their place so removeContacts() can drop the whole sentence around them.
+  if (stripContacts) main.find('a[href^="mailto:"], a[href^="tel:"]').replaceWith(CONTACT_MARK);
+
+  let markdown = turndown
     .turndown(main.html() ?? "")
     .replace(/\[\s*\]\([^)]*\)/g, "") // drop links that only wrapped an image (now empty)
     .replace(/(\d)\\\./g, "$1.") // turndown writes "1\." to avoid accidental lists; we want "1."
@@ -353,8 +375,58 @@ async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main" }:
     .replace(/(\n\s*\* \* \*\s*)*\n## Sidebar\s*$/, "") // drop a sidebar that ended up empty
     .replace(/(\n\s*\* \* \*\s*)+$/, "") // drop trailing divider lines
     .trim();
+  if (stripContacts) markdown = removeContacts(markdown);
 
   return { title, markdown };
+}
+
+/**
+ * Entry 34: remove contact details from a page's Markdown, so no staff or officer names, emails, or
+ * phone numbers are stored. What goes:
+ *   - any sentence holding an email address, a phone number, or a removed email link (so we never
+ *     leave half sentences like "contact or ."),
+ *   - a paragraph that starts with a contact label ("**Club Advisor**", "Officers:") and the name
+ *     lines under it,
+ *   - lines that are only a label and a contact ("Email: ...", "Phone: ...").
+ * Everything else stays word for word.
+ */
+const CONTACT_MARK = "CONTACTREMOVED"; // plain letters, so the Markdown converter leaves it alone
+const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
+const PHONE = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
+const CONTACT_WORDS = /\b(advisors?|advisers?|officers?|president|vice president|treasurer|secretary|coordinator|contacts?|e-?mail|phone|board|e-?board|cabinet|recipients?)\b/i;
+function removeContacts(markdown: string) {
+  const hasContact = (text: string) => text.includes(CONTACT_MARK) || EMAIL.test(text) || PHONE.test(text);
+  return markdown
+    .split(/\n{2,}/)
+    .filter(function (this: { dropList: boolean }, para) {
+      // A list right after a dropped label ("**Executive Board:**" then "- **VP:** Name") goes too.
+      if (this.dropList && /^\s*([-*+]|\d+\.)\s/.test(para)) return (this.dropList = false);
+      this.dropList = false;
+      const first = para.split("\n")[0].trim();
+      const isLabel = /^(\*\*|__).*(\*\*|__):?$/.test(first) || /:\s*$/.test(first);
+      if (isLabel && first.length <= 80 && CONTACT_WORDS.test(first)) return !(this.dropList = true);
+      return true;
+    }, { dropList: false })
+    .join("\n\n")
+    // "visit the website _or_ <email>": drop just the email and its "or", keeping the website link.
+    .replace(new RegExp(`\\s*(_or_|\\bor\\b|,)\\s*${CONTACT_MARK}`, "g"), "")
+    .replace(new RegExp(`${CONTACT_MARK}\\s*(_or_|\\bor\\b)\\s*`, "g"), "")
+    .split("\n")
+    // Role lines that name a person ("**President:** Name", "Faculty Advisor: Name").
+    .filter((line) => !/^\W*([A-Za-z]+ ){0,2}(advisors?|advisers?|officers?|president|vice president|treasurer|secretary|coordinator|contact|e-?mail|phone)\b[^:.]{0,40}:/i.test(line.trim()))
+    .map((line) => {
+      if (!hasContact(line)) return line;
+      if (/^\W*(e-?mail|phone|tel|contact)\b[^.]*:/i.test(line.trim())) return "";
+      if (line.trim().startsWith("|")) return line.split("|").map((cell) => (hasContact(cell) ? " " : cell)).join("|");
+      // Keep the line's list/heading prefix, drop only the sentences with contact details.
+      const [, prefix, body] = line.match(/^(\s*(?:[-*+]|\d+\.|#+)?\s*)(.*)$/)!;
+      const kept = body.split(/(?<=[.!?])\s+/).filter((sentence) => !hasContact(sentence)).join(" ");
+      return kept ? prefix + kept : "";
+    })
+    .join("\n")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /** Page text for checking directory sentences and contacts: main content, sidebar, and meta description. */
@@ -419,7 +491,9 @@ async function main() {
   const checks: Record<string, string> = JSON.parse(await readFile(CHECKS_FILE, "utf8").catch(() => "{}"));
   const changed: string[] = [];
 
-  for (const source of SOURCES) {
+  // ONLY=slug1,slug2 fetches just those pages (Entry 34: add new pages without refreshing all 130).
+  const only = process.env.ONLY?.split(",").map((s) => s.trim()).filter(Boolean);
+  for (const source of SOURCES.filter((s) => !only || only.includes(s.slug))) {
     try {
       const { title, markdown } = await fetchAsMarkdown(source);
       // Small header ("front matter") the retrieval code will read later.

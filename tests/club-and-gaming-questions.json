@@ -1,0 +1,57 @@
+{
+  "about": "Entry 34: club discovery and gaming questions. Clubs may be named only if one of our official csulb.edu pages lists them; every club question gets a BeachSync search button (beachsyncTerm) built by our code from a short keyword. BeachSync itself is never fetched. Gaming uses the ASI Games Area page. Run with: TESTS_FILE=tests/club-and-gaming-questions.json RESULTS_FILE=docs/test-results-clubs.md npm run test:questions",
+  "tests": [
+    {
+      "id": 1,
+      "question": "I'm Cambodian, how can I get involved with my culture on campus?",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "Answer from the Student Cultural Resource Centers page (the Asian, Pacific Islander, and Desi Resource Center), with a citation. No made-up Cambodian club. A BeachSync search for a Cambodian keyword.",
+      "expected_fact": "Asian, Pacific Islander, and Desi Resource Center",
+      "expect": { "response": "answer", "mustInclude": ["Asian, Pacific Islander,? and Desi"], "mustNotInclude": ["Cambodian (Student )?(Club|Association|Society|Organization)"], "minSources": 1, "beachsyncTerm": "cambodian|khmer" }
+    },
+    {
+      "id": 2,
+      "question": "I'm a CS student, what clubs can help me gain experience?",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "Names at least one club from the Engineering Student Clubs & Organizations page (for example ACM or the Video Game Development Club), cited. A BeachSync search.",
+      "expected_fact": "Association for Computing Machinery (ACM)",
+      "expect": { "response": "answer", "mustIncludeAny": ["ACM", "Association for Computing Machinery", "Video Game Development", "AI Research", "Women in Computing", "Data Science"], "mustInclude": ["Engineering Student Clubs"], "minSources": 1, "beachsyncTerm": "comput|cs|engineer|tech|programming|software" }
+    },
+    {
+      "id": 3,
+      "question": "is there a chess club",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "No source lists a chess club: says our CSULB pages don't list one (or falls back), never invents one. A BeachSync search for chess.",
+      "expect": { "response": ["answer", "fallback"], "mustNotInclude": ["(the|a) [A-Z][a-zA-Z ]*Chess (Club|Society|Association)\\b.*(meets|is a|offers)", "yes, (there is|CSULB has) a chess"], "helpOffice": true, "beachsyncTerm": "chess" }
+    },
+    {
+      "id": 4,
+      "question": "clubs for nursing students",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "Names the nursing student association from the Health & Human Services Student Organizations page, cited. A BeachSync search for nursing.",
+      "expected_fact": "California Nursing Students' Association (CNSA)",
+      "expect": { "response": "answer", "mustInclude": ["Nursing Student"], "minSources": 1, "beachsyncTerm": "nurs" }
+    },
+    {
+      "id": 5,
+      "question": "is there an underwater basket weaving club",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "No such club in our sources: says so (or falls back), never invents one. A BeachSync search.",
+      "expect": { "response": ["answer", "fallback"], "mustNotInclude": ["yes, (there is|CSULB has)", "Basket Weaving (Club|Society|Association) (is|meets|offers)"], "helpOffice": true, "beachsyncTerm": "basket|weaving" }
+    },
+    {
+      "id": 6,
+      "question": "where can i play video games on campus",
+      "type": "gaming",
+      "area": "Campus places",
+      "expected_behavior": "Answer from the ASI Games Area page: the Games Center is closed for the FUTURE U Project and the Esports Lounge moved to Peterson Hall 1 (PH1) Room-218. Or, if it falls back, Who can help = ASI. Never a Tuition and Fees button.",
+      "expected_fact": "Esports Lounge will be relocated to Peterson Hall 1 (PH1) Room-218",
+      "expect": { "response": ["answer", "fallback"], "mustNotInclude": ["Tuition"], "mustIncludeAny": ["Peterson Hall", "PH1", "Associated Students"], "helpOfficeName": "Associated Students", "beachsyncTerm": null }
+    }
+  ]
+}

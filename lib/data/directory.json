@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-23",
+  "checked": "2026-11-24",
   "offices": [
     {
       "name": "Admissions",
@@ -254,7 +254,13 @@
     {
       "name": "Associated Students, Inc. (ASI)",
       "url": "https://www.asicsulb.org/",
-      "description": "Associated Students, Inc. is a nonprofit membership association and auxiliary organization of California State University, Long Beach."
+      "description": "Associated Students, Inc. is a nonprofit membership association and auxiliary organization of California State University, Long Beach.",
+      "keywords": [
+        "video games",
+        "gaming",
+        "esports",
+        "games"
+      ]
     },
     {
       "name": "Student Recreation and Wellness Center (SRWC)",

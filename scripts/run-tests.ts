@@ -45,6 +45,8 @@ type Expect = {
   // If the reply is a fallback: true = it must show a "Who can help" office (a CSULB question);
   // false = it must NOT show one (not about CSULB), and shows example questions instead.
   helpOffice?: boolean;
+  helpOfficeName?: string; // if the reply is a fallback with an office, its name must match this pattern (Entry 34)
+  beachsyncTerm?: string | null; // Entry 34: pattern the BeachSync club search keyword must match; null = no BeachSync button
 };
 
 type Test = {
@@ -75,6 +77,7 @@ type ApiResult = {
     followUps?: string[];
     helpOffice?: { name: string; url: string } | null;
     offTopic?: boolean;
+    beachsyncSearch?: { term: string; url: string };
     error?: { code: string; message: string };
   };
 };
@@ -147,6 +150,13 @@ function check(test: Test, result: ApiResult): string[] {
     if (!expect.helpOffice && body.helpOffice) problems.push(`expected no office for a non-CSULB question, got "${body.helpOffice.name}"`);
     if (!expect.helpOffice && (body.examples?.length ?? 0) < 3) problems.push(`expected 3 example questions for a non-CSULB question, got ${body.examples?.length ?? 0}`);
   }
+  if (expect.helpOfficeName && body.type === "fallback" && body.helpOffice && !new RegExp(expect.helpOfficeName, "i").test(body.helpOffice.name)) {
+    problems.push(`expected "Who can help" to match /${expect.helpOfficeName}/, got "${body.helpOffice.name}"`);
+  }
+  if (expect.beachsyncTerm === null && body.beachsyncSearch) problems.push(`expected no BeachSync button, got "${body.beachsyncSearch.term}"`);
+  if (typeof expect.beachsyncTerm === "string" && !new RegExp(expect.beachsyncTerm, "i").test(body.beachsyncSearch?.term ?? "")) {
+    problems.push(`expected a BeachSync search matching /${expect.beachsyncTerm}/, got ${body.beachsyncSearch ? `"${body.beachsyncSearch.term}"` : "none"}`);
+  }
   for (const pattern of expect.searchQueriesMustNotInclude ?? []) {
     if ((body.searchQueries ?? []).some((q) => new RegExp(pattern, "i").test(q))) problems.push(`search queries should not contain /${pattern}/`);
   }
@@ -188,7 +198,9 @@ function summarize(result: ApiResult) {
   const corrected = searched.length ? `[searched: ${searched.map((q) => `"${q}"`).join(" + ")}] ` : "";
   const help = body.type === "fallback" ? (body.helpOffice ? ` [Who can help: ${body.helpOffice.name}]` : body.offTopic ? " [not about CSULB: example questions]" : "") : "";
   const followUps = body.followUps?.length ? ` [follow-ups: ${body.followUps.map((q) => `"${q}"`).join(" | ")}]` : "";
-  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}${followUps}`;
+  const tryPage = body.type === "fallback" && body.suggestion ? ` [Try: ${body.suggestion.title}]` : "";
+  const beachsync = body.beachsyncSearch ? ` [BeachSync: "${body.beachsyncSearch.term}"]` : "";
+  return `${corrected}${body.type}: ${text.length > 140 ? `${text.slice(0, 137)}...` : text}${sources}${help}${tryPage}${beachsync}${followUps}`;
 }
 
 const cell = (text: string | undefined) => (text ?? "-").replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -251,7 +263,11 @@ async function main() {
     const shortQ = (test.history?.length ? "(follow-up) " : "") + question;
     const shortQShown = shortQ.length > 60 ? `${shortQ.slice(0, 57)}...` : shortQ || "(empty)";
     console.log(`${row.passed ? "PASS" : "FAIL"}  #${String(test.id).padStart(2)}  ${test.type.padEnd(11)} ${shortQShown}`);
-    if (!row.passed) console.log(`        -> ${problems.join("; ")}`);
+    if (!row.passed) {
+      console.log(`        -> ${problems.join("; ")}`);
+      // Entry 34: the full answer, so a failure can be judged later (the table cuts it at 140 characters).
+      if (result.body.answer) console.log(`        answer: ${result.body.answer.replace(/\s+/g, " ")}`);
+    }
     if (ONLY) console.log(`        ${row.summary}  [${model}, ${(ms / 1000).toFixed(1)}s]`);
   }
 

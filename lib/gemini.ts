@@ -56,6 +56,8 @@ SPECIAL CASES
 - Where is an office, or how do I reach it: if the sources don't give the office's location but do give its phone, email, website, or how to book an appointment, use type "answer": say our sources don't list where it is, then give that contact and booking information with citations. Never guess a building or room, and don't use a room from an event listing as the office's location.
 - Health and medical questions (symptoms, medicine, getting sick or hurt, vaccines) are always about CSULB students: if you fall back, set about_csulb to true and related_office to Student Health Services.
 - Follow-up questions (follow_ups): for "answer" only, suggest up to 3 short questions (under 60 characters) the student might ask next about the same topic, written the way a student would ask them. Only suggest a question if one of the SOURCES states its answer directly (a specific step, price, date, contact, or rule). Do not suggest questions about locations, hours, or eligibility rules unless that exact information is in the sources. If unsure, suggest fewer or none. Use [] for "clarify" and "fallback".
+- Clubs and student organizations (Entry 34): name a club or organization ONLY if it appears in the SOURCES, with its link if the source gives one, and describe it only with what the source says. Never invent or guess a club, and never say a club exists because it sounds likely. If the sources list matching clubs or a matching resource center, use type "answer", name them, and add that CSULB pages list only some clubs and BeachSync has the full current list. If no source lists a match (for example "is there a chess club" and no source names one), use type "answer" if a source explains where clubs are listed (BeachSync, Student Life & Development) and say plainly that our CSULB pages don't list that kind of club; otherwise "fallback". Do not write a BeachSync search link yourself: the app adds one from club_search.
+- club_search: only when the student is looking for clubs, organizations, or ways to get involved with a group, community, or culture, set it to 1 to 3 plain words to search for clubs, taken from the student's own words (for example "I'm Cambodian and want to get involved with my culture" -> "Cambodian"; "is there a chess club" -> "chess"; "clubs for nursing students" -> "nursing"; "I'm a CS student, what clubs help me gain experience" -> "computer science"). Otherwise use "".
 - Name what the sources name: when the sources list specific programs, places, or services for what the student needs (for example the Beach Pantry for food), name them in the answer.
 - Advising contacts: if a source lists an advising center with a "Contact & Location" link instead of a phone number or email, name the advising center and give that link. Do not make up contact details.
 - Maps and getting around campus: you may always point students to the official campus maps page, ${CAMPUS_MAP_URL}, in addition to what the sources say.
@@ -105,6 +107,10 @@ export const RESPONSE_SCHEMA = {
       items: { type: "string" },
       description: "Only for answer: up to 3 short follow-up questions (under 60 characters each) on the same topic whose answers the SOURCES state directly. No locations, hours, or rules unless the sources give them. Use [] for clarify and fallback.",
     },
+    club_search: {
+      type: "string",
+      description: "Only when the student is looking for clubs, organizations, or a group or culture to get involved with: 1 to 3 plain words to search for clubs (e.g. \"Cambodian\", \"chess\", \"nursing\", \"computer science\"). Otherwise \"\".",
+    },
   },
   required: ["type", "answer", "related_source", "related_office", "about_csulb", "follow_ups"],
 };
@@ -116,6 +122,7 @@ export type GeminiReply = {
   related_office: number;
   about_csulb: boolean;
   follow_ups: string[]; // suggested next questions (answers only); checked again in lib/rag.ts before showing
+  club_search?: string; // Entry 34: a short club search keyword; lib/club-search.ts turns it into a BeachSync link
 };
 
 /** A problem we can explain to the student in friendly words. */

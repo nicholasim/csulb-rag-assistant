@@ -3,8 +3,18 @@
  * No Gemini calls. It pretends Gemini answered a parking question and suggested these follow-ups,
  * and checks which ones the filter keeps.
  *
+ * Entry 34 adds two more offline checks: the "Try:" page on fallbacks (relevantSuggestion) and
+ * the BeachSync club search link (lib/club-search.ts).
+ *
  *   npm run check:follow-ups
  */
+import { readFileSync } from "node:fs";
+
+/** A knowledge page's title and URL, read from its file header. */
+function page(slug: string) {
+  const text = readFileSync(`knowledge/${slug}.md`, "utf8");
+  return { title: text.match(/^title: "(.*)"$/m)![1], url: text.match(/^url: (.*)$/m)![1] };
+}
 async function main() {
   const { cleanFollowUps } = await import("../lib/rag");
   const { search } = await import("../lib/retrieval");
@@ -47,11 +57,49 @@ async function main() {
   console.log(`${none ? "ok  " : "FAIL"} missing or malformed follow_ups give no suggestions`);
   if (!none) failures++;
 
+  // ---- "Try:" page on fallbacks (Entry 34): kept only if the student's words match it. ----
+  const { relevantSuggestion } = await import("../lib/rag");
+  const tryCases: { question: string; slug: string; keep: boolean }[] = [
+    { question: "Where are the best taco spots near campus?", slug: "food-services", keep: true },
+    { question: "Who is the best professor for CECS 326?", slug: "computer-science-bs", keep: true },
+    { question: "How do I reserve a group study room?", slug: "library-study-areas", keep: true },
+    { question: "What medicine should I take for a headache?", slug: "student-health-services", keep: true },
+    { question: "how do I reserve a study room", slug: "library-services", keep: true },
+    { question: "where can i play video games on campus", slug: "tuition-and-fees", keep: false },
+  ];
+  for (const c of tryCases) {
+    const kept = relevantSuggestion(page(c.slug), c.question) !== null;
+    const ok = kept === c.keep;
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} Try: ${c.keep ? "keep" : "drop"}  ${c.slug} for ${JSON.stringify(c.question)}`);
+  }
+  const same = relevantSuggestion(page("student-health-services"), "headache medicine", page("student-health-services").url) === null;
+  console.log(`${same ? "ok  " : "FAIL"} Try: drop a page that repeats the Who can help office`);
+  if (!same) failures++;
+
+  // ---- BeachSync club search link (Entry 34). ----
+  const { beachSyncSearch } = await import("../lib/club-search");
+  const linkCases: { term: unknown; question: string; url: string | null }[] = [
+    { term: "chess", question: "is there a chess club", url: "https://csulb.campuslabs.com/engage/organizations?query=chess" },
+    { term: "Cambodian", question: "I'm Cambodian, how can I get involved with my culture on campus?", url: "https://csulb.campuslabs.com/engage/organizations?query=Cambodian" },
+    { term: "computer science club", question: "I'm a CS student, what clubs can help me gain experience?", url: "https://csulb.campuslabs.com/engage/organizations?query=computer%20science" },
+    { term: "chess<script>&x=1", question: "chess clubs", url: "https://csulb.campuslabs.com/engage/organizations?query=chess%20script%20x" },
+    { term: "", question: "is there a chess club", url: null },
+    { term: "chess", question: "How much is a parking permit?", url: null }, // not a club question: no button
+    { term: undefined, question: "clubs for nursing students", url: null },
+  ];
+  for (const c of linkCases) {
+    const got = beachSyncSearch(c.term, c.question)?.url ?? null;
+    const ok = got === c.url;
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} BeachSync ${JSON.stringify(c.term)} / ${JSON.stringify(c.question)} -> ${got}`);
+  }
+
   if (failures) {
     console.log(`\n${failures} check(s) failed`);
     process.exit(1);
   }
-  console.log("\nOK: the follow-up filter keeps only short, clean, on-topic questions our pages answer");
+  console.log("\nOK: follow-ups, the Try: page, and the BeachSync link all behave");
 }
 
 main();

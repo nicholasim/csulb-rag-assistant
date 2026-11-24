@@ -138,6 +138,13 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **6 questions have no approved page** and get the Who can help fallback: student pay, athletics tickets, child care, laptop loans, lost and found, name change.
   - **Entry 24:** 3 more official pages (FAFSA school code, commencement schedule, cross enrollment), so the bank's live misses dropped to 1 test (original #7, SOAR date). Study room booking has no csulb.edu page and stays a fallback.
   - **Live run (Entry 23):** the bank sample of 40 questions scored 29/40. #7 "How much does it cost to apply?" recovered live: the rewrite added "application fee", and the answer was "The CSU Application Fee is $70". Remaining misses are 4 coverage gaps (school code, commencement dates, study room booking, concurrent enrollment for CSULB students), 1 wording, 1 API timeout, and 5 test expectations that are out of date or too strict.
+- [x] **Clubs and gaming round (Entry 34): 10 more pages, 131 in total.** The team approved the list before fetching.
+  - **Club lists:** Engineering, Health & Human Services, Business, the Arts, and Liberal Arts student org pages, plus the Physics & Astronomy and Liberal Studies (LSSA) pages. Natural Sciences and Mathematics and Education have no college-wide page, so these are their department pages.
+  - **Culture:** the Student Cultural Resource Centers page (for example the Asian, Pacific Islander, and Desi Resource Center) and American Indian Student Organizations.
+  - **Gaming:** the ASI Games Area page. The Games Center is closed until Summer 2028, and the Esports Lounge moved to Peterson Hall 1 (PH1) Room-218.
+  - **No contact details stored:** `stripContacts` in `scripts/fetch-sources.ts` removes emails, phone numbers, and officer, advisor and board names. A check found 0 emails and 0 phone numbers in the 10 files.
+  - **BeachSync search button:** every club question gets a "Search BeachSync for "chess"" button. Our code builds the link from a 1-3 word keyword Gemini picks (`lib/club-search.ts`). Clubs are named only if one of our official pages lists them. Live tests: `tests/club-and-gaming-questions.json`.
+  - **"Try:" button only when related:** a fallback's "Try:" page must match the student's own words (keyword score of at least 3), and it can't repeat the Who can help office. "play video games" no longer shows Tuition and Fees (`relevantSuggestion` in `lib/rag.ts`).
 - [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
 - **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Decision: **not built; future work.** It conflicts with our official-sources-only rule. Mention it on the "next steps" slide.
 
@@ -204,6 +211,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Conflicting dates are not always both shown.** Original #3 (last day to drop without a W) gave both dates in 2 of 3 tries with the current prompt, and 1 of 3 without the follow-up rule. Gemini applies the conflict rule inconsistently (Entry 28).
   - **Trademark:** the shark mascots and "LB" are Long Beach State's official athletics marks, used for a class project (Entry 30). The footer says it's a student class project and not an official CSULB service, and the site asks search engines not to list it (`noindex`). Confirm with the instructor before any public sharing.
   - **Every question finishes within about 28 seconds,** and the hosting limit (`maxDuration`) is 40s, so there are 12s of headroom (Entry 33). On a busy machine, timers can fire a few seconds late: one offline `check:timeouts` run took 31.4s (Entry 32), which would have hit the old 30s limit. 40s is allowed on every current Vercel plan (Hobby: 60s, or 300s with Fluid compute). Confirm it in the Vercel project (Settings → Functions) after deploying.
+  - **Club information is partly student-written and partly outside csulb.edu** (Entry 34). BeachSync is hosted by Campus Labs, not csulb.edu, and student organizations write its club listings. We never fetch or store it; we only link to its search, with the note "Club listings on BeachSync are written by student organizations and may change." Our pages list only some clubs, so for most specific clubs ("chess") the assistant says our pages don't list one and shows the BeachSync button.
   - The Basic Needs page lists screening questions about food, housing, and money. The assistant must not ask students these; it should point to the Referral Form.
 
 ## 5. Presentation (assignment: Deliverable 3)
@@ -220,6 +228,7 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - [ ] 9. Expected value and success measures
   - [ ] 10. Live prototype demonstration
   - [ ] 11. Limitations and what production deployment would require
+    - **Production note (Entry 34):** a full club directory would need an official data feed from Student Life & Development. BeachSync (csulb.campuslabs.com, run by Campus Labs) doesn't allow automated access to its data (its robots.txt disallows `/engage/api/`). For now the assistant only links to BeachSync's search page.
   - [ ] 12. Final recommendation / next steps
 - [ ] **12-15 minute presentation.**
 - [ ] **3-5 minute live prototype demo**, showing an answer with sources, a clarifying question, a fallback, and an error case.

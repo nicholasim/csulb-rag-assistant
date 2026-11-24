@@ -1933,4 +1933,99 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 34 (Relevant "Try:" buttons, club discovery, gaming answers)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Found during testing. Plan first with the scope check, and don't build until approved.
+> 1. Bug: "where can i play video games on campus" showed "Try: Tuition and Fees". Show "Try:" only when it's relevant, and never repeating the Who can help card.
+> 2. Club discovery ("I'm Cambodian, how can I get involved with my culture?", "I'm a CS student, what clubs can help me gain experience?"). No officer names, emails, or phones. Never make up a club. Flag that BeachSync is outside csulb.edu and its club descriptions are written by students.
+> 3. Video games: find an official page, or say there isn't one.
+>
+> The team approved, with additions:
+> - add ASI's Games Area page;
+> - look for cultural resource center pages;
+> - check the other colleges' student org pages;
+> - don't fetch BeachSync (its robots.txt blocks it), but add a pre-filled BeachSync search link built from a short keyword;
+> - add a production note about needing an official data feed.
+>
+> The team asked to see the final page list and link format before anything was fetched. They then click-tested both BeachSync links ("results are filtered correctly") and said go ahead.
+
+**Scope check:** Inside the assignment.
+- The "Try:" fix is a bug fix.
+- The new sources are official csulb.edu pages, plus one asicsulb.org page (ASI pages were already approved).
+- **Flagged:** BeachSync (csulb.campuslabs.com) is hosted by Campus Labs, not csulb.edu, and club descriptions there are written by student organizations. We only link to its search page; nothing is fetched or stored from it.
+
+**What the AI did:**
+- **"Try:" only when related** (`relevantSuggestion` in `lib/rag.ts`). A fallback's "Try:" page must match **the student's own words** (spelling fixed, not the AI rewrite) with a keyword score of at least 3, and must not be the Who can help office's page. "play video games" → Tuition and Fees scores 0, so it's dropped; the 5 good "Try:" pages from earlier runs all stay.
+- **10 new pages** (`scripts/fetch-sources.ts`, 131 in total):
+  - college and department org lists: Engineering, Health & Human Services, Business, the Arts, Liberal Arts, Physics & Astronomy, and the Liberal Studies Student Association;
+  - Student Cultural Resource Centers;
+  - American Indian Student Organizations;
+  - ASI Games Area.
+- **Contact stripping** (`stripContacts`). It removes:
+  - emails and phone numbers, with the sentence fragment around them (so no "contact or .");
+  - role lines ("**President:** Name");
+  - labelled lists of people (advisors, the executive board, award recipients).
+
+  Club descriptions and club website links are kept word for word.
+- **`ONLY=slug,...` for fetch-sources**, so new pages can be added without refreshing all 131.
+- **ASI keywords** (`video games`, `gaming`, `esports`, `games`) on the ASI office entry, for matching only.
+- **Club search link** (`lib/club-search.ts`):
+  - Gemini returns a short `club_search` keyword ("Cambodian", "chess", "nursing") in the same reply, so there are no extra requests.
+  - Our code builds `https://csulb.campuslabs.com/engage/organizations?query=<keyword>`, keeping only letters, numbers, spaces and hyphens (max 3 words).
+  - The link only shows if the question is about clubs, groups, or getting involved.
+- **Prompt rule:** name a club only if a source lists it, never invent one, and never write the BeachSync link.
+- **UI:** a "Search BeachSync for "chess"" link-button on answers and fallbacks, with the note "Club listings on BeachSync are written by student organizations and may change."
+- **Search:** a `culture` → `cultural` synonym, so "my culture" reaches the Cultural Resource Centers page.
+- **Checks:**
+  - `check:follow-ups` now also checks the "Try:" rule (7 cases) and the BeachSync link (7 cases);
+  - the test runner checks `beachsyncTerm` and `helpOfficeName`, and prints the full answer when a test fails.
+- **Docs:** the checklist has the new pages, the BeachSync limitation, and the production note (a full club directory would need an official data feed from Student Life & Development).
+
+**Did it work?**
+- **New tests** (`tests/club-and-gaming-questions.json`): **5/6 on the first run, then 6/6.** #1 (Cambodian) failed once (see Troubleshooting).
+  - Cambodian: the Asian, Pacific Islander, and Desi Resource Center (FO4-276), plus a BeachSync search for "Cambodian".
+  - CS: ACM, the AI Research Club and the Cybersecurity Club, plus "computer science".
+  - Chess: "Our CSULB pages do not list a chess club" and BeachSync for "chess".
+  - Nursing: the California Nursing Student Association, plus "nursing".
+  - Underwater basket weaving: not listed, plus a BeachSync search.
+  - Video games: "The Esports Lounge will be relocated to Peterson Hall 1 (PH1) Room-218", with no Tuition button.
+- **Affected fallback tests** (the "Try:" rule changed), all passed:
+  - original set: 9/9;
+  - student set: 15/15;
+  - bank sample fallbacks: 2/2.
+
+  The tacos, professor, study room, headache and child care "Try:" buttons are unchanged.
+- **Offline:**
+  - `check:follow-ups`, `check:presets`, `check:copy`, `check:stream` and `check:timeouts` pass;
+  - `check:coverage` stays at **150/151** (the same #7 miss);
+  - the 10 new files have 0 emails and 0 phone numbers;
+  - tsc, eslint and build pass.
+- **UI** (fake replies, desktop and mobile): the BeachSync link opens in a new tab with the right URL, with no sideways scroll (`docs/screenshots/*-34-beachsync-*.png`).
+- **Gemini use:** about 36 live questions (about 70 requests), plus 31 embeddings for the new sections and the ASI office.
+
+**Troubleshooting or redirection (if any):**
+1. **One request to BeachSync's data API during planning.** While looking for the search link format, the AI called `csulb.campuslabs.com/engage/api/...` once (3 records) before reading robots.txt, which disallows that path. Nothing from it was stored or used, and it wasn't called again. The link format was then confirmed from links on our own Business page plus the team's click test.
+2. **The plan said the Games Area page lists rental rates ($70/hr).** Those prices are inside HTML comments, so visitors never see them, and our file correctly leaves them out. The page as shown only has the Games Center closure and the new Esports Lounge room.
+3. **Contact stripping needed four passes.**
+   - The first left fragments ("For more information contact or .") and an advisor's name on the physics page.
+   - The second dropped whole sentences, which lost the clubs' website links. Its placeholder was also escaped by the Markdown converter.
+   - The third left a "**President:** Name" line.
+   - The fourth missed the Business page's executive-board and award-recipient lists of student names.
+
+   Each was fixed and checked by reading the diffs.
+4. **Test #1 (Cambodian) failed once** on the "no invented Cambodian club" check. The runner only kept the first 140 characters, so the full answer wasn't saved, and we can't tell if it named a made-up club or just said something like "search BeachSync for Cambodian student organizations" (which the pattern also matches). In 4 reruns no club was invented. The runner now prints the full answer for any failure.
+5. **The shadcn Button turns a link into `role="button"`,** so screen readers announced the BeachSync link as a button. It's now a plain link styled like a button. The existing "Try:" button has the same issue; not changed here.
+6. **Still worth knowing:**
+   - "should i take a private loan or use my savings" still shows "Try: Tuition and Fees", because that page mentions loans (score above 3). It's related enough to keep.
+   - "how do I join a club" gets no BeachSync button, because there's no specific topic to search; the answer explains BeachSync instead.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-34-beachsync-{answer,fallback}.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

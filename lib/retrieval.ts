@@ -47,6 +47,7 @@ export const SYNONYMS: Record<string, string[]> = {
   orientation: ["soar"],
   textbook: ["d1ta"],
   book: ["textbook"],
+  culture: ["cultural"], // Entry 34: "my culture" -> the Student Cultural Resource Centers page
 };
 
 /** Turn text into a list of search words: lowercase, no punctuation, no stop words. */

@@ -26,6 +26,7 @@ import { MIN_OFFICE_SIMILARITY, OFF_TOPIC_SIMILARITY, pickHelpOffice, rankOffice
 import { removePersonalDetails, rewriteQuestion } from "./rewrite";
 import { mergeRankings } from "./rank-merge";
 import { vectorSearch } from "./vector-search";
+import { beachSyncSearch, type BeachSyncSearch } from "./club-search";
 
 export { MAX_QUESTION_LENGTH };
 
@@ -65,6 +66,8 @@ export type ChatResponse = {
   crisis?: boolean;
   // Normal answers only: 0-3 suggested next questions, each checked against our pages (cleanFollowUps).
   followUps?: string[];
+  // Club questions (Entry 34): a BeachSync search pre-filled with a short keyword (lib/club-search.ts).
+  beachsyncSearch?: BeachSyncSearch;
 };
 
 // Every question the app offers as a button: sidebar starters and welcome/example questions.
@@ -117,6 +120,19 @@ export function cleanFollowUps(raw: unknown, question: string, results: SearchRe
     kept.push(text);
   }
   return kept;
+}
+
+/**
+ * Entry 34: the "Try:" page on a fallback, only when it's really related. Gemini picks a related
+ * source for every fallback, and sometimes it's a page that only shares meaning loosely ("play
+ * video games" -> Tuition and Fees, through its recreation center fee). We keep it only if keyword
+ * search on the student's own words (spelling fixed, not the AI rewrite) finds that page at the
+ * same bar as the no-AI gate (MIN_SCORE), and it isn't the same page as the "Who can help" office.
+ */
+export function relevantSuggestion(page: { title: string; url: string } | undefined, studentWords: string, helpOfficeUrl?: string) {
+  if (!page || page.url === helpOfficeUrl) return null;
+  const hit = search(studentWords, 50).find((r) => r.chunk.url === page.url);
+  return hit && hit.score >= MIN_SCORE ? { title: page.title, url: page.url } : null;
 }
 
 /** When the page a chunk came from was last checked (chunk ids look like "parking-permit-fees#2"). */
@@ -373,12 +389,12 @@ export function buildInput(question: string, correctedQuestion: string | null, s
  * - not about CSULB ("capital of France"): no office, but what we can help with and 3 example questions.
  */
 function fallback(
-  where: { suggestion: ChatResponse["suggestion"]; helpOffice: HelpOffice | null },
+  where: { suggestion: ChatResponse["suggestion"]; helpOffice: HelpOffice | null; beachsyncSearch?: BeachSyncSearch | null },
   model: string | null,
   correctedQuestion: string | null,
   searchQueries: string[],
 ): ChatResponse {
-  const { suggestion, helpOffice } = where;
+  const { suggestion, helpOffice, beachsyncSearch } = where;
   const answer = suggestion
     ? `${FALLBACK_SENTENCE} You may find help on this CSULB page: [${suggestion.title}](${suggestion.url})`
     : FALLBACK_SENTENCE;
@@ -386,6 +402,7 @@ function fallback(
   return {
     type: "fallback", answer, sources: [], suggestion, model, correctedQuestion, searchQueries,
     helpOffice, offTopic, examples: offTopic ? EXAMPLE_QUESTIONS.slice(0, 3) : undefined,
+    ...(beachsyncSearch && !offTopic ? { beachsyncSearch } : {}),
   };
 }
 
@@ -537,6 +554,8 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   }
 
   // 5. Shape the response.
+  // Club questions get a BeachSync search link (answers and fallbacks), built from Gemini's keyword.
+  const clubLink = beachSyncSearch(reply.club_search, [searchText, ...searchQueries].join(" "));
   if (reply.type === "fallback") {
     // Not about CSULB at all (Gemini's about_csulb): no office, show what we can help with.
     // Health and medical questions always count as CSULB (Student Health Services), whatever Gemini says.
@@ -545,10 +564,12 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     }
     // About CSULB: a related page if we have one (the campus maps page for map questions), and
     // always a "Who can help" office: Gemini's pick, else the closest by meaning, else the default.
+    // "Try:" shows only if that page really matches the student's words (Entry 34).
     const related = results[reply.related_source - 1]?.chunk;
-    const suggestion = isMapQuestion(searchText) ? MAP_SUGGESTION : related ? { title: related.title, url: related.url } : null;
     const helpOffice = pickHelpOffice(health ? studentHealthOffice() : officeAt(reply.related_office), queryVectors);
-    return fallback({ suggestion, helpOffice }, model, correctedQuestion, searchQueries);
+    const suggestion = isMapQuestion(searchText) ? MAP_SUGGESTION : relevantSuggestion(related, searchText, helpOffice?.url);
+    if (related && !suggestion) console.info(`[try] dropped unrelated page ${related.url}`);
+    return fallback({ suggestion, helpOffice, beachsyncSearch: clubLink }, model, correctedQuestion, searchQueries);
   }
 
   // Double-check contact details against the sources before showing anything.
@@ -575,5 +596,9 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     if (process.env.DEBUG_FOLLOW_UPS === "1") console.info(`[follow-ups] raw=${JSON.stringify(reply.follow_ups)} kept=${JSON.stringify(followUps)}`);
   }
 
-  return { type: reply.type, answer, sources, suggestion: null, model, correctedQuestion, searchQueries, ...(followUps.length ? { followUps } : {}) };
+  return {
+    type: reply.type, answer, sources, suggestion: null, model, correctedQuestion, searchQueries,
+    ...(followUps.length ? { followUps } : {}),
+    ...(reply.type === "answer" && clubLink ? { beachsyncSearch: clubLink } : {}),
+  };
 }
