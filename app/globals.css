@@ -165,3 +165,22 @@
     animation: none;
   }
 }
+
+/* Message entrance (Entry 31): new messages fade in and slide up 6px, once, when they first appear.
+   `--enter-delay` staggers the parts of an answer (text, then source chips, then follow-ups).
+   transform + opacity only, so nothing shifts the layout or the scroll position. Off for reduced motion. */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.enter {
+  animation: enter-up 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: none;
+  }
+}

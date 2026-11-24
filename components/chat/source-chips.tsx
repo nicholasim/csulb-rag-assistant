@@ -4,6 +4,7 @@ import { ExternalLinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Source } from "@/lib/rag";
 import { cn } from "@/lib/utils";
+import { CHIPS_START_MS, ENTER_STEP_MS, enterDelay } from "@/lib/enter";
 
 /**
  * The numbered source chips under an answer. Chip [1] matches citation [1] in the text.
@@ -26,12 +27,14 @@ export function SourceChips({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-muted-foreground">Sources</p>
+      <p className="enter text-xs font-medium text-muted-foreground" style={enterDelay(CHIPS_START_MS)}>
+        Sources
+      </p>
       <ul className="flex flex-wrap gap-2" aria-label="Sources for this answer">
-        {sources.map((source) => {
+        {sources.map((source, i) => {
           const isOpen = source.id === openId;
           return (
-            <li key={source.id}>
+            <li key={source.id} className="enter" style={enterDelay(CHIPS_START_MS + i * ENTER_STEP_MS)}>
               <Button
                 variant="outline"
                 size="sm"

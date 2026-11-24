@@ -1807,4 +1807,48 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 31 (Smooth message entrance)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> New messages fade in and slide up a few pixels. On an answer, the parts appear in order (text, then source chips one by one, then follow-ups one by one), all in well under a second. Animate only on first appearance, never re-animating old messages. About 0.2-0.3s, 4-8px, no animation for reduced motion, no layout shift, auto-scroll still smooth. Must work with Stop, edit, the progress steps and the sharks. Prefer plain CSS. Before/after screenshots and a recording or GIF. Plan first with the scope check.
+
+**What the AI did:**
+- **Scope check:** UI polish, inside scope; no flags.
+- **Plain CSS, no library:** this needs no exit animations, gestures or physics.
+  - **One class, `.enter`** (`app/globals.css`): fade from 0 and a 6px upward slide over 0.24s, with a gentle ease-out.
+  - **Fill mode `both`,** so a staggered part stays hidden until its turn.
+  - **`transform` and `opacity` only,** so layout and scroll height never change.
+  - **One `prefers-reduced-motion` rule** turns it off.
+- **Timing (`lib/enter.ts`):** each part starts 60ms after the previous one. Answer text at 0ms, "Sources" and chips from 100ms, then "You could also ask" and the follow-ups. Delays are capped at 500ms, so everything finishes by about 0.7s.
+- **Applied to:**
+  - the student bubble;
+  - the assistant message (avatar and progress steps, when the turn appears);
+  - the answer parts (staggered);
+  - fallbacks, clarifying questions, small talk and errors (one unit each).
+- **Only on first appearance:** CSS animations run once, when an element is added to the page. Messages keep stable keys, so re-renders, scrolling, progress updates and hiding an older answer's follow-ups don't replay anything. The shark avatar swap (working → pointing) only changes the image, so it doesn't animate again.
+
+**Did it work?** Measured with fake responses (no Gemini), motion on, desktop and mobile:
+- **Timing:** the longest delay plus duration is **700ms**.
+- **No replay:** when a second answer arrives, **0 animations run on the first question and answer**, and 8 run on the new answer.
+- **Reduced motion:** **0** entrance animations.
+- **Scrolling:** the chat stays at the bottom after each answer (0px from the bottom), and the scroll position held steady while an answer arrived.
+- **Layout shift:** **0 on desktop**. Mobile measured 0.001, from the mobile header's "New chat" button appearing after the first question. The same shift happens with reduced motion (no animation), so it's existing behavior, not the animation, and far below the 0.1 "good" threshold. The before run measured 0 only because the browser ignores shifts within 0.5s of typing.
+- **Checks:** `check:presets`, `check:follow-ups`, `check:stream`, `check:timeouts`, tsc, eslint and build pass. `test:stop-edit` passes all checks (Stop, Esc, edit, resend, clarify, mobile).
+
+**Troubleshooting or redirection (if any):**
+1. **The "before" captures were taken after the code was changed,** so Claude temporarily set the changes aside (`git stash`), built and captured the before state, then restored them. Nothing was lost.
+2. **The mobile layout-shift reading was traced to its source** (the header buttons) and confirmed unrelated by repeating it with reduced motion, instead of assuming it was the new animation.
+
+**Screenshot / commit:**
+- **static:** `docs/screenshots/{desktop,mobile}-22-answer-{before,after}.png` (the finished screens look identical, as intended);
+- **frame strips:** `{desktop,mobile}-22-frames-{before,after}.png`;
+- **GIFs:** `{desktop,mobile}-22-message-arrives-{before,after}.gif`;
+- **screen recordings:** `{desktop,mobile}-22-message-arrives-{before,after}.webm`.
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

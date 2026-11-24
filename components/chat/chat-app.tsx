@@ -302,7 +302,7 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
                     {turns.map((turn) => (
                       <MessageScrollerItem key={turn.id} messageId={turn.id} scrollAnchor={turn.role === "user"}>
                         {turn.role === "user" ? (
-                          <Message align="end" className="group/question">
+                          <Message align="end" className="group/question enter">
                             <MessageContent>
                               <span className="sr-only">You:</span>
                               {/* w-full: the bubble's max width (80%) must be measured against the whole

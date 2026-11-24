@@ -9,6 +9,7 @@ import { Message, MessageContent } from "@/components/ui/message";
 import { Spinner } from "@/components/ui/spinner";
 import type { ChatResponse, Stage } from "@/lib/rag";
 import { cn } from "@/lib/utils";
+import { CHIPS_START_MS, ENTER_STEP_MS, enterDelay } from "@/lib/enter";
 import type { HelpOffice } from "@/lib/help-office";
 import { AnswerText } from "./answer-text";
 import { SourceChips } from "./source-chips";
@@ -99,7 +100,7 @@ export function AssistantMessage({
   isLatest?: boolean; // follow-up suggestions show only under the most recent answer
 }) {
   return (
-    <Message align="start" className="gap-3">
+    <Message align="start" className="enter gap-3">
       <AssistantAvatar turn={turn} />
       <MessageContent className="gap-3 pt-1">
         <span className="sr-only">Assistant:</span>
@@ -110,11 +111,11 @@ export function AssistantMessage({
           </p>
         )}
         {turn.state === "loading" && <ProgressSteps stages={turn.stages ?? []} />}
-        {turn.state === "error" && <ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} />}
+        {turn.state === "error" && <div className="enter"><ErrorState message={turn.error.message} onRetry={() => onRetry(turn)} /></div>}
         {turn.state === "done" && turn.response.type === "answer" && <AnswerState turn={turn} response={turn.response} onAsk={onAsk} showFollowUps={isLatest} />}
-        {turn.state === "done" && turn.response.type === "clarify" && <ClarifyState response={turn.response} onAsk={onAsk} />}
-        {turn.state === "done" && turn.response.type === "fallback" && <FallbackState question={turn.question} response={turn.response} onAsk={onAsk} />}
-        {turn.state === "done" && turn.response.type === "chat" && <ChatState response={turn.response} onAsk={onAsk} />}
+        {turn.state === "done" && turn.response.type === "clarify" && <div className="enter"><ClarifyState response={turn.response} onAsk={onAsk} /></div>}
+        {turn.state === "done" && turn.response.type === "fallback" && <div className="enter"><FallbackState question={turn.question} response={turn.response} onAsk={onAsk} /></div>}
+        {turn.state === "done" && turn.response.type === "chat" && <div className="enter flex flex-col gap-3"><ChatState response={turn.response} onAsk={onAsk} /></div>}
       </MessageContent>
     </Message>
   );
@@ -191,11 +192,14 @@ function AnswerState({
   const ids = response.sources.map((s) => s.id);
   return (
     <>
-      <AnswerText
-        text={response.answer}
-        citableIds={ids}
-        onCite={(id) => setOpenId(id)}
-      />
+      {/* Answer parts enter in order (Entry 31): text, then each source chip, then each follow-up. */}
+      <div className="enter">
+        <AnswerText
+          text={response.answer}
+          citableIds={ids}
+          onCite={(id) => setOpenId(id)}
+        />
+      </div>
       <SourceChips
         sources={response.sources}
         openId={openId}
@@ -203,7 +207,11 @@ function AnswerState({
         messageId={turn.id}
       />
       {showFollowUps && response.followUps && response.followUps.length > 0 && (
-        <FollowUps questions={response.followUps} onAsk={onAsk} />
+        <FollowUps
+          questions={response.followUps}
+          onAsk={onAsk}
+          startMs={CHIPS_START_MS + (response.sources.length + 1) * ENTER_STEP_MS}
+        />
       )}
     </>
   );
@@ -214,18 +222,21 @@ function AnswerState({
  * on purpose (muted text, thin border, no fill) so it doesn't read as part of the answer; hover and
  * keyboard focus make it stronger. Each one was checked in lib/rag.ts to be answerable by our pages.
  */
-function FollowUps({ questions, onAsk }: { questions: string[]; onAsk: (q: string) => void }) {
+function FollowUps({ questions, onAsk, startMs }: { questions: string[]; onAsk: (q: string) => void; startMs: number }) {
   return (
     <div className="flex flex-col gap-2 pt-1">
-      <p className="text-xs text-muted-foreground">You could also ask</p>
+      <p className="enter text-xs text-muted-foreground" style={enterDelay(startMs)}>
+        You could also ask
+      </p>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Suggested follow-up questions">
-        {questions.map((question) => (
+        {questions.map((question, i) => (
           <button
             key={question}
             type="button"
             onClick={() => onAsk(question)}
             aria-label={`Ask: ${question}`}
-            className="max-w-full rounded-full border border-border/70 bg-transparent px-3 py-1.5 text-left text-sm leading-5 text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 hover:text-foreground focus-visible:border-foreground/30 focus-visible:bg-muted/50 focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            style={enterDelay(startMs + (i + 1) * ENTER_STEP_MS)}
+            className="enter max-w-full rounded-full border border-border/70 bg-transparent px-3 py-1.5 text-left text-sm leading-5 text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 hover:text-foreground focus-visible:border-foreground/30 focus-visible:bg-muted/50 focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             <span className={WRAP}>{question}</span>
           </button>
