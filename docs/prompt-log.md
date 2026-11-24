@@ -2028,4 +2028,63 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 35 (Cambodian Student Society, quiet safety check, citations that fit)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Testing "I'm Cambodian, how can I get involved with my culture on campus?" found four things. Plan first with the scope check, and don't build until approved.
+> 1. BeachSync shows the Cambodian Student Society and the AAPI Student Success Initiative, but our answer can't name them. Find official csulb.edu pages, or propose a labeled "team-verified clubs" file with the tradeoffs.
+> 2. Explain the "Some contact details were removed…" note. Students shouldn't see it unless the removal left the answer misleading.
+> 3. The answer cited the Engineering and Liberal Arts club pages, which say nothing relevant.
+> 4. Check whether "Where is the APID Resource Center located?" is answered by our sources.
+>
+> Rerun this question and the other club tests.
+
+**Scope check:** Inside the assignment. The 3 new sources are official csulb.edu pages; the rest are answer-quality fixes. Flagged: a team-verified clubs file would not be an official source, so it goes beyond our official-sources-only rule. It was not recommended and not built.
+
+**What the AI did:**
+- **Research (read-only):**
+  - The Cambodian Student Society **is** named on an official page: the Cambodian Graduation Celebration page (Student Affairs).
+  - No official page names the "AAPI Student Success Initiative". The closest is the Provost's AANHPI Initiatives page (ASCEND, Project Resilience), which doesn't mention Cambodian students.
+  - The APID Resource Center's "Who is APID" page lists Cambodian among the Southeast Asian communities it serves.
+- **New pages, 134 in total:** `cambodian-graduation-celebration`, `apid-who-we-serve`, `aanhpi-initiatives`.
+- **Stricter contact stripping:**
+  - a sentence with a role word and a titled name ("CSS faculty advisors, Dr. …") is dropped;
+  - "Contact" headings and the staff names under them are dropped;
+  - the sentence splitter no longer breaks after "Dr." or "Prof.".
+- **Removal note, item 2:**
+  - **What was removed:** in 3 tries Gemini never produced it, so the exact case wasn't reproduced. Offline tests show the likely cause: Gemini wrote its own BeachSync link (the search URL, `beachsync.com`, or `csulb.campuslabs.com/engage/`). When that address wasn't in the sources it was shown, the check removed it and added the note. Our own prompt mentioned BeachSync, which invited this.
+  - **The fix:** the trailing note is gone. A removed link keeps its words. A removed email or phone still says "(see the source page for contact details)", since "call ___" would mislead. The log records only the kind and the link's host.
+- **Citations, item 3:**
+  - **The cause:** our prompt told Gemini to say "CSULB pages list only some clubs and BeachSync has the full current list". Gemini cited that with every source (reproduced: `[1, 2, 3, 4, 5, 6, 7, 8]`). That instruction is removed.
+  - **The new check:** `keepSupportedCitations` keeps only cited pages that score at least half as well as the best one for the cited text. It only applies to citations with 2 or more pages.
+- **Location follow-up, item 4:** the Cultural Resource Centers page does state "Location: FO4-276" for the APID center, so the filter was right. A prompt line now says not to suggest a question the answer already answers.
+- **Prompt:**
+  - name cultural student groups and events (like CSS) when a source lists them;
+  - never write a BeachSync link.
+
+**Did it work?**
+- **Offline:**
+  - the 13 contact-stripped pages have 0 emails, 0 phone numbers and no titled names; the 10 pages from Entry 34 were unchanged;
+  - 6 new unit cases pass: the 8-source citation keeps only the Cultural Resource Centers page; the "300 organizations" sentence drops Engineering and Liberal Arts; two parking pages that both support a sentence keep both; single citations are untouched; a fake BeachSync link is removed with no note; a fake phone gets the pointer;
+  - coverage is still 150/151; tsc, eslint and build pass.
+- **Cambodian question, live (2 good runs):** both name the Cambodian Student Society, its cultural show and graduation celebration [1]. Both say the APID center serves students including Cambodian ones [2, 3], with no removal note. Neither cites an Engineering or Liberal Arts page, and both show a BeachSync "Cambodian" button. The Liberal Studies page they cite for "check Beach Sync on your Single Sign-On dashboard" does say exactly that.
+- **Club and gaming tests: 4/6** (see Troubleshooting for #1 and #5).
+- **Original set** (regression for the citation change): **41/42.** Only #3 fails, the known conflicting-dates limitation, and Gemini's own text caused it. Across all live runs the server logged no trimmed citations and no removed details.
+
+**Troubleshooting or redirection (if any):**
+1. **Auto mode blocked the page fetch** twice in Claude Code, so the team member ran `npm run fetch-sources` for the new pages by hand, then again after the stripping fixes.
+2. **The first fetch kept the CSS faculty-advisor sentence and an AANHPI staff contact.** Splitting sentences at "Dr." hid the names from the rule, and "## Contact" headings weren't treated as labels. Both were fixed and the pages fetched again.
+3. **The first live call failed** because the server wasn't ready yet; not an app problem.
+4. **Club test #1 failed once:** the answer named CSS but not the APID center (the test requires both). The answer was grounded and cited, just shorter. Not changed yet; waiting for the team.
+5. **Club test #5 failed once:** no BeachSync button, because Gemini left `club_search` empty. In 3 reruns the button appeared each time. Gemini also wrote its own `beachsync.com` link despite the new rule; it's kept because that link is on one of our source pages. Not changed yet; waiting for the team.
+6. **Still lenient:** a follow-up like "How do I join the Cambodian Student Society?" passes the filter, though the page doesn't say how to join (the known follow-up limitation).
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

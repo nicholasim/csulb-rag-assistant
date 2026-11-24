@@ -307,6 +307,49 @@ const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 const PHONE = /\(?\b\d{3}\)?[\s.-]\d{3}[.-]\d{4}\b/g;
 const digitsOf = (phone: string) => phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
 const normalizeUrl = (url: string) => url.replace(/[.,;:]+$/, "").replace(/\/$/, "");
+const safeHost = (url: string) => {
+  try { return new URL(url).host; } catch { return "unknown"; }
+};
+
+/**
+ * Entry 35: a citation should only point to pages that support what it cites. Gemini sometimes
+ * cites a general sentence with every source ("[1, 2, 3, 4, 5, 6, 7, 8]"). For each citation with
+ * 2 or more sources, we score each cited page against the text it cites (the text since the
+ * previous citation in that paragraph) with our keyword search, and keep the pages that score at
+ * least half as well as the best one (always keeping the best). Single citations are left as they
+ * are: short sentences ("You can buy it online") score low for every page, so dropping is riskier.
+ * Works on Gemini's numbering (before renumberCitations), so dropped pages get no chip.
+ */
+const SUPPORT_RATIO = 0.5;
+export function keepSupportedCitations(answer: string, results: SearchResult[]) {
+  return answer
+    .split(/(\n{2,})/)
+    .map((paragraph) => {
+      let last = 0;
+      return paragraph.replace(CITATION, (match, nums: string, offset: number) => {
+        const cited = paragraph.slice(last, offset).replace(CITATION, "").replace(/\]\([^)]*\)/g, "]");
+        last = offset + match.length;
+        const numbers = nums.split(",").map((s) => Number(s.trim()));
+        if (numbers.length < 2) return match;
+        const scores = new Map(search(cited, 5000).map((r) => [r.chunk.id, r.score]));
+        // A page's score is its best chunk among the cited ones (two chunks can share a page).
+        const pageScore = new Map<string, number>();
+        for (const n of numbers) {
+          const chunk = results[n - 1]?.chunk;
+          if (chunk) pageScore.set(chunk.url, Math.max(pageScore.get(chunk.url) ?? 0, scores.get(chunk.id) ?? 0));
+        }
+        const best = Math.max(0, ...pageScore.values());
+        if (best === 0) return match; // nothing to compare by: leave Gemini's citation alone
+        const kept = numbers.filter((n) => {
+          const chunk = results[n - 1]?.chunk;
+          return !chunk || (pageScore.get(chunk.url) ?? 0) >= best * SUPPORT_RATIO;
+        });
+        if (kept.length < numbers.length) console.info(`[cite] kept ${kept.length} of ${numbers.length} cited sources`);
+        return `[${kept.join(", ")}]`;
+      });
+    })
+    .join("");
+}
 
 /**
  * Safety check: every email, phone number, and link in the AI's answer must appear in the
@@ -355,9 +398,13 @@ export function removeUnverifiedDetails(answer: string, results: SearchResult[])
     .map((part) => (part.startsWith("](") ? part : cleanText(part)))
     .join("");
 
+  // Entry 35: removed quietly. A removed link keeps its words, so the sentence still reads right; a
+  // removed email or phone already says "(see the source page for contact details)" where it was, the
+  // one case where students need a note. The log names only the kind and the link's host, never a
+  // full email or phone, so a removal can be explained later.
   if (removed.length) {
-    console.warn(`[rag] removed ${removed.length} contact detail(s) not found in the sources`);
-    return `${final}\n\n_Some contact details were removed because they didn't match the CSULB sources. Please check the source page._`;
+    const kinds = removed.map((d) => (/^https?:/.test(d) ? `link ${safeHost(d)}` : d.includes("@") ? "email" : "phone"));
+    console.warn(`[rag] removed ${removed.length} detail(s) not found in the sources: ${kinds.join(", ")}`);
   }
   return final;
 }
@@ -573,7 +620,8 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
   }
 
   // Double-check contact details against the sources before showing anything.
-  const checked = removeUnverifiedDetails(reply.answer, results);
+  // Then keep only the cited pages that support what they cite (Entry 35).
+  const checked = keepSupportedCitations(removeUnverifiedDetails(reply.answer, results), results);
 
   // Renumber the citations 1, 2, 3 (one number per web page), then build one chip per page.
   // Then keep one citation per paragraph or list.

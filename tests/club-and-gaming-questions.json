@@ -6,9 +6,9 @@
       "question": "I'm Cambodian, how can I get involved with my culture on campus?",
       "type": "clubs",
       "area": "Clubs & culture",
-      "expected_behavior": "Answer from the Student Cultural Resource Centers page (the Asian, Pacific Islander, and Desi Resource Center), with a citation. No made-up Cambodian club. A BeachSync search for a Cambodian keyword.",
-      "expected_fact": "Asian, Pacific Islander, and Desi Resource Center",
-      "expect": { "response": "answer", "mustInclude": ["Asian, Pacific Islander,? and Desi"], "mustNotInclude": ["Cambodian (Student )?(Club|Association|Society|Organization)"], "minSources": 1, "beachsyncTerm": "cambodian|khmer" }
+      "expected_behavior": "Answer naming the Cambodian Student Society (from the official Cambodian Graduation Celebration page, Entry 35) and the Asian, Pacific Islander, and Desi Resource Center, cited. No other Cambodian club named (none is on an official page). No 'contact details were removed' note, and no Engineering or Liberal Arts club page cited. A BeachSync search for a Cambodian keyword.",
+      "expected_fact": "The Cambodian Student Society invites any Cambodian identifying students to join them",
+      "expect": { "response": "answer", "mustInclude": ["Cambodian Student Society", "Asian, Pacific Islander,? and Desi"], "mustNotInclude": ["Cambodian (Student )?(Club|Association|Organization)\\b(?! was)", "Some contact details", "Engineering Student Clubs", "Liberal Arts Clubs"], "minSources": 1, "beachsyncTerm": "cambodian|khmer" }
     },
     {
       "id": 2,

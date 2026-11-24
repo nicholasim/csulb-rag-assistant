@@ -207,6 +207,10 @@ const SOURCES: Source[] = [
   { slug: "american-indian-student-organizations", title: "American Indian Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/american-indian-student-organizations", stripContacts: true },
   { slug: "physics-astronomy-student-organizations", title: "Physics & Astronomy Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/physics-astronomy/student-organizations", stripContacts: true },
   { slug: "liberal-studies-student-association", title: "Liberal Studies Student Association (LSSA)", category: "Campus Places", url: "https://www.csulb.edu/college-of-education/liberal-studies/peer-mentors-liberal-studies-student-association-lssa", stripContacts: true },
+  // Entry 35: official pages that name Cambodian and other APID student groups and programs.
+  { slug: "cambodian-graduation-celebration", title: "Cambodian Graduation Celebration (Cambodian Student Society)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/cambodian-graduation-celebration", stripContacts: true },
+  { slug: "apid-who-we-serve", title: "APID Resource Center: Who We Serve", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/asian-pacific-islander-desi-resource-center/who-apid", stripContacts: true },
+  { slug: "aanhpi-initiatives", title: "AANHPI Initiatives (ASCEND, Project Resilience)", category: "Campus Places", url: "https://www.csulb.edu/office-of-the-provost/academic-affairs-inclusive-excellence/asian-american-native-hawaiian-pacific", stripContacts: true },
   { slug: "asi-games-area", title: "ASI Games Area (Esports Lounge)", category: "Campus Places", url: "https://www.asicsulb.org/corporate/discover/campus-events-office/games-area", stripContacts: true },
 ];
 
@@ -394,19 +398,28 @@ const CONTACT_MARK = "CONTACTREMOVED"; // plain letters, so the Markdown convert
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
 const PHONE = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
 const CONTACT_WORDS = /\b(advisors?|advisers?|officers?|president|vice president|treasurer|secretary|coordinator|contacts?|e-?mail|phone|board|e-?board|cabinet|recipients?)\b/i;
+// Entry 35: a sentence that names people in a role ("With the help of ... CSS faculty advisors, Dr. A,
+// Dr. B, ...") is dropped too: a role word plus a title before a name, in either order.
+const NAMED_ROLE = /\b(advisors?|advisers?|officers?|president|treasurer|secretary|coordinator)\b[\s\S]*\b(Dr\.|Professor|Prof\.)\s+[A-Z]|\b(Dr\.|Professor|Prof\.)\s+[A-Z][\s\S]*\b(advisors?|advisers?|officers?|president|coordinator)\b/;
 function removeContacts(markdown: string) {
-  const hasContact = (text: string) => text.includes(CONTACT_MARK) || EMAIL.test(text) || PHONE.test(text);
+  const hasContact = (text: string) => text.includes(CONTACT_MARK) || EMAIL.test(text) || PHONE.test(text) || NAMED_ROLE.test(text);
   return markdown
     .split(/\n{2,}/)
-    .filter(function (this: { dropList: boolean }, para) {
+    .filter(function (this: { dropList: boolean; dropSection: boolean }, para) {
+      const first = para.split("\n")[0].trim();
+      // Entry 35: a "## Contact" heading and everything under it (a staff name and title) go,
+      // up to the next heading.
+      if (/^#+\s/.test(first)) {
+        this.dropSection = /^#+\s*(contacts?|contact us|staff|advisors?|officers?)\s*$/i.test(first);
+        if (this.dropSection) return false;
+      } else if (this.dropSection) return false;
       // A list right after a dropped label ("**Executive Board:**" then "- **VP:** Name") goes too.
       if (this.dropList && /^\s*([-*+]|\d+\.)\s/.test(para)) return (this.dropList = false);
       this.dropList = false;
-      const first = para.split("\n")[0].trim();
       const isLabel = /^(\*\*|__).*(\*\*|__):?$/.test(first) || /:\s*$/.test(first);
       if (isLabel && first.length <= 80 && CONTACT_WORDS.test(first)) return !(this.dropList = true);
       return true;
-    }, { dropList: false })
+    }, { dropList: false, dropSection: false })
     .join("\n\n")
     // "visit the website _or_ <email>": drop just the email and its "or", keeping the website link.
     .replace(new RegExp(`\\s*(_or_|\\bor\\b|,)\\s*${CONTACT_MARK}`, "g"), "")
@@ -420,12 +433,14 @@ function removeContacts(markdown: string) {
       if (line.trim().startsWith("|")) return line.split("|").map((cell) => (hasContact(cell) ? " " : cell)).join("|");
       // Keep the line's list/heading prefix, drop only the sentences with contact details.
       const [, prefix, body] = line.match(/^(\s*(?:[-*+]|\d+\.|#+)?\s*)(.*)$/)!;
-      const kept = body.split(/(?<=[.!?])\s+/).filter((sentence) => !hasContact(sentence)).join(" ");
+      // (Never split after a title like "Dr." or "Prof.", so "advisors, Dr. A, Dr. B" stays one sentence.)
+      const kept = body.split(/(?<=(?<!\b(?:Dr|Prof|Mr|Mrs|Ms))[.!?])\s+/).filter((sentence) => !hasContact(sentence)).join(" ");
       return kept ? prefix + kept : "";
     })
     .join("\n")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/(\n\s*\* \* \*\s*)*\n## Sidebar\s*$/, "") // a sidebar left empty after removing its contact section
     .trim();
 }
 

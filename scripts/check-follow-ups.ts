@@ -77,6 +77,60 @@ async function main() {
   console.log(`${same ? "ok  " : "FAIL"} Try: drop a page that repeats the Who can help office`);
   if (!same) failures++;
 
+  // ---- Citations only on pages that support them (Entry 35). ----
+  const { keepSupportedCitations, removeUnverifiedDetails } = await import("../lib/rag");
+  const { loadChunks } = await import("../lib/knowledge");
+  const byId = new Map(loadChunks().map((c) => [c.id, c]));
+  const asResults = (ids: string[]) => ids.map((id) => ({ chunk: byId.get(id)!, score: 1 }));
+  // The 8 sections Gemini was shown in a real Cambodian-question run (Entry 35 reproduction).
+  const cambodian = asResults(["cultural-resource-centers#1", "american-indian-student-organizations#1", "cultural-resource-centers#2", "liberal-arts-clubs#2", "student-life-development#1", "engineering-student-clubs#13", "commencement-ceremony-schedules#5", "chhs-student-organizations#1"]);
+  const citeCases: { label: string; answer: string; results: typeof cambodian; expected: string }[] = [
+    {
+      label: "a sentence cited with all 8 sources keeps only the page that supports it",
+      answer: "You can get involved with your culture on campus by visiting the Asian, Pacific Islander, and Desi Resource Center, which is located in FO4-276 [1, 2, 3, 4, 5, 6, 7, 8].",
+      results: cambodian,
+      expected: "You can get involved with your culture on campus by visiting the Asian, Pacific Islander, and Desi Resource Center, which is located in FO4-276 [1, 3].",
+    },
+    {
+      label: "the 300-organizations sentence keeps Student Life & Development, drops Engineering and Liberal Arts",
+      answer: "CSULB has more than 300 recognized student organizations across 12 diverse categories [4, 5, 6].",
+      results: cambodian,
+      expected: "CSULB has more than 300 recognized student organizations across 12 diverse categories [5].",
+    },
+    {
+      label: "a single citation is left alone",
+      answer: "You can buy it online through the Parking Portal [6].",
+      results: cambodian,
+      expected: "You can buy it online through the Parking Portal [6].",
+    },
+  ];
+  // Two parking pages that both support a sentence keep both.
+  const parking = search("How much is a semester student parking permit and where do I buy it?", 8);
+  const parkingPages = [...new Set(parking.map((r) => r.chunk.url))];
+  const two = [parking.findIndex((r) => r.chunk.url === parkingPages[0]) + 1, parking.findIndex((r) => r.chunk.url === parkingPages[1]) + 1];
+  citeCases.push({
+    label: "two parking pages that both support the sentence keep both",
+    answer: `A student semester parking permit is sold online, and daily permits are available through the ParkMobile app [${two.join(", ")}].`,
+    results: parking,
+    expected: `A student semester parking permit is sold online, and daily permits are available through the ParkMobile app [${two.join(", ")}].`,
+  });
+  for (const c of citeCases) {
+    const got = keepSupportedCitations(c.answer, c.results);
+    const ok = got === c.expected;
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} cite: ${c.label}${ok ? "" : `\n       got:      ${got}\n       expected: ${c.expected}`}`);
+  }
+
+  // ---- The safety check removes made-up links quietly (Entry 35). ----
+  const quiet = removeUnverifiedDetails("Search [BeachSync](https://csulb.campuslabs.com/engage/organizations?query=Cambodian) for more clubs [1].", cambodian);
+  const quietOk = quiet === "Search BeachSync for more clubs [1]." && !/removed/i.test(quiet);
+  console.log(`${quietOk ? "ok  " : "FAIL"} safety check: a made-up link keeps its words, with no note (got ${JSON.stringify(quiet)})`);
+  if (!quietOk) failures++;
+  const phone = removeUnverifiedDetails("Call 562-555-0199 for help [1].", cambodian);
+  const phoneOk = phone.includes("(see the source page for contact details)");
+  console.log(`${phoneOk ? "ok  " : "FAIL"} safety check: a made-up phone number is replaced with a pointer to the source page`);
+  if (!phoneOk) failures++;
+
   // ---- BeachSync club search link (Entry 34). ----
   const { beachSyncSearch } = await import("../lib/club-search");
   const linkCases: { term: unknown; question: string; url: string | null }[] = [
