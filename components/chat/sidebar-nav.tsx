@@ -7,8 +7,18 @@ import { cn } from "@/lib/utils";
 export function Wordmark() {
   return (
     <div className="flex items-center gap-3">
-      <div aria-hidden className="flex size-9 items-center justify-center rounded-md bg-gold text-base font-bold text-gold-foreground">
-        C
+      {/* The Long Beach State shark (head crop: the full body is too small to read at this size,
+          Entry 30), on a gold tile so its black outline stays visible on the dark sidebar. */}
+      <div aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gold">
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny pre-sized PNGs with our own 1x/2x/3x files */}
+        <img
+          src="/brand/shark-main-head-32.png"
+          srcSet="/brand/shark-main-head-32.png 1x, /brand/shark-main-head-64.png 2x, /brand/shark-main-head-96.png 3x"
+          alt=""
+          width={30}
+          height={30}
+          className="size-[30px]"
+        />
       </div>
       <div className="flex flex-col leading-tight">
         <span className="text-sm font-semibold">CSULB Services</span>

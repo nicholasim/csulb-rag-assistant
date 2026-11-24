@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "CSULB Services Assistant",
   description:
     "Ask questions about CSULB student services. Answers come only from official CSULB web pages, with sources.",
+  // A student class project that uses Long Beach State's mascot: keep it out of search results so it
+  // isn't mistaken for an official CSULB service (Entry 30).
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircleIcon, CheckIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
+import { AlertCircleIcon, CheckIcon, HeartHandshakeIcon, ExternalLinkIcon, InfoIcon, MailIcon, MessageCircleQuestionIcon, PhoneIcon, RotateCwIcon, SendIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
@@ -45,14 +45,45 @@ export function clarifyOptions(question: string): string[] {
 // a line by itself. Normal words always wrap whole (never "he / llo").
 const WRAP = "min-w-0 wrap-break-word";
 
-function AssistantMark() {
+// The assistant's avatar (Entry 30). Long Beach State's sharks, used as given (never flipped or
+// redrawn), cropped and trimmed in public/brand/, with 1x/2x/3x files for sharp small sizes.
+const SHARKS = {
+  working: "shark-working", // gold curled shark: while the answer loads (gently bobbing)
+  answer: "shark-answer", // pointing shark: a normal answer
+  main: "shark-main-head", // standing shark, head crop: fallbacks, clarifying questions, small talk, errors
+} as const;
+
+/** Which avatar a turn gets. Crisis replies get a plain support icon, never the cartoon mascot. */
+function avatarFor(turn: AssistantTurn): keyof typeof SHARKS | "support" {
+  if (turn.state === "loading") return "working";
+  if (turn.state === "error") return "main";
+  if (turn.response.crisis) return "support";
+  if (turn.response.type === "answer") return "answer";
+  return "main";
+}
+
+function AssistantAvatar({ turn }: { turn: AssistantTurn }) {
+  const kind = avatarFor(turn);
+  if (kind === "support") {
+    return (
+      <div aria-hidden className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <HeartHandshakeIcon className="size-4" />
+      </div>
+    );
+  }
+  const file = SHARKS[kind];
   return (
-    <div
+    // eslint-disable-next-line @next/next/no-img-element -- tiny pre-sized PNGs with our own 1x/2x/3x files
+    <img
       aria-hidden
-      className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-black text-sm font-bold text-gold"
-    >
-      C
-    </div>
+      alt=""
+      src={`/brand/${file}-32.png`}
+      srcSet={`/brand/${file}-32.png 1x, /brand/${file}-64.png 2x, /brand/${file}-96.png 3x`}
+      width={32}
+      height={32}
+      className={cn("mt-0.5 size-8 shrink-0 select-none", kind === "working" && "animate-shark-bob")}
+      draggable={false}
+    />
   );
 }
 
@@ -69,7 +100,7 @@ export function AssistantMessage({
 }) {
   return (
     <Message align="start" className="gap-3">
-      <AssistantMark />
+      <AssistantAvatar turn={turn} />
       <MessageContent className="gap-3 pt-1">
         <span className="sr-only">Assistant:</span>
         {/* We fixed a typo before searching: say so, like a search engine's "Did you mean". */}

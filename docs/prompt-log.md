@@ -1742,4 +1742,69 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 30 (Shark mascot avatars + "not official" note)
+
+**Date:** 2026-11-23
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Use the Long Beach State shark mascots (two images we added):
+> - **the standing middle shark** as the main icon: logo, favicon, and the avatar on fallbacks, clarifying questions, small talk and errors;
+> - **the gold curled shark** while processing, next to the progress steps, with a gentle bob (off for reduced motion);
+> - **the pointing shark** on normal answers.
+>
+> **Image prep:** crop to transparent PNGs, remove only the yellow background (no fringe, arm not cut off), never flip/redraw/change, trim tightly, retina sizes; check small sizes on white and dark and tell us if any is muddy.
+>
+> Add the footer note "Student class project. Not an official CSULB service." Plan first with the scope check, including a trademark flag.
+>
+> **Team decisions:** add robots noindex; crisis replies get no mascot (a plain, neutral support icon); show the small-size preview before choosing full body vs head crop for the middle shark (chosen: head crop at small sizes).
+
+**What the AI did:**
+- **Scope check:** UI only, inside scope.
+  - **⚠ Trademark flag:** the sharks and the "LB" are Long Beach State's official athletics marks. Mitigations: the footer note, plus `robots: noindex, nofollow` so the class demo isn't listed by search engines. The images are used as the team supplied them.
+  - **Recommended:** confirm with the instructor before any public sharing.
+- **Image findings:**
+  - `sharks-original.png` is fully opaque with a **white** background, not transparent. Each sticker's outer white outline fades through a faint gray shadow straight into it, so the outline can't be separated from the background.
+  - **So** the background was removed from the image edges inward, stopping at each shark's black outline. Inside the outline (white bellies, LB logo) is untouched.
+  - The outline's edge pixels were "un-blended" from the background color, so there's no white or yellow fringe.
+  - **Because the sharks have no white outline anymore,** the logo sits on a gold tile on the dark sidebar and mobile header (like the old "C" box), so the black outline stays visible.
+- **Prep script** (`sharp`, already installed; no new packages). Crops, background removal, trimming and resizing only; no flipping or recoloring.
+  - 3 sharks found at x = 32-278, 334-567, 620-832; only the left and middle were used.
+  - **Pointing shark:**
+    - background yellow measured at 235,204,75; **0 yellow-ish pixels left** after removal;
+    - the fingertip sat 46px below the original's top edge, so **the pointing arm isn't cut off**.
+  - **Files in `public/brand/`:**
+    - `shark-working`, `shark-answer`, `shark-main-head`: trimmed full-resolution PNGs, plus 32/64/96px versions for 1×/2×/3× screens;
+    - `shark-main.png`: the full-body original crop, kept for any larger use later;
+    - the original images are unchanged.
+- **Small-size check** (`docs/screenshots/sharks-preview-retina.png`, `-1x.png`):
+  - **as predicted, the full-body middle shark was muddy at 20-32px** (a thin gray squiggle, the LB unreadable);
+  - **the head-and-chest crop of the same art reads clearly at 32-40px**;
+  - the gold curled and pointing sharks read well at 32px on white;
+  - on the dark sidebar the gray sharks need the gold tile.
+
+  The team chose **the head crop at small sizes**.
+- **Wiring:**
+  - **`AssistantAvatar`** (`components/chat/assistant-message.tsx`): loading → gold curled shark with a 2px bob (`.animate-shark-bob`, off under `prefers-reduced-motion`); normal answer → pointing shark; fallback, clarify, small talk and error → middle shark (head crop); **crisis → a plain `HeartHandshake` icon in muted gray**, no mascot and no animation. Crisis replies are marked with a new `crisis: true` field (`lib/rag.ts`).
+  - **Logo (`Wordmark`):** the head crop on the gold tile, decorative (empty alt text), because "CSULB Services" is written right next to it.
+  - **Favicon:** `app/icon1.png` (32px), `app/icon2.png` (192px), `app/apple-icon.png` (180px), each the head crop on the gold tile. The old `app/favicon.ico` was removed, following the Next.js app-icon docs in `node_modules/next/dist/docs`.
+  - **Footer:** "Student class project. Not an official CSULB service." on every screen.
+  - **Metadata:** `robots: { index: false, follow: false }` in `app/layout.tsx`.
+
+**Did it work?**
+- **The page** has `<meta name="robots" content="noindex, nofollow">` and links all three icons (all return 200).
+- **Reduced motion:** the bob animation is `shark-bob` normally and `none` with reduced motion.
+- **Screenshots, before and after** (fake responses, desktop and mobile): welcome, sidebar/menu, loading steps, answer, fallback, small talk, crisis. Page overflow is still 0, and Stop mid-steps leaves no error.
+- **Checks:** `check:presets`, `check:follow-ups`, `check:stream`, `check:timeouts`, tsc, eslint and build pass, and `test:stop-edit` passes all checks.
+
+**Troubleshooting or redirection (if any):**
+1. **The "transparent" source wasn't transparent:** the original sharks image had a solid white background, with the stickers' white outlines blending into it. Rather than guess the outline back in (which would change the art), the background was cut at the black outline, and a gold tile is used on dark backgrounds.
+2. **Claude predicted the full-body shark would be unreadable small,** checked it with a preview sheet, and asked the team instead of forcing it. They chose the head crop.
+3. **The team changed the crisis avatar** from a mascot to a neutral support icon.
+
+**Screenshot / commit:** `docs/screenshots/{desktop,mobile}-21-*-{before,after}.png`, `docs/screenshots/sharks-preview-retina.png`, `sharks-preview-1x.png`
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

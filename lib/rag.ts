@@ -59,6 +59,8 @@ export type ChatResponse = {
   // the question isn't about CSULB at all (offTopic), which shows example questions instead.
   helpOffice?: HelpOffice | null;
   offTopic?: boolean;
+  // Crisis replies (lib/crisis.ts): the page shows a plain support icon instead of the mascot (Entry 30).
+  crisis?: boolean;
   // Normal answers only: 0-3 suggested next questions, each checked against our pages (cleanFollowUps).
   followUps?: string[];
 };
@@ -447,7 +449,7 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
     const sources = chunks.length
       ? [{ id: 1, title: chunks[0].title, url: chunks[0].url, category: chunks[0].category, excerpt: bestExcerpt(chunks, question, answer) }]
       : [];
-    return { type: "answer", answer, sources, suggestion: null, model: null, correctedQuestion: null };
+    return { type: "answer", answer, sources, suggestion: null, model: null, correctedQuestion: null, crisis: true };
   }
 
   // Small talk ("hi", "thanks", "what can you do?") gets a fixed friendly reply: no search, no AI.

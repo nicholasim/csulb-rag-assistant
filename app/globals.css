@@ -147,3 +147,21 @@
     overscroll-behavior: none;
   }
 }
+/* The working shark's gentle bob while an answer loads (Entry 30). Off for reduced motion. */
+@keyframes shark-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+.animate-shark-bob {
+  animation: shark-bob 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-shark-bob {
+    animation: none;
+  }
+}

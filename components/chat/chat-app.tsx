@@ -24,6 +24,8 @@ type UserTurn = { id: string; role: "user"; content: string };
 type Turn = UserTurn | AssistantTurn;
 
 const FOOTER_NOTE = "Answers come only from official CSULB web pages. Don't enter personal information.";
+// The app uses Long Beach State's mascot, so say plainly that it isn't an official service (Entry 30).
+const PROJECT_NOTE = "Student class project. Not an official CSULB service.";
 
 let nextId = 0;
 const newId = () => `turn-${++nextId}`;
@@ -360,7 +362,9 @@ export function ChatApp({ pageCount }: { pageCount: number }) {
                 notice={notice}
                 textareaRef={textareaRef}
               />
-              <p className="text-center text-xs leading-5 text-muted-foreground">{FOOTER_NOTE}</p>
+              <p className="text-center text-xs leading-5 text-muted-foreground">
+                {FOOTER_NOTE} <span className="font-medium">{PROJECT_NOTE}</span>
+              </p>
             </div>
           </div>
         </main>
