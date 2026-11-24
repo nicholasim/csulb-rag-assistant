@@ -24,12 +24,24 @@ import { readdirSync, readFileSync } from "node:fs";
 // Organization names in an answer: capitalized words ending in Association, Society, Club, Council,
 // Union, Coalition, Alliance, or Organization ("Vietnamese Student Association", "Pre-Physician
 // Assistant Club"). The first word is capitalized; small joining words (of, for, and, the) may appear inside.
-const ORG_NAME = /\b([A-Z][\w'’&.\/-]*(?:\s+(?:[A-Z][\w'’&.\/-]*|of|for|and|the|in|de|&)){0,7}\s+(?:Association|Society|Club|Council|Union|Coalition|Alliance|Organization))\b/g;
+const ORG_NAME = /\b([A-Z][\w'’&.\/-]*(?:\s+(?:[A-Z][\w'’&.\/-]*|of|for|and|the|in|de|&)){0,7}\s+(?:Association|Society|Club|Council|Union|Coalition|Alliance|Organization))\b(?!\s+(?:Sports|&|and|of|for)\b)/g; // Entry 38: "Office of Club Sports & Recreation" isn't a club name
 function namedOrgs(answer: string) {
   const text = answer.replace(/\]\([^)]*\)/g, "]").replace(/[[\]*_]/g, "");
   return [...new Set([...text.matchAll(ORG_NAME)].map((m) => m[1].replace(/^(The|the|of|for|and|in)\s+/, "").trim()))];
 }
 const squash = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9']+/g, " ").trim();
+/**
+ * Is this name in the cited pages? A capitalized word starting the sentence can get caught in the
+ * name ("Join the Vietnamese Student Association"), so leading words may be dropped, as long as at
+ * least 3 words are left (a 2-word name must match whole), so an invented "Chess Student
+ * Association" can't pass on "student association" alone (Entry 38).
+ */
+function inCited(name: string, cited: string) {
+  const words = squash(name).split(" ");
+  const minLeft = Math.min(3, words.length);
+  for (let i = 0; i <= words.length - minLeft; i++) if (cited.includes(words.slice(i).join(" "))) return true;
+  return false;
+}
 let knowledgeByUrl: Map<string, string> | null = null;
 /** Our knowledge files, by page URL (read once). */
 function knowledgeText(url: string) {
@@ -184,7 +196,7 @@ function check(test: Test, result: ApiResult): string[] {
     const cited = (body.sources ?? []).map((s) => knowledgeText(s.url)).join("\n");
     for (const name of namedOrgs(body.answer ?? "")) {
       if (expect.noClubsNamed && !/^(Associated Students|Student Life)/.test(name)) problems.push(`expected no club named, got "${name}"`);
-      else if (!cited.includes(squash(name))) problems.push(`names "${name}", which isn't in any cited source`);
+      else if (!inCited(name, cited)) problems.push(`names "${name}", which isn't in any cited source`);
     }
   }
   if (expect.beachsyncTerm === null && body.beachsyncSearch) problems.push(`expected no BeachSync button, got "${body.beachsyncSearch.term}"`);

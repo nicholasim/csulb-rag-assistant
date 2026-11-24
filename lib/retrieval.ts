@@ -66,6 +66,7 @@ export const SYNONYMS: Record<string, string[]> = {
   transgender: ["lgbtq"],
   lgbtq: ["queer"],
   black: ["african"], // matches "Pan-African"
+  gaming: ["game", "video"], // Entry 38: "gaming clubs" -> the Video Game Development Association section
 };
 
 /** Turn text into a list of search words: lowercase, no punctuation, no stop words. */

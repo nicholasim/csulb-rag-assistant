@@ -268,9 +268,40 @@ export function citeOncePerParagraph(text: string) {
           return keep.length ? `[${keep.join(", ")}]` : "";
         })
         .replace(/[ \t]+([.,;:!?])/g, "$1")
-        .replace(/[ \t]+$/gm, ""); // no trailing spaces where a citation was removed
+        .replace(/[ \t]+$/gm, "") // no trailing spaces where a citation was removed
+        .replace(/([\p{L}\p{N}.,;:!?)\]]) {2,}(?=\S)/gu, "$1 ") // Entry 38: "Recreation  and" -> "Recreation and"
+        // Entry 38: a citation left on its own after the last sentence ("welcome [2]. [1]") joins
+        // the citation before it ("welcome [1, 2].").
+        .replace(/(?: \[(\d+(?:, \d+)*)\])?([.!?])\s+\[(\d+(?:, \d+)*)\]\s*$/, (_, before: string | undefined, punct: string, after: string) => {
+          const nums = [...new Set([...(before ? before.split(", ") : []), ...after.split(", ")].map(Number))].sort((a, b) => a - b);
+          return ` [${nums.join(", ")}]${punct}`;
+        });
     })
     .join("");
+}
+
+/**
+ * Entry 38: when the app shows a BeachSync search button, a general sentence like "All student
+ * organizations at CSULB can be found on BeachSync [2]" only repeats the button (and often cites a
+ * page for nothing else). Remove such sentences, with their citation. A sentence that links a
+ * specific club's BeachSync page is kept, and so is the answer if removing would leave nothing.
+ * Runs on Gemini's numbering, before renumbering, so a page cited only there loses its chip.
+ */
+const BEACHSYNC_WORD = /\bbeach ?sync\b/i;
+const GENERAL_CLUB_WORDS = /\b(all|every|full|more|other|explore|browse|find|search|view|list)\b[\s\S]*\b(organi[sz]ations?|clubs?|groups?|orgs?)\b|\b(organi[sz]ations?|clubs?|groups?|orgs?)\b[\s\S]*\b(all|every|full|more|other|explore|browse|find|search|view|list)\b/i;
+export function dropGeneralBeachSyncSentence(answer: string) {
+  const out = answer
+    .split(/(\n+)/)
+    .map((line) => {
+      if (!BEACHSYNC_WORD.test(line)) return line;
+      const sentences = line.split(/(?<=[.!?](?:\s*\[\d+(?:,\s*\d+)*\])?)\s+(?=[A-Z*[_])/);
+      const kept = sentences.filter((s) => !(BEACHSYNC_WORD.test(s) && GENERAL_CLUB_WORDS.test(s) && !/\/engage\/organization\//.test(s)));
+      return kept.join(" ");
+    })
+    .join("")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return out ? out : answer;
 }
 
 /**
@@ -623,7 +654,9 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // Double-check contact details against the sources before showing anything.
   // Then keep only the cited pages that support what they cite (Entry 35).
-  const checked = keepSupportedCitations(removeUnverifiedDetails(reply.answer, results), results);
+  // Entry 38: with a BeachSync button on an answer, a general "all clubs are on BeachSync" sentence goes.
+  const withoutRepeat = reply.type === "answer" && clubLink ? dropGeneralBeachSyncSentence(reply.answer) : reply.answer;
+  const checked = keepSupportedCitations(removeUnverifiedDetails(withoutRepeat, results), results);
 
   // Renumber the citations 1, 2, 3 (one number per web page), then build one chip per page.
   // Then keep one citation per paragraph or list.

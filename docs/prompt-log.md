@@ -2236,4 +2236,63 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 38 (Remove the repeated BeachSync sentence, gaming search, cleanups, two test rounds)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Make the code fix: when the BeachSync button shows, remove the general "all organizations are on BeachSync" sentence and its citation, and keep it when there's no button. Also, plan first:
+> 1. Check whether the Club Sports & Recreation page mentions hiking.
+> 2. Check whether "no match → fallback" makes Gemini give up on "are there gaming clubs".
+> 3. Clean up the stray "[1]" and the "Office of Club" name check.
+>
+> Then rerun the 17 club tests twice and show the table.
+
+**Scope check:** Inside the assignment: answer and search quality only. No new sources.
+
+**What the AI did:**
+- **Hiking:** the Club Sports & Recreation page does say "…more than 40 activities from Dance to Hiking to Water Polo", so the claim was supported. It looked uncited only because "cite once per paragraph" moved its [1] to the end of the paragraph.
+- **Gaming:** a search miss, not the rule. The VGDA section says "game"/"video game", never "gaming", so keyword search didn't reach it, and Gemini fell back on what it was shown. When VGDA was shown, Gemini named it. Added the search synonym gaming → game, video.
+- **`dropGeneralBeachSyncSentence`** (`lib/rag.ts`): on answers with a BeachSync button, it removes sentences that mention BeachSync and speak generally ("all/explore/find … organizations/clubs"), with their citation, before renumbering.
+  - Kept: sentences linking one club's BeachSync page, answers that would be left empty, and every answer without a button.
+- **`citeOncePerParagraph`:** a citation standing alone after the last sentence ("welcome [2]. [1]") joins the one before it ("welcome [1, 2]."), and double spaces left by moved citations are tidied.
+- **Test runner name check:**
+  - doesn't stop at "Club"/"Alliance" when the name continues ("Office of Club Sports & Recreation" is no longer reported);
+  - a capitalized sentence start caught in a name ("Join the Vietnamese Student Association") is allowed, as long as at least 3 words still match.
+- **7 new unit cases** in `scripts/check-follow-ups.ts`.
+
+**Did it work?**
+- **Offline:** all unit checks pass, coverage is still 150/151, and copy, presets, stream, tsc, eslint and build pass.
+- **Live, 17 questions × 2 rounds: 16/17, then 17/17 passed** (33/34).
+
+  | Question | Named (round 1 / round 2) | BeachSync (both rounds) |
+  |---|---|---|
+  | Vietnamese | Vietnamese Student Association / same | "Vietnamese" |
+  | Filipino | Pilipino American Coalition / same | "Filipino" |
+  | Black | none / none (Cultural Resource Centers cited) | "Black" |
+  | Latino | HSBA, Latinx Student Union / same (**FAIL**: LSU's page not cited) | "Latino" |
+  | Queer | none / none (LGBTQ+ Resource Center cited) | "LGBTQ" |
+  | Pre-med | AMSA / same | "pre-med" |
+  | Business | ABSOC, AMA / + Beta Alpha Psi | "business" |
+  | Hiking | none / none (ASI Outdoor Adventures cited both times) | "hiking" |
+  | Gaming | VGDA / VGDA | "gaming" |
+  | Cheese rolling | fallback / fallback | "cheese rolling" / "competitive cheese rolling" |
+  | Cambodian | Cambodian Student Society / same | "Cambodian" |
+  | CS | 4 engineering clubs / same | "computer science" |
+  | Chess, basket weaving | fallback / fallback | "chess", "underwater basket weaving" |
+  | Nursing | CNSA / same | "nursing" |
+  | Video games | ASI Games Area / same | none |
+  | How do I join a club | BeachSync sentence, cited / same | none |
+- **Physics & Astronomy:** cited only in "how do I join a club", where the BeachSync sentence belongs (it was 6 times in Entry 36).
+
+**Troubleshooting or redirection (if any):**
+1. **The name check had two false alarms in waiting:** "Office of Club" and "Join the Vietnamese Student Association". Fixed. The first fix was too loose (an invented "Chess Student Association" could have passed on "student association"), so it now needs 3 matching words.
+2. **Round 2, Latino (FAIL):** the answer named the Latinx Student Union but cited only the Business and Liberal Arts pages. The server log shows the citation filter (`keepSupportedCitations`, Entry 35) "kept 1 of 3 cited sources". Gemini cited 3 pages for one list sentence that combined clubs from several pages. The page naming LSU scored below half of the Business page against the whole sentence, so it was dropped. This was the only time the filter trimmed anything in 34 answers. Not fixed yet; waiting for the team.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

@@ -131,6 +131,49 @@ async function main() {
   console.log(`${phoneOk ? "ok  " : "FAIL"} safety check: a made-up phone number is replaced with a pointer to the source page`);
   if (!phoneOk) failures++;
 
+  // ---- Entry 38: the general BeachSync sentence, stray citations, gaming search. ----
+  const { dropGeneralBeachSyncSentence, citeOncePerParagraph } = await import("../lib/rag");
+  const e38: { label: string; got: string; want: string }[] = [
+    {
+      label: "button shown: the general BeachSync sentence and its citation go",
+      got: dropGeneralBeachSyncSentence("Computer science students can join the AI Research Club [1]. You can find all student organizations at CSULB on [BeachSync](http://beachsync.com/) [2]."),
+      want: "Computer science students can join the AI Research Club [1].",
+    },
+    {
+      label: "button shown: 'Beach Sync on your Single Sign-On dashboard' version goes too",
+      got: dropGeneralBeachSyncSentence("Join the Cambodian Student Society [1]. To explore all student organizations, check Beach Sync via your Single Sign-On dashboard [2]."),
+      want: "Join the Cambodian Student Society [1].",
+    },
+    {
+      label: "a sentence linking one club's BeachSync page is kept",
+      got: dropGeneralBeachSyncSentence("See the [Society of Physics Students](https://csulb.campuslabs.com/engage/organization/society-of-physics-students-sps) on BeachSync, among other clubs [1]."),
+      want: "See the [Society of Physics Students](https://csulb.campuslabs.com/engage/organization/society-of-physics-students-sps) on BeachSync, among other clubs [1].",
+    },
+    {
+      label: "an answer that is only that sentence is left as it is",
+      got: dropGeneralBeachSyncSentence("All student organizations at CSULB can be found on BeachSync [1]."),
+      want: "All student organizations at CSULB can be found on BeachSync [1].",
+    },
+    {
+      label: "a stray citation after the last sentence joins the one before it",
+      got: citeOncePerParagraph("You are welcome at the center [2]. [1]"),
+      want: "You are welcome at the center [1, 2].",
+    },
+    {
+      label: "a double space left by a moved citation is tidied",
+      got: citeOncePerParagraph("Hiking through Club Sports [1]  and ASI Outdoor Adventures [2]. Call the office [1]."),
+      want: "Hiking through Club Sports and ASI Outdoor Adventures [2]. Call the office [1].",
+    },
+  ];
+  for (const c of e38) {
+    const ok = c.got === c.want;
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} ${c.label}${ok ? "" : `\n       got:  ${c.got}\n       want: ${c.want}`}`);
+  }
+  const gaming = search("are there gaming clubs", 8).some((r) => r.chunk.id === "engineering-student-clubs#8" || /Video Game Development/.test(r.chunk.text));
+  console.log(`${gaming ? "ok  " : "FAIL"} search: "are there gaming clubs" reaches the Video Game Development Association section`);
+  if (!gaming) failures++;
+
   // ---- Bad club keywords fall back to the student's words (Entry 37). ----
   const { beachSyncSearch: bs } = await import("../lib/club-search");
   const officeNames = ["Student Life & Development (clubs and organizations)", "LGBTQ+ Resource Center", "Black Resource Center"];
