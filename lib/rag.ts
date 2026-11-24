@@ -602,7 +602,9 @@ export async function answerQuestion(rawQuestion: unknown, rawHistory: unknown =
 
   // 5. Shape the response.
   // Club questions get a BeachSync search link (answers and fallbacks), built from Gemini's keyword.
-  const clubLink = beachSyncSearch(reply.club_search, [searchText, ...searchQueries].join(" "));
+  // Entry 37: a keyword that's only generic words or an office/page name is replaced by the student's words.
+  const avoidNames = [...OFFICES.map((o) => o.name), ...results.map((r) => r.chunk.title)];
+  const clubLink = beachSyncSearch(reply.club_search, searchText, avoidNames, [searchText, ...searchQueries].join(" "));
   if (reply.type === "fallback") {
     // Not about CSULB at all (Gemini's about_csulb): no office, show what we can help with.
     // Health and medical questions always count as CSULB (Student Health Services), whatever Gemini says.

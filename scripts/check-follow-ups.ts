@@ -131,6 +131,25 @@ async function main() {
   console.log(`${phoneOk ? "ok  " : "FAIL"} safety check: a made-up phone number is replaced with a pointer to the source page`);
   if (!phoneOk) failures++;
 
+  // ---- Bad club keywords fall back to the student's words (Entry 37). ----
+  const { beachSyncSearch: bs } = await import("../lib/club-search");
+  const officeNames = ["Student Life & Development (clubs and organizations)", "LGBTQ+ Resource Center", "Black Resource Center"];
+  const keywordCases: { term: string; question: string; want: string | null; why: string }[] = [
+    { term: "life and development", question: "I'm queer, where can I find community?", want: "queer", why: "generic words -> student's word" },
+    { term: "Student Life & Development", question: "I'm queer, where can I find community?", want: "queer", why: "an office name -> student's word" },
+    { term: "LGBTQ", question: "I'm queer, where can I find community?", want: "LGBTQ", why: "a real topic inside an office name is kept" },
+    { term: "Black Resource Center", question: "how can Black students find community here?", want: "black", why: "a piece of an office name -> student's word" },
+    { term: "", question: "how can Black students find community here?", want: "black", why: "no club word: what's left after filler" },
+    { term: "student resources", question: "Latino student organizations?", want: "latino", why: "generic words -> student's word" },
+    { term: "", question: "how do I join a club", want: null, why: "no topic: no button (the answer mentions BeachSync instead)" },
+  ];
+  for (const c of keywordCases) {
+    const got = bs(c.term, c.question, officeNames)?.term ?? null;
+    const ok = got === c.want;
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} keyword ${JSON.stringify(c.term)} / ${JSON.stringify(c.question)} -> ${JSON.stringify(got)} (${c.why})`);
+  }
+
   // ---- BeachSync club search link (Entry 34). ----
   const { beachSyncSearch } = await import("../lib/club-search");
   const linkCases: { term: unknown; question: string; url: string | null }[] = [

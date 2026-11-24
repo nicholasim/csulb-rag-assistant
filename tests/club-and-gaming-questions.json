@@ -49,6 +49,15 @@
       "expected_behavior": "Answer from the ASI Games Area page: the Games Center is closed for the FUTURE U Project and the Esports Lounge moved to Peterson Hall 1 (PH1) Room-218. Or, if it falls back, Who can help = ASI. Never a Tuition and Fees button. Not a club question, so no BeachSync button.",
       "expected_fact": "Esports Lounge will be relocated to Peterson Hall 1 (PH1) Room-218",
       "expect": { "response": ["answer", "fallback"], "clubsFromSources": true, "mustNotInclude": ["Tuition"], "mustIncludeAny": ["Peterson Hall", "PH1", "Associated Students"], "helpOfficeName": "Associated Students", "beachsyncTerm": null }
+    },
+    {
+      "id": 7,
+      "question": "how do I join a club",
+      "type": "clubs",
+      "area": "Clubs & culture",
+      "expected_behavior": "No specific topic, so no BeachSync button (Entry 37). The answer itself must then say student organizations can be found on BeachSync, with a citation.",
+      "expected_fact": "All student organizations can be found on BeachSync",
+      "expect": { "response": "answer", "mustInclude": ["Beach ?Sync"], "minSources": 1, "clubsFromSources": true, "beachsyncTerm": null }
     }
   ]
 }

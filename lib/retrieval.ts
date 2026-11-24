@@ -48,6 +48,24 @@ export const SYNONYMS: Record<string, string[]> = {
   textbook: ["d1ta"],
   book: ["textbook"],
   culture: ["cultural"], // Entry 34: "my culture" -> the Student Cultural Resource Centers page
+  // Entry 37: name variants for communities, so a student's word reaches pages that spell it
+  // differently. Search hints only; never shown as facts, and the BeachSync button keeps the
+  // student's own word. (Forms are after tokenize: "trans" becomes "tran".)
+  filipino: ["pilipino"],
+  pilipino: ["filipino"],
+  latino: ["latinx", "latine", "chicanx"],
+  latina: ["latinx", "latine", "chicanx"],
+  hispanic: ["latinx", "latine", "chicanx"],
+  latinx: ["latino"],
+  latine: ["latino"],
+  chicanx: ["latino"],
+  queer: ["lgbtq"],
+  gay: ["lgbtq"],
+  lesbian: ["lgbtq"],
+  tran: ["lgbtq"],
+  transgender: ["lgbtq"],
+  lgbtq: ["queer"],
+  black: ["african"], // matches "Pan-African"
 };
 
 /** Turn text into a list of search words: lowercase, no punctuation, no stop words. */

@@ -151,6 +151,12 @@ Built from the assignment handout (`docs/is300 capstone.pdf`) and our Solution D
   - **Contact stripping:** "Club: email" lines lose only the email, so club names are kept; any "Dr./Professor Name" sentence is dropped; a line that names a role (president, advisor…) is always dropped whole.
   - **The rule for every club or community question:** a BeachSync button with a sensible term (if Gemini gives no keyword, the student's own words before "club" are used), no invented clubs, and any organization named must appear in a cited page. The test runner's `clubsFromSources` check enforces this.
   - **Tests:** `tests/community-questions.json` (10 varied questions) scored 9/10; `tests/club-and-gaming-questions.json` scored 6/6.
+- [x] **Club keywords, name variants, fewer generic citations (Entry 37).**
+  - **Bad keywords:** a BeachSync keyword that's only generic words ("life and development") or an office or page name is replaced by the student's own words; questions with no club word use what's left after filler words ("I'm queer, where can I find community?" → "queer").
+  - **Name variants:** search-only synonyms in `lib/retrieval.ts` (Filipino ↔ Pilipino; Latino/Latina/Hispanic ↔ Latinx/Latine/Chicanx; queer/gay/lesbian/trans ↔ LGBTQ; Black → African, for "Pan-African"). They're never shown as facts, and the button keeps the student's word.
+  - **No-match club questions** (chess, basket weaving) are now fallbacks with the Who can help card and the BeachSync button.
+  - **The general "all clubs are on BeachSync" sentence** is kept with a citation when no button shows ("how do I join a club"). It should be left out when the button shows, but Gemini follows that prompt rule only part of the time (open item).
+  - **Tests:** community 10/10, club and gaming 7/7.
 - [x] **"Option to write a claim"** (brief: Handling Unsupported Questions). Built in Phase 3 (`app/api/request-topic/route.ts`; `docs/screenshots/*-04b-fallback-topic-requested.png`). Fallback answers show a "Request this topic" button. Clicking it logs only the question text on the server (`console.log`, visible in Vercel logs; no IP, no personal info, no database) and tells the student "Thanks, we'll consider adding this topic."
 - **"Integration of student experiences and reviews where relevant"** (brief: workflow step 4b and CSULB Sources). Decision: **not built; future work.** It conflicts with our official-sources-only rule. Mention it on the "next steps" slide.
 

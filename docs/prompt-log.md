@@ -2162,4 +2162,78 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 37 (Club keywords, name variants, fewer generic citations)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Three fixes; plan first with the scope check.
+> 1. The queer test's BeachSync term became "life and development": reject keywords that are office or page names or only generic words, use the student's words instead, and add the prompt example "I'm queer…" → "LGBTQ".
+> 2. Add search-only synonyms (Filipino ↔ Pilipino; Latino/Hispanic ↔ Latinx, Latine, Chicanx; queer/gay/lesbian/trans ↔ LGBTQ+; Black ↔ Pan-African), say exactly where they go, and keep the student's word on the button.
+> 3. Find out why "Physics & Astronomy Student Organizations" is cited in so many club answers.
+>
+> Approved, with no-match club questions becoming fallbacks, and one exception: leave out the general "all clubs are on BeachSync" sentence only when a BeachSync button shows. Without a button ("how do I join a club"), the answer should still say it with a citation, checked by a test.
+
+**Scope check:** Inside the assignment: search and answer quality only. No new sources; the synonyms are hidden search hints.
+
+**What the AI did:**
+- **Why Physics & Astronomy was cited:**
+  - It's one short chunk (233 words) full of club words, so keyword search ranks it 5th-8th for generic club questions.
+  - The only fact answers took from it was its generic last line, "All student organizations at CSULB can be found on BeachSync".
+- **Bad keywords** (`lib/club-search.ts`): `beachSyncSearch` rejects Gemini's keyword when it's only generic words (life, development, student, center, office, resources…) or equals, or is a generic piece of, an office or page name. "LGBTQ" inside "LGBTQ+ Resource Center" is kept. The fallback then uses the student's own words; with no club word it uses what's left after filler words, if 1-3 words. `lib/rag.ts` passes office names and the shown page titles, and the fallback topic uses only the student's words (not the AI rewrite).
+- **Synonyms:** the `SYNONYMS` table in `lib/retrieval.ts`, keyword search only. The meaning search, rewrite, `club_search` and button are unchanged.
+- **Prompt** (`lib/gemini.ts`):
+  - the "I'm queer…" → "LGBTQ" and "how do I join a club" → "" examples;
+  - "use the community or interest, never an office or page name";
+  - no-match club questions → fallback;
+  - leave out the general BeachSync sentence when club_search is set, and include it, cited, when it's empty.
+- **Tests:**
+  - 7 keyword unit cases in `scripts/check-follow-ups.ts`;
+  - club test #7, "how do I join a club": an answer that mentions BeachSync, at least 1 citation, no button.
+
+**Did it work?**
+- **Offline:**
+  - keyword search now puts the Pilipino page first for "any Filipino student clubs?", and Nuestra Graduación 2nd for "Latino" and "Hispanic";
+  - for "I'm queer…" the Lavender Graduation and LGBTQ+ Resource Center pages lead, and for "Black students" the Pan-African page is 2nd;
+  - coverage is still 150/151; all unit checks, tsc, eslint and build pass.
+- **Community set: 10/10.**
+
+  | Question | Named | Cited | BeachSync |
+  |---|---|---|---|
+  | Vietnamese | Vietnamese Student Association | Vietnamese Graduation, APID Who We Serve, Student Life & Development | "Vietnamese" |
+  | Filipino | Pilipino American Coalition | Pilipino Graduation Celebration | "Filipino" |
+  | Black | none | Cultural Resource Centers, Student Life & Development | "Black" |
+  | Latino | Hispanic Students Business Association | College of Business orgs, Student Organizations | "Latino" |
+  | Queer | none | LGBTQ+ Resource Center, Physics & Astronomy | "LGBTQ" |
+  | Pre-med | American Medical Student Association | Pre-Health Clubs | "pre-med" |
+  | Business | ABSOC, American Marketing Association | College of Business orgs | "business" |
+  | Hiking | none | Club Sports & Recreation | "hiking" |
+  | Gaming | none (fallback) | none | "gaming" |
+  | Cheese rolling | none (fallback) | none | "cheese rolling" |
+- **Club and gaming set: 7/7.**
+  - Cambodian → CSS, "Cambodian".
+  - CS → 3 engineering clubs, "computer science".
+  - Chess, basket weaving → fallback with the button.
+  - Nursing → CNSA, "nursing".
+  - Video games → ASI Games Area, no button.
+  - "how do I join a club" → mentions BeachSync with citations, no button.
+- **Physics & Astronomy citations:** 3 in this run (was 6): queer, CS, and "how do I join a club" (expected there).
+
+**Troubleshooting or redirection (if any):**
+1. **The first keyword check rejected "LGBTQ",** because it's part of "LGBTQ+ Resource Center". Narrowed to exact names or name pieces of 2+ words that include a generic word.
+2. **The fallback topic was first built from the student's question plus the AI's rewritten queries.** It now uses only the student's words.
+3. **The prompt rule is only partly followed:** in reruns, the CS and "are there gaming clubs" answers still ended with "All student organizations at CSULB can be found on BeachSync [Physics & Astronomy]" although the button was shown. Not fixed yet; waiting for the team.
+4. **Answers vary between runs:**
+   - "are there gaming clubs" fell back in the test run but named the Video Game Development Association in a rerun;
+   - "is there a hiking club" cited ASI Outdoor Adventures in the rerun but not in the test run;
+   - the rerun said "CSULB offers hiking activities through Club Sports & Recreation" without a citation for that part.
+
+   Not fixed yet; waiting for the team.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
