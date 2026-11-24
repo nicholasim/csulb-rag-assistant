@@ -207,6 +207,19 @@ const SOURCES: Source[] = [
   { slug: "american-indian-student-organizations", title: "American Indian Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/american-indian-student-organizations", stripContacts: true },
   { slug: "physics-astronomy-student-organizations", title: "Physics & Astronomy Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/physics-astronomy/student-organizations", stripContacts: true },
   { slug: "liberal-studies-student-association", title: "Liberal Studies Student Association (LSSA)", category: "Campus Places", url: "https://www.csulb.edu/college-of-education/liberal-studies/peer-mentors-liberal-studies-student-association-lssa", stripContacts: true },
+  // Entry 36: official pages that name student groups across many communities and interests
+  // (the cultural graduation celebration pages name the student groups that host them).
+  { slug: "vietnamese-graduation-celebration", title: "Vietnamese Graduation Celebration (Vietnamese Student Association)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/vietnamese-graduation-celebration", stripContacts: true },
+  { slug: "pilipino-graduation-celebration", title: "Pilipino Graduation Celebration (Pilipino American Coalition)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/pilipino-graduation-celebration", stripContacts: true },
+  { slug: "pacific-islander-graduation-celebration", title: "Pacific Islander Graduation Celebration (Pacific Islander Association)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/pacific-islander-graduation-celebration", stripContacts: true },
+  { slug: "nuestra-graduacion", title: "Nuestra Graduación: Latine Graduation Celebration (Latinx Student Union)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/nuestra-graduacion-our-graduation-celebration", stripContacts: true },
+  { slug: "black-pan-african-graduation-celebration", title: "Black/Pan-African Graduation Celebration", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/blackpan-african-graduation-celebration", stripContacts: true },
+  { slug: "lavender-graduation-celebration", title: "Lavender Graduation Celebration (LGBTQ+ Resource Center)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/lavender-graduation-celebration", stripContacts: true },
+  { slug: "mena-graduation-celebration", title: "Middle Eastern and North African (MENA) Graduation Celebration", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/middle-eastern-and-north-african-mena-graduation", stripContacts: true },
+  { slug: "american-indian-graduation-celebration", title: "American Indian Graduation Celebration (American Indian Student Council)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/american-indian-graduation-celebration", stripContacts: true },
+  { slug: "beyond-borders-graduation-celebration", title: "Beyond Borders Graduation Celebration (Dream Success Center)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/beyond-borders-graduation-celebration", stripContacts: true },
+  { slug: "pre-health-opportunities", title: "Pre-Health Clubs and Experience (Health Professions Advising Office)", category: "Campus Places", url: "https://www.csulb.edu/college-of-natural-sciences-and-mathematics/hpao/opportunities-for-experience", stripContacts: true },
+  { slug: "asi-outdoor-adventures", title: "ASI Outdoor Adventures (hiking and outdoor trips)", category: "Recreation", url: "https://asirecreation.org/outdoor-adventures", contentSelector: ".item-page", stripContacts: true },
   // Entry 35: official pages that name Cambodian and other APID student groups and programs.
   { slug: "cambodian-graduation-celebration", title: "Cambodian Graduation Celebration (Cambodian Student Society)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/cambodian-graduation-celebration", stripContacts: true },
   { slug: "apid-who-we-serve", title: "APID Resource Center: Who We Serve", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/asian-pacific-islander-desi-resource-center/who-apid", stripContacts: true },
@@ -398,11 +411,17 @@ const CONTACT_MARK = "CONTACTREMOVED"; // plain letters, so the Markdown convert
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
 const PHONE = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
 const CONTACT_WORDS = /\b(advisors?|advisers?|officers?|president|vice president|treasurer|secretary|coordinator|contacts?|e-?mail|phone|board|e-?board|cabinet|recipients?)\b/i;
-// Entry 35: a sentence that names people in a role ("With the help of ... CSS faculty advisors, Dr. A,
-// Dr. B, ...") is dropped too: a role word plus a title before a name, in either order.
-const NAMED_ROLE = /\b(advisors?|advisers?|officers?|president|treasurer|secretary|coordinator)\b[\s\S]*\b(Dr\.|Professor|Prof\.)\s+[A-Z]|\b(Dr\.|Professor|Prof\.)\s+[A-Z][\s\S]*\b(advisors?|advisers?|officers?|president|coordinator)\b/;
+// A sentence that names a person by title ("CSS faculty advisors, Dr. A, Dr. B", Entry 35; any
+// "Dr. Name" or "Professor Name", Entry 36) is dropped too, so no staff or faculty names are stored.
+const TITLED_NAME = /\b(Dr\.|Prof\.|Professor)\s+[A-Z]/;
+// "Club Name: club@gmail.com" (Entry 36): only the email and its ":" or dash go; the club name stays.
+// A "Contact:" or "Email:" word just before it goes too ("...field trips. Contact: x@y" -> "...field trips.").
+const LABELED_EMAIL = new RegExp(`(\\s*\\b(?:contact|e-?mail)\\b)?\\s*[:\\u2013\\u2014-]\\s*(${CONTACT_MARK}|${EMAIL.source})\\s*$`, "i");
+// ...but never on a line that names a role ("contact President, A at: x or Vice President, B at: y"):
+// there the whole sentence must go, names included.
+const ROLE_WORD = /\b(president|vice president|officers?|advisors?|advisers?|treasurer|secretary|coordinator|chair)\b/i;
 function removeContacts(markdown: string) {
-  const hasContact = (text: string) => text.includes(CONTACT_MARK) || EMAIL.test(text) || PHONE.test(text) || NAMED_ROLE.test(text);
+  const hasContact = (text: string) => text.includes(CONTACT_MARK) || EMAIL.test(text) || PHONE.test(text) || TITLED_NAME.test(text);
   return markdown
     .split(/\n{2,}/)
     .filter(function (this: { dropList: boolean; dropSection: boolean }, para) {
@@ -427,6 +446,7 @@ function removeContacts(markdown: string) {
     .split("\n")
     // Role lines that name a person ("**President:** Name", "Faculty Advisor: Name").
     .filter((line) => !/^\W*([A-Za-z]+ ){0,2}(advisors?|advisers?|officers?|president|vice president|treasurer|secretary|coordinator|contact|e-?mail|phone)\b[^:.]{0,40}:/i.test(line.trim()))
+    .map((line) => (ROLE_WORD.test(line) ? line : line.replace(LABELED_EMAIL, "")))
     .map((line) => {
       if (!hasContact(line)) return line;
       if (/^\W*(e-?mail|phone|tel|contact)\b[^.]*:/i.test(line.trim())) return "";

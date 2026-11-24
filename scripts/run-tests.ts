@@ -18,6 +18,31 @@
  * /api/chat route code directly inside this script, where GEMINI_API_KEY is removed first.
  */
 import { readFile, writeFile } from "node:fs/promises";
+import { readdirSync, readFileSync } from "node:fs";
+
+// ---- Club names must come from our sources (Entry 36) ----
+// Organization names in an answer: capitalized words ending in Association, Society, Club, Council,
+// Union, Coalition, Alliance, or Organization ("Vietnamese Student Association", "Pre-Physician
+// Assistant Club"). The first word is capitalized; small joining words (of, for, and, the) may appear inside.
+const ORG_NAME = /\b([A-Z][\w'’&.\/-]*(?:\s+(?:[A-Z][\w'’&.\/-]*|of|for|and|the|in|de|&)){0,7}\s+(?:Association|Society|Club|Council|Union|Coalition|Alliance|Organization))\b/g;
+function namedOrgs(answer: string) {
+  const text = answer.replace(/\]\([^)]*\)/g, "]").replace(/[[\]*_]/g, "");
+  return [...new Set([...text.matchAll(ORG_NAME)].map((m) => m[1].replace(/^(The|the|of|for|and|in)\s+/, "").trim()))];
+}
+const squash = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9']+/g, " ").trim();
+let knowledgeByUrl: Map<string, string> | null = null;
+/** Our knowledge files, by page URL (read once). */
+function knowledgeText(url: string) {
+  if (!knowledgeByUrl) {
+    knowledgeByUrl = new Map();
+    for (const file of readdirSync("knowledge")) {
+      const text = readFileSync(`knowledge/${file}`, "utf8");
+      const pageUrl = text.match(/^url: (.*)$/m)?.[1];
+      if (pageUrl) knowledgeByUrl.set(pageUrl, squash(text));
+    }
+  }
+  return knowledgeByUrl.get(url) ?? "";
+}
 
 const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 const DELAY_MS = Number(process.env.DELAY_MS ?? 5000);
@@ -47,6 +72,8 @@ type Expect = {
   helpOffice?: boolean;
   helpOfficeName?: string; // if the reply is a fallback with an office, its name must match this pattern (Entry 34)
   beachsyncTerm?: string | null; // Entry 34: pattern the BeachSync club search keyword must match; null = no BeachSync button
+  clubsFromSources?: boolean; // Entry 36: every organization the answer names must appear in one of its cited pages
+  noClubsNamed?: boolean; // Entry 36: the answer must not name any organization (a club our pages don't list)
 };
 
 type Test = {
@@ -68,7 +95,7 @@ type ApiResult = {
   body: {
     type?: string;
     answer?: string;
-    sources?: { id: number; title: string; excerpt: string }[];
+    sources?: { id: number; title: string; url: string; excerpt: string }[];
     suggestion?: { title: string; url: string } | null;
     model?: string | null;
     correctedQuestion?: string | null;
@@ -152,6 +179,13 @@ function check(test: Test, result: ApiResult): string[] {
   }
   if (expect.helpOfficeName && body.type === "fallback" && body.helpOffice && !new RegExp(expect.helpOfficeName, "i").test(body.helpOffice.name)) {
     problems.push(`expected "Who can help" to match /${expect.helpOfficeName}/, got "${body.helpOffice.name}"`);
+  }
+  if (expect.clubsFromSources || expect.noClubsNamed) {
+    const cited = (body.sources ?? []).map((s) => knowledgeText(s.url)).join("\n");
+    for (const name of namedOrgs(body.answer ?? "")) {
+      if (expect.noClubsNamed && !/^(Associated Students|Student Life)/.test(name)) problems.push(`expected no club named, got "${name}"`);
+      else if (!cited.includes(squash(name))) problems.push(`names "${name}", which isn't in any cited source`);
+    }
   }
   if (expect.beachsyncTerm === null && body.beachsyncSearch) problems.push(`expected no BeachSync button, got "${body.beachsyncSearch.term}"`);
   if (typeof expect.beachsyncTerm === "string" && !new RegExp(expect.beachsyncTerm, "i").test(body.beachsyncSearch?.term ?? "")) {
@@ -269,6 +303,11 @@ async function main() {
       if (result.body.answer) console.log(`        answer: ${result.body.answer.replace(/\s+/g, " ")}`);
     }
     if (ONLY) console.log(`        ${row.summary}  [${model}, ${(ms / 1000).toFixed(1)}s]`);
+    // Entry 36: for club and community questions, what it named, what it cited, and the BeachSync term.
+    if (test.expect.clubsFromSources || test.expect.noClubsNamed) {
+      const b = result.body;
+      console.log(`        named: ${JSON.stringify(namedOrgs(b.answer ?? ""))} | cited: ${JSON.stringify((b.sources ?? []).map((s) => s.title))} | BeachSync: ${b.beachsyncSearch ? JSON.stringify(b.beachsyncSearch.term) : "none"} | ${b.type}`);
+    }
   }
 
   // Results table for the terminal and for docs/test-results.md.

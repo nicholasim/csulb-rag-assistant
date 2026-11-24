@@ -2087,4 +2087,79 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 36 (Club and community questions that work for everyone)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Correction: the Cambodian question was just one example. ANY club or community question should work well. Plan first with the scope check.
+> 1. Tests shouldn't depend on one specific club. The rule: a BeachSync button with a sensible search term, no invented clubs, and any club named must come from our sources.
+> 2. Basket weaving: if Gemini leaves the club keyword empty, use the words before "club"/"organization".
+> 3. Broaden coverage with official pages naming student groups across many communities and interests (show the list before fetching), with contacts stripped.
+> 4. Gently nudge the prompt to mention resource centers or programs that serve the student's community or interest.
+> 5. Test about 10 varied questions and report what each named, cited, and searched for.
+
+**Scope check:** Inside the assignment: official csulb.edu pages plus one ASI rec page (an approved domain), and quality fixes. Flagged: graduation-celebration pages describe yearly events whose dates change.
+
+**What the AI did:**
+- **11 pages, team-approved before fetching (145 total):**
+  - 9 cultural graduation celebration pages: Vietnamese, Pilipino, Pacific Islander, Nuestra Graduación (Latine), Black/Pan-African, Lavender (LGBTQ+), MENA, American Indian, Beyond Borders (Dream Success Center);
+  - the Health Professions Advising Office's "Opportunities for Experience" page (pre-health clubs);
+  - ASI Outdoor Adventures (hiking).
+
+  The resource centers' own home pages were not added, because they repeat text already in our Cultural Resource Centers page.
+- **Contact stripping:**
+  - "Club: email" lines lose only the email and its "Contact:" label, so club names stay;
+  - any "Dr./Professor Name" sentence is dropped;
+  - a line that names a role (president, advisor…) is never trimmed, only dropped whole.
+- **BeachSync keyword fallback** (`topicFromQuestion` in `lib/club-search.ts`): "underwater basket weaving club" → "underwater basket weaving", "clubs for nursing students" → "nursing", "I'm Vietnamese, are there groups for me?" → "vietnamese". A question with no topic ("how do I join a club") gets no button.
+- **Prompt:** mention a resource center, office, or program that serves the student's community or interest, with a citation.
+- **Generic tests:**
+  - the new `clubsFromSources` runner check: every organization name in the answer must appear in a cited page's knowledge file;
+  - `noClubsNamed` for a question that shouldn't match;
+  - the runner prints a named / cited / BeachSync line for each question;
+  - the club tests no longer require any specific club;
+  - new `tests/community-questions.json` (10 questions).
+
+**Did it work?**
+- **Offline:**
+  - the 11 new files have 0 emails, 0 phone numbers and no titled names; the 7 pre-health club names and descriptions are kept;
+  - the 13 earlier stripped pages are unchanged by the new rules (the Cambodian page changed on csulb.edu itself);
+  - coverage is still 150/151; `check:follow-ups` (6 new keyword-fallback cases), `check:presets`, tsc, eslint and build pass.
+- **Community set: 9/10.**
+
+  | Question | Named | Cited | BeachSync |
+  |---|---|---|---|
+  | Vietnamese | Vietnamese Student Association | Vietnamese Graduation Celebration, APID Who We Serve, Student Life & Development | "Vietnamese" |
+  | Filipino | none | APID Who We Serve, Physics & Astronomy orgs | "Filipino" |
+  | Black | Black Business Students Association | Cultural Resource Centers, College of Business orgs, Student Life & Development | "Black" |
+  | Latino | none | Student Organizations, Student Life & Development, LSSA | "Latino" |
+  | Queer (FAIL) | none | LGBTQ+ Resource Center, Cultural Resource Centers | "life and development" |
+  | Pre-med | AMSA, Minority-Focused Alliance of Pre-Health Students | Pre-Health Clubs | "pre-health" |
+  | Business | ABSOC, American Marketing Association, Financial Management Association | College of Business orgs, Physics & Astronomy orgs | "business" |
+  | Hiking | (Office of Club Sports & Recreation) | ASI Outdoor Adventures, Club Sports & Recreation | "hiking" |
+  | Gaming | Video Game Development Association | Engineering clubs, Physics & Astronomy orgs | "gaming" |
+  | Cheese rolling | none | Club Sports & Recreation, Liberal Arts clubs | "cheese rolling" |
+- **Club and gaming set: 6/6.**
+  - Cambodian → Cambodian Student Society, "Cambodian".
+  - CS → AI Research Club, Cybersecurity Club, Embedded Applications Technology Society, "computer science".
+  - Chess → none named, "chess".
+  - Nursing → California Nursing Student Association, "nursing".
+  - Basket weaving → none named, "underwater basket weaving".
+  - Video games → ASI Games Area, no button.
+
+**Troubleshooting or redirection (if any):**
+1. **Auto mode blocked the page fetch again,** so the team member ran `npm run fetch-sources` by hand, twice.
+2. **The first fetch brought back two student officers' names** on the Liberal Studies page. The new "Club: email" rule removed the emails from "please contact President, … at: … Vice President, … at: …", so the line no longer looked like contact details and was kept. Caught by diffing the earlier pages; fixed so role lines are always dropped whole, then fetched again. The pre-health page also kept a dangling "Contact" word, fixed in the same pass.
+3. **The Cambodian Graduation Celebration page changed on csulb.edu** between fetches: it now shows the past May 3, 2026 event with registration closed. Not our code; noted as a limitation.
+4. **Community #5 failed** ("I'm queer, where can I find community?"). Gemini set the club keyword to "life and development" (from Student Life & Development) instead of the student's topic. The answer itself was good: the LGBTQ+ Resource Center, cited. Not fixed yet; waiting for the team.
+5. **Retrieval misses (tests passed, answers weaker):** "Filipino" didn't reach the Pilipino page (Pilipino American Coalition), and "Latino" didn't reach the Nuestra Graduación page (Latinx Student Union) or the Latine Resource Center, because of spelling differences. Not fixed yet; waiting for the team.
+6. **The name checker is a rough pattern:** it caught "Office of Club" (from "Office of Club Sports & Recreation") and cut "Minority-Focused Alliance of Pre-Health Students" short. Both are in the cited pages, so no false failures.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

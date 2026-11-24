@@ -138,9 +138,14 @@ async function main() {
     { term: "Cambodian", question: "I'm Cambodian, how can I get involved with my culture on campus?", url: "https://csulb.campuslabs.com/engage/organizations?query=Cambodian" },
     { term: "computer science club", question: "I'm a CS student, what clubs can help me gain experience?", url: "https://csulb.campuslabs.com/engage/organizations?query=computer%20science" },
     { term: "chess<script>&x=1", question: "chess clubs", url: "https://csulb.campuslabs.com/engage/organizations?query=chess%20script%20x" },
-    { term: "", question: "is there a chess club", url: null },
     { term: "chess", question: "How much is a parking permit?", url: null }, // not a club question: no button
-    { term: undefined, question: "clubs for nursing students", url: null },
+    // Entry 36: an empty keyword falls back to the student's own words for the topic.
+    { term: "", question: "is there a chess club", url: "https://csulb.campuslabs.com/engage/organizations?query=chess" },
+    { term: undefined, question: "clubs for nursing students", url: "https://csulb.campuslabs.com/engage/organizations?query=nursing" },
+    { term: "", question: "is there an underwater basket weaving club", url: "https://csulb.campuslabs.com/engage/organizations?query=underwater%20basket%20weaving" },
+    { term: "", question: "I'm Vietnamese, are there groups for me?", url: "https://csulb.campuslabs.com/engage/organizations?query=vietnamese" },
+    { term: "", question: "how do I join a club", url: null }, // no topic: no button
+    { term: "", question: "How much is a parking permit?", url: null },
   ];
   for (const c of linkCases) {
     const got = beachSyncSearch(c.term, c.question)?.url ?? null;
