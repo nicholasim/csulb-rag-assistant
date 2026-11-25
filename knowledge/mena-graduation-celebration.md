@@ -9,7 +9,7 @@ retrieved: 2026-11-24
 
 MENA invites you to join them as they celebrate the academic accomplishments of all Middle Eastern and North African students at CSULB.
 
-Thank you for your interest in attending the Middle Eastern and North African (MENA) Graduation Celebration. Registration is not open yet. Please check back later.
+Thank you for your interest in attending the Middle Eastern and North African (MENA) Graduation Celebration. The registration has been closed.
 
 _The Cultural Graduation Celebrations are voluntary and open to all graduating students who would like to participate, regardless of race, sex, color, ethnicity or national origin._
 
@@ -17,9 +17,9 @@ _The Cultural Graduation Celebrations are voluntary and open to all graduating s
 
 |  |  |
 | --- | --- |
-| **When** | Sunday, April 25, 2027. Time TBA. |
-| **Registration Deadline** | TBA |
-| **Location** | TBA [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
+| **When** | Saturday,  April 18, 2026, at 6 p.m. |
+| **Registration Deadline** | Friday, April 10, 2026 at 5:00 p.m. |
+| **Location** | The Pointe [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
 | **Contact** | |
 | **Cost to Participate** | $50  • Registration and payment to participate in the program are completed online. All payments are final and there are no refunds. • You will receive two confirmation emails after registering. One will confirm your registration information while the other will confirm your payment receipt. Please be sure to list your email correctly to receive these important confirmation emails. • Submit your online payment with a major credit card/debit card or electronic check (e-Check) by the deadline. _\*Note: Credit and/or Debit Card payments will incur a 2.75% service fee that will be added to the purchase total. This charge is assessed by CASHNet, Inc. and is paid directly to CASHNet, Inc. Service fee charges are non-refundable. E-Check payments are free of charge but please make sure your routing and account information is correct. If any returned eCheck payments occur for any reason, you will be charged a $20.00 dishonored e-Check fee per occurrence. Please check with your banking institution if you are not sure about your routing and/or account numbers for e-Check payments before making a payment._ |
 | **Attire** | Graduates must wear their graduation cap and gown. |

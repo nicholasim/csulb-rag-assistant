@@ -33,6 +33,10 @@ type Source = {
   // Entry 34: remove email addresses, phone numbers, and staff contact lines before saving, so no
   // officer or staff contact details are stored (used for the club and student-org pages).
   stripContacts?: boolean;
+  // Entry 40: office pages keep their office phone and email, but not a staff member's name.
+  // Drops a line that is only a bolded name (2-3 capitalized words) when the next line is a phone
+  // number or email ("**Jane Doe**" above "562.985.1579"). Only turned on for pages that need it.
+  dropStaffNameLines?: boolean;
 };
 
 // The approved sources from the "CSULB Sources" table in our brief, plus the pages we
@@ -207,6 +211,15 @@ const SOURCES: Source[] = [
   { slug: "american-indian-student-organizations", title: "American Indian Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/student-life-development/american-indian-student-organizations", stripContacts: true },
   { slug: "physics-astronomy-student-organizations", title: "Physics & Astronomy Student Organizations", category: "Campus Places", url: "https://www.csulb.edu/physics-astronomy/student-organizations", stripContacts: true },
   { slug: "liberal-studies-student-association", title: "Liberal Studies Student Association (LSSA)", category: "Campus Places", url: "https://www.csulb.edu/college-of-education/liberal-studies/peer-mentors-liberal-studies-student-association-lssa", stripContacts: true },
+  // ---- Coverage round B4 (prompt log Entry 40, team-approved list). ----
+  // Lost and Found is an office page: its office phone/email and drop-off desk phones are how
+  // students reach it, so (like CAPS or Student Health) it keeps them; it names no people.
+  { slug: "student-parent-childcare", title: "Childcare for Student Parents", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/pregnant-and-parenting-students/childcare", stripContacts: true },
+  { slug: "student-parent-campus-resources", title: "Campus Resources for Pregnant and Parenting Students", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/pregnant-and-parenting-students/campus-resources", stripContacts: true },
+  { slug: "lost-and-found", title: "Lost and Found", category: "Campus Places", url: "https://www.csulb.edu/parking-operations/lost-and-found", dropStaffNameLines: true },
+  { slug: "preferred-first-name", title: "Setting Your Preferred First Name (and Legal Name Changes)", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/setting-your-preferred-first-name", stripContacts: true },
+  { slug: "cast-mental-health-team", title: "Campus Assessment & Stabilization Team (CAST)", category: "Basic Student Support", url: "https://www.csulb.edu/student-affairs/campus-assessment-stabilization-team", stripContacts: true },
+  { slug: "schedule-of-classes", title: "Schedule of Classes: Modes of Instruction", category: "Enrollment / Registration", url: "https://www.csulb.edu/student-records/schedule-of-classes", stripContacts: true },
   // Entry 36: official pages that name student groups across many communities and interests
   // (the cultural graduation celebration pages name the student groups that host them).
   { slug: "vietnamese-graduation-celebration", title: "Vietnamese Graduation Celebration (Vietnamese Student Association)", category: "Campus Places", url: "https://www.csulb.edu/student-affairs/cultural-graduation-celebrations/vietnamese-graduation-celebration", stripContacts: true },
@@ -302,7 +315,7 @@ async function download(url: string) {
 }
 
 /** Download one page and turn its main content into Markdown. */
-async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main", stripContacts = false }: Source) {
+async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main", stripContacts = false, dropStaffNameLines = false }: Source) {
   const $ = cheerio.load(await download(url));
 
   // "Load More" pages: download each extra batch and add its list entries after ours.
@@ -393,6 +406,7 @@ async function fetchAsMarkdown({ url, morePages = 0, contentSelector = "main", s
     .replace(/(\n\s*\* \* \*\s*)+$/, "") // drop trailing divider lines
     .trim();
   if (stripContacts) markdown = removeContacts(markdown);
+  if (dropStaffNameLines) markdown = removeStaffNameLines(markdown);
 
   return { title, markdown };
 }
@@ -462,6 +476,21 @@ function removeContacts(markdown: string) {
     .replace(/\n{3,}/g, "\n\n")
     .replace(/(\n\s*\* \* \*\s*)*\n## Sidebar\s*$/, "") // a sidebar left empty after removing its contact section
     .trim();
+}
+
+/**
+ * Entry 40: remove a staff member's name from an office page's contact block, keeping the office
+ * address, phone, email and hours. A line that is only a bolded name of 2-3 capitalized words goes
+ * when the next non-empty line is a phone number or email; headings like "**Hours**" stay.
+ */
+function removeStaffNameLines(markdown: string) {
+  const lines = markdown.split("\n");
+  const kept = lines.filter((line, i) => {
+    if (!/^\s*\*\*[A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’.-]+){1,2}\*\*\s*$/.test(line)) return true;
+    const next = lines.slice(i + 1).find((l) => l.trim() !== "") ?? "";
+    return !(PHONE.test(next) || EMAIL.test(next));
+  });
+  return kept.join("\n");
 }
 
 /** Page text for checking directory sentences and contacts: main content, sidebar, and meta description. */

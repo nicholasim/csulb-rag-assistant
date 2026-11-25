@@ -9,7 +9,7 @@ retrieved: 2026-11-24
 
 The Vietnamese Student Association invites you to join them as they celebrate the academic accomplishments of all Vietnamese students at CSULB.
 
-Thank you for your interest in attending the Vietnamese Graduation Celebration. Registration is not open yet. Please check back later.
+Thank you for your interest in attending the Vietnamese Graduation Celebration. The registration has been closed.
 
 _The Cultural Graduation Celebrations are voluntary and open to all graduating students who would like to participate, regardless of race, sex, color, ethnicity or national origin._
 
@@ -17,9 +17,9 @@ _The Cultural Graduation Celebrations are voluntary and open to all graduating s
 
 |  |  |
 | --- | --- |
-| **When** | Saturday, May 1, 2027. Time TBA. |
-| **Deadline** | TBA  **Important Note:** Only online payments will be accepted, and payment is required to submit your registration. |
-| **Location** | TBA [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
+| **When** | Saturday, May 9, 2026, at 4:00 p.m. |
+| **Deadline** | Friday, April 10, 2026 at 5:00 p.m.  **Important Note:** Only online payments will be accepted, and payment is required to submit your registration. |
+| **Location** | The Pointe [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
 | **Contact** | |
 | **Cost to Participate** | $55  • Registration and payment to participate in the program are completed online. All payments are final and there are no refunds. • You will receive two confirmation emails after registering. One will confirm your registration information while the other will confirm your payment receipt. Please be sure to list your email correctly to receive these important confirmation emails. • Submit your online payment with a major credit card/debit card or electronic check (e-Check) by the deadline. _\*Note: Credit and/or Debit Card payments will incur a 2.75% service fee that will be added to the purchase total. This charge is assessed by CASHNet, Inc. and is paid directly to CASHNet, Inc. Service fee charges are non-refundable. E-Check payments are free of charge but please make sure your routing and account information is correct. If any returned eCheck payments occur for any reason, you will be charged a $20.00 dishonored e-Check fee per occurrence. Please check with your banking institution if you are not sure about your routing and/or account numbers for e-Check payments before making a payment._ |
 | **Attire** | Graduates must wear their graduation cap and gown. |
@@ -41,15 +41,14 @@ _Particularly as federal immigration policies evolve, there may be concerns that
 
 ## Sidebar
 
-## 2026
+## 2025
 
--   [2026 Photo Gallery](https://www.flickr.com/photos/190912417@N04/albums/72177720333629708/)
+-   [2025 Photo Gallery](https://www.flickr.com/photos/190912417@N04/albums/72177720326269823/)
 
 * * *
 
 ## Others
 
--   [2025 Photo Gallery](https://www.flickr.com/photos/190912417@N04/albums/72177720326269823/)
 -   [2024 Photo Gallery](https://flic.kr/s/aHBqjBrKz6)
 -   [2023 Photo Gallery](https://photos.app.goo.gl/qbHSorFvCd1k6fVS6) | [Video](https://youtu.be/Ma4-vN44-yI)
 -   [2022 Photo Gallery](https://photos.app.goo.gl/jUzVAH2FVc1TuSiHA)| [Virtual Celebration Slideshow](https://youtu.be/_P0zFJZpsaw)

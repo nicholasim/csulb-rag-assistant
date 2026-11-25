@@ -9,11 +9,11 @@ retrieved: 2026-11-24
 
 The Latinx Student Union, Latine Resource Center, and the Student Affairs Division invites you to join them as they celebrate the academic accomplishments of all Latinx students at CSULB. Due to the high demand, we offer two celebration sessions.
 
-The graduation ceremony is only open to Fall 26, Winter 26, Spring 27, and Summer 27 graduates.
+The graduation ceremony is only open to Fall 25, Winter 25, Spring 26, and Summer 26 graduates.
 
 Follow our Instagram account to stay updated: [**csulb\_latinxgrad**](https://instagram.com/csulb_latinxgrad)
 
-Thank you for your interest in attending the Nuestra Graduación  (Our Graduation) Celebration. Registration is not open yet. Please check back later.
+Thank you for your interest in attending the Nuestra Graduación  (Our Graduation) Celebration. The registration has been closed.
 
 _The Cultural Graduation Celebrations are voluntary and open to all graduating students who would like to participate, regardless of race, sex, color, ethnicity or national origin._
 
@@ -23,9 +23,9 @@ _Particularly as federal immigration policies evolve, there may be concerns that
 
 |  |  |
 | --- | --- |
-| **When** | Session 1: Saturday, May 15, 2027. Time TBA Session 2: Saturday, May 15, 2027. Time TBA _**\*Note: Student may NOT switch their Session after submitting their registration. No exceptions will be made.**_ |
-| **Deadline** | TBA \***Note:** _**Only online payments will be accepted, and payment is required to submit your registration.**_  |
-| **Location** | TBA [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
+| **When** | Session 1: Saturday, May 16, 2026, at 10:00 a.m. Session 2: Saturday, May 16, 2026, at 4:00 p.m. _**\*Note: Student may NOT switch their Session after submitting their registration. No exceptions will be made.**_ |
+| **Deadline** | Friday, April 10, 2026 at 5:00 p.m. \***Note:** _**Only online payments will be accepted, and payment is required to submit your registration.**_  |
+| **Location** | LBS Financial Credit Union Pyramid [Parking Map](https://map.concept3d.com/?id=1314#!ce/37105?ct/42039,41596,41597) |
 | **Contact** | |
 | **Cost to Participate** | $65 • You must complete the online registration and pay the registration all at once in order for your registration to be submitted. All payments are final. **There are no refunds.** • You will receive two confirmation emails after registering. One will confirm your registration information while the other will confirm your payment receipt. **Please be sure to list your email correctly to receive these important confirmation emails**. • Submit online payment with a major credit card/debit card or electronic check (e-Check) by the deadline. _\*Note: Credit and/or Debit Card payments will incur a 2.75% service fee that will be added to the purchase total. This charge is assessed by CASHNet, Inc. and is paid directly to CASHNet, Inc. Service fee charges are non-refundable. E-Check payments are free of charge but please make sure your routing and account information is correct. If any returned e-Check payments occur for any reason, you will be charged a $20.00 dishonored e-Check fee per occurrence. Please check with your banking institution if you are not sure about your routing and/or account numbers for e-Check payments before making a payment._ |
 | **Attire** | Graduates must wear their graduation cap and gown. |

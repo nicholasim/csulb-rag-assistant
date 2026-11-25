@@ -2345,4 +2345,62 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 40 (Coverage round B4)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Coverage round B4; plan first with the scope check. Check 8 candidate csulb.edu pages (pregnant and parenting students, Beach Wellness, CAST (it must not change our crisis rule), schedule of classes, /help, graduate studies, parents and family orientation, /alert). Also look for official pages for our known gaps: lost and found, laptop loans, name change. For each, confirm it returns 200 with real text, say which bank questions it answers, and skip any already covered or mostly staff names. Show the list before fetching and strip contacts as usual. After fetching: re-embed, check:coverage, then a full regression.
+
+**Scope check:** Inside the assignment: official csulb.edu pages only. Flagged:
+- **Office contacts:** office pages keep their office phone and email; only people's details are stripped.
+- **CAST and the crisis rule:** CAST can't change the crisis rule, because the crisis reply is fixed text that runs before search.
+
+**What the AI did:**
+- **Checked every candidate.** The team approved 6 pages:
+  - student-parent childcare and campus resources (bank #96);
+  - Lost and Found (#137);
+  - Setting Your Preferred First Name, which also covers legal name changes (#145);
+  - CAST;
+  - Schedule of Classes (modes of instruction).
+- **Skipped:**
+  - the pregnant-and-parenting main page (thin) and ASI's Child Development Center page (repeats the childcare page);
+  - Beach Wellness (links to services we already have) and /help (mostly a phone list);
+  - graduate studies (a marketing overview) and parent and family programs (written for families);
+  - /alert (no content; BeachALERT already covers #135).
+  - **Laptop loans (#111):** no current official page. The CSUCCESS page returns 403, and official pages say the loan program ended in Spring 2023.
+- **Lost and Found** is an office page, so it keeps its office phone and email. Its sidebar named a staff member, which the pre-fetch check missed. The team approved a new `dropStaffNameLines` option, used only on that page: it drops a line that is only a bolded name when the next line is a phone number or email.
+- **Question bank:** `expectedPages` for #96, #137 and #145 now point to the new pages.
+
+**Did it work?**
+- **The files:**
+  - the 5 contact-stripped new pages have 0 emails, 0 phones and no titled names;
+  - in Lost and Found, "David Pedersen" is gone, and the address (1331 Palo Verde Avenue), phone (562.985.1579), email and hours are still there;
+  - the 24 earlier contact-stripped pages are clean. Five graduation pages changed on csulb.edu itself, back to the past 2026 events.
+- **Offline:** coverage is **152/153** (was 150/151); only #7 still misses. All offline checks, tsc, eslint and build pass.
+- **Full regression:**
+
+  | Set | Entry 39 | Now |
+  |---|---|---|
+  | Presets (22) | 21/22 | **22/22** |
+  | Original (42) | 41/42 | **40/42** (#4, #29) |
+  | Student (48) | 47/48 | **48/48** |
+  | Club and community (17) | 17/17 | 17/17 |
+- **The 2 that got worse**, each rerun twice:
+  - **#4** "How do I check my financial aid status?" passed both reruns: run-to-run variation (the same question failed as preset #2 in Entry 39).
+  - **#29** "how do i reserve a studdy room" failed 1 of 2 reruns (2 of 3 overall), answering with the iSpace podcast studios. None of the 8 sections shown for it are B4 pages.
+
+**Troubleshooting or redirection (if any):**
+1. **Auto mode blocked fetching,** so the team member ran `npm run fetch-sources` by hand, twice.
+2. **The pre-fetch check missed a staff name** in the Lost and Found sidebar, because only the main content was scanned. Fixed with the page-only option above and checked after a re-fetch.
+3. **The first edit to `tests/question-bank.json` reformatted the whole file** (2-space instead of 1-space indent). Reverted and redone, so the diff is only the 3 questions.
+4. **Original #29 is open, not fixed.** It passed every run before Entry 36 and has failed more often since (1 of 3 in Entry 39, 2 of 3 now). A possible cause is the Entry 36 prompt nudge to "mention a program that serves the student's interest", which may push Gemini toward iSpace instead of the fallback. Not confirmed; waiting for the team.
+5. **Found an older bug in the contact-detail safety check.** The Writing Center page writes its number "(562) 985 5162", with a space where a dash usually goes. The check's phone pattern doesn't read that from the source, so when Gemini writes "(562) 985-5162", the correct number is replaced with "(see the source page for contact details)". Reproduced offline. It dates from Entry 3, not B4. Not fixed yet; waiting for the team. Two email removals in the run couldn't be traced to a question: the emails in the rerun answers are both in our sources.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

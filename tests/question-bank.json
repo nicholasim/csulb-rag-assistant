@@ -903,7 +903,10 @@
    "category": "Campus life",
    "question": "Is there a child care center for student parents?",
    "coverageBefore": "M",
-   "expectedPages": []
+   "expectedPages": [
+    "student-parent-childcare",
+    "student-parent-campus-resources"
+   ]
   },
   {
    "id": 97,
@@ -1279,6 +1282,7 @@
    "question": "Where is lost and found?",
    "coverageBefore": "M",
    "expectedPages": [
+    "lost-and-found",
     "library-circulation-desk"
    ]
   },
@@ -1353,7 +1357,9 @@
    "category": "Records",
    "question": "How do I change my name on my records?",
    "coverageBefore": "P",
-   "expectedPages": []
+   "expectedPages": [
+    "preferred-first-name"
+   ]
   },
   {
    "id": 146,
