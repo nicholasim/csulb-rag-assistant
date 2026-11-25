@@ -138,6 +138,24 @@ async function main() {
   console.log(`${phoneOk ? "ok  " : "FAIL"} safety check: a made-up phone number is replaced with a pointer to the source page`);
   if (!phoneOk) failures++;
 
+  // ---- Entry 41: phone numbers compared by digits, emails exactly (ignoring case). ----
+  const uwc = asResults(["writing-center#5"]); // its source says "(562) 985 5162" and "UWC@csulb.edu"
+  const POINTER = "(see the source page for contact details)";
+  const contactCases: { label: string; answer: string; kept: boolean }[] = [
+    { label: "source '(562) 985 5162', answer '(562) 985-5162' is kept", answer: "Call (562) 985-5162 [1].", kept: true },
+    { label: "answer '562.985.5162' is kept", answer: "Call 562.985.5162 [1].", kept: true },
+    { label: "answer '+1 562 985 5162' is kept", answer: "Call +1 562 985 5162 [1].", kept: true },
+    { label: "a made-up '(562) 985-9999' is replaced", answer: "Call (562) 985-9999 [1].", kept: false },
+    { label: "'uwc@csulb.edu' matches 'UWC@csulb.edu' (case ignored)", answer: "Email uwc@csulb.edu [1].", kept: true },
+    { label: "a one-letter-off email is removed", answer: "Email uwx@csulb.edu [1].", kept: false },
+  ];
+  for (const c of contactCases) {
+    const out = removeUnverifiedDetails(c.answer, uwc);
+    const ok = (out === c.answer) === c.kept && (c.kept || out.includes(POINTER));
+    if (!ok) failures++;
+    console.log(`${ok ? "ok  " : "FAIL"} contact: ${c.label}${ok ? "" : ` (got ${JSON.stringify(out)})`}`);
+  }
+
   // ---- Entry 38: the general BeachSync sentence, stray citations, gaming search. ----
   const { dropGeneralBeachSyncSentence, citeOncePerParagraph } = await import("../lib/rag");
   const e38: { label: string; got: string; want: string }[] = [

@@ -2403,4 +2403,48 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 41 (Phone check by digits; does the Entry 36 prompt line cause #29?)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> Yes to both; plan first.
+> 1. Fix the phone check: compare phone numbers by digits only, so "(562) 985 5162" and "(562) 985-5162" match. Add unit cases, and keep comparing emails exactly (ignoring case).
+> 2. Test whether the Entry 36 line ("mention a program that serves the student's interest") causes #29. If yes, limit it to club and community questions. If not, say so and propose whether to accept an honest partial answer in the test.
+>
+> Then rerun the original 42 and the 17 club tests, with before/after.
+
+**Scope check:** Inside the assignment: a safety-check bug fix and an answer-quality check. No new sources.
+
+**What the AI did:**
+- **Phone check** (`lib/rag.ts`): numbers were already compared by digits; the bug was in finding them. The phone pattern only allowed a dot or dash between the last two parts, so "(562) 985 5162" in a source was never collected. It now allows a space, dot or dash in both places (and an optional +1). Emails are unchanged.
+- **6 unit cases** (`scripts/check-follow-ups.ts`):
+  - "(562) 985-5162", "562.985.5162" and "+1 562 985 5162" all match the source's "(562) 985 5162";
+  - a made-up "(562) 985-9999" is replaced with the pointer;
+  - "uwc@csulb.edu" matches "UWC@csulb.edu", and a one-letter-off email is removed.
+- **#29 experiment:** 12 calls in a scratch script, with nothing in the repo changed. The same 8 sections went to Gemini with the current prompt and with the "Communities and interests" line removed.
+
+**Did it work?**
+- **Offline:** the 6 new cases pass, as do `check:follow-ups`, `check:copy`, `check:timeouts`, `check:presets`, tsc, eslint and build.
+- **Writing Center (student #7) live:** the answer gave "(562) 985 5162", and the server logged 0 removals (before, the correct number was replaced).
+- **#29 experiment, with the app's exact search:** **5/6 fallbacks with the line, and 5/6 without it.** Each version gave the iSpace answer once. **The line is not the cause,** so the prompt was not changed.
+- **Before/after:**
+
+  | Set | Entry 40 | Now |
+  |---|---|---|
+  | Original (42) | 40/42 (#4, #29) | 40/42 (#3, #29) |
+  | Club and community (17) | 17/17 | 17/17 |
+
+  #4 passed this time. #3 is the known date-conflict limitation (Feb. 3 only). #29 failed with an honest partial answer: "The sources do not state how to reserve a study room. However, the library offers group study areas on several floors [1]."
+
+**Troubleshooting or redirection (if any):**
+1. **My first #29 experiment was flawed.** It ran the meaning search on both queries, but the app runs it only on the student's typed question, so Gemini was shown different sections. It gave 6/6 fallbacks either way. Re-run with the app's exact search (5/6 vs 5/6); the conclusion is the same.
+2. **#29 is still open.** About 1 in 6 answers says the sources don't explain reserving a study room, then offers a nearby fact (iSpace podcast studios, or group study areas). That's honest, but not the fallback the test expects. **Proposed:** change test #29 to also pass an answer that says the sources don't explain how to reserve a study room, cites a source for anything else it says, and never claims a study room can be reserved. Waiting for the team.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->

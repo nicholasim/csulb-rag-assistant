@@ -335,7 +335,9 @@ export function renumberCitations(answer: string, results: SearchResult[]) {
 
 // Patterns for the contact details we double-check.
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-const PHONE = /\(?\b\d{3}\)?[\s.-]\d{3}[.-]\d{4}\b/g;
+// Entry 41: a space, dot, or dash in both places, so "(562) 985 5162" in a source is found too.
+// Numbers are then compared by digits only (digitsOf), so any spacing matches.
+const PHONE = /(?:\+?1[\s.-]?)?\(?\b\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/g;
 const digitsOf = (phone: string) => phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
 const normalizeUrl = (url: string) => url.replace(/[.,;:]+$/, "").replace(/\/$/, "");
 const safeHost = (url: string) => {
