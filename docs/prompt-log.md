@@ -2331,7 +2331,15 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 **Troubleshooting or redirection (if any):**
 1. **Run-to-run variation** made 3 different tests fail than last time, though each set's count stayed the same or was off by one. Reruns showed they pass, so nothing was changed.
-2. **Preset #1's citation is trimmed most of the time.** The add/drop answer usually cites 2 pages and the filter keeps 1. The test passes, but which page is dropped wasn't checked. Left for the team.
+2. **Preset #1's citation is trimmed most of the time (checked, resolved; no fix needed).**
+   - **Where the dates are:** both are on the one Key Dates page. Section #6 has Feb. 3 (the Registration table) and #10 has Feb. 2 (the Refund table). The filter scores whole pages, so Key Dates is always kept, and both sections share one source chip.
+   - **What gets dropped:** an offline simulation of every two-page citation on the date sentences showed the dropped page is most likely Dropping and Withdrawing. That page states no February date or Spring 2027 deadline, so dropping it is correct. Permission to Add and Day 1 Textbook Access are dropped from the conflict sentence for the same reason.
+   - **The conflict can't be lost to the filter:** it only removes citation numbers, never words, so it can't remove the Feb. 2 vs Feb. 3 conflict from an answer.
+   - **Live tries:** in 3 tries, Gemini stated both dates once and only Feb. 3 twice. That's the known original #3 limitation, not the filter. None of the 3 had a two-page citation, so the filter changed nothing.
+3. **Original #29 "how do i reserve a studdy room" (checked; no fix needed).**
+   - The spelling step changed "studdy" to "study", not "studio".
+   - The failed run searched "how do i reserve a study room" + "University Library study room reservation".
+   - The iSpace podcast-studio answer was Gemini's own choice, a partial answer from a nearby page. It fell back correctly on both reruns, so it's run-to-run variation.
 
 **Screenshot / commit:** none
 
