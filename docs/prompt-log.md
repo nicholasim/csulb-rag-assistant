@@ -2441,7 +2441,13 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 **Troubleshooting or redirection (if any):**
 1. **My first #29 experiment was flawed.** It ran the meaning search on both queries, but the app runs it only on the student's typed question, so Gemini was shown different sections. It gave 6/6 fallbacks either way. Re-run with the app's exact search (5/6 vs 5/6); the conclusion is the same.
-2. **#29 is still open.** About 1 in 6 answers says the sources don't explain reserving a study room, then offers a nearby fact (iSpace podcast studios, or group study areas). That's honest, but not the fallback the test expects. **Proposed:** change test #29 to also pass an answer that says the sources don't explain how to reserve a study room, cites a source for anything else it says, and never claims a study room can be reserved. Waiting for the team.
+2. **#29: the test now accepts an honest partial answer (team-approved).** Test #29 passes a fallback, **or** an answer that:
+   - says the sources don't explain how to reserve a study room;
+   - cites at least one source;
+   - never claims a study room can be reserved.
+   - **Runner:** new `ifAnswer` / `ifFallback` blocks in `scripts/run-tests.ts` apply checks only to that kind of reply. `check()` is exported, and the test run only starts when the file is run directly.
+   - **Offline** (`npm run check:test-rules`, new): 8 fake replies through the real `check()`. These pass: the fallback, and the two partial answers seen live ("The sources do not state how to reserve a study room. However, the library offers group study areas… [1]" and the iSpace version that starts "Our sources do not list how to reserve…"). These fail: "You can reserve a group study room through the library's booking site [1]", "…study rooms can be booked online [1]", a partial answer with no citation, an answer that never says the sources don't cover it, and a fallback without the fallback sentence.
+   - **Live, #29 × 5:** 3 fallbacks passed. 2 failed, correctly: both said "Podcast Studios at the iSpace … are available for reservation" without ever saying the sources don't cover study rooms (rule 1). They answer a different question as if it were the one asked, which is the case the test should catch. No app change was made; Gemini gives this kind of answer in about 1 to 2 out of 5 runs.
 
 **Screenshot / commit:** none
 

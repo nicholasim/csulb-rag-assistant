@@ -19,7 +19,8 @@
     "test:stop-edit": "tsx scripts/test-stop-edit.ts",
     "english-words": "tsx scripts/build-english-words.ts",
     "explain": "tsx scripts/explain.ts",
-    "embeddings": "tsx scripts/build-embeddings.ts"
+    "embeddings": "tsx scripts/build-embeddings.ts",
+    "check:test-rules": "tsx scripts/check-test-rules.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

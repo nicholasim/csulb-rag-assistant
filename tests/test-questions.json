@@ -279,9 +279,25 @@
       "question": "how do i reserve a studdy room",
       "type": "misspelled",
       "area": "Library (not covered)",
-      "expected_behavior": "Fixes 'studdy' to 'study', but our sources still don't explain room reservations, so it falls back.",
-      "expected_fact": "Corrected to 'study room'; fallback sentence",
-      "expect": { "helpOffice": true, "response": "fallback", "correctedQuestion": "study room", "mustInclude": ["do not have enough information"] }
+      "expected_behavior": "Fixes 'studdy' to 'study'. Our sources don't explain room reservations, so it either falls back, or (Entry 41) gives an honest partial answer that (1) says the sources don't explain how to reserve a study room, (2) cites a source for anything else it says, and (3) never claims a study room can be reserved.",
+      "expected_fact": "Corrected to 'study room'; fallback sentence, or an honest partial answer",
+      "expect": {
+        "response": ["fallback", "answer"],
+        "correctedQuestion": "study room",
+        "ifFallback": { "helpOffice": true, "mustInclude": ["do not have enough information"] },
+        "ifAnswer": {
+          "mustIncludeAny": [
+            "(do not|don't|does not|doesn't|not)\\s+(list|state|explain|provide|include|cover|say|mention|describe)[^.]*reserv[^.]*stud(y|ies)\\s+rooms?",
+            "stud(y|ies)\\s+rooms?[^.]*(is|are)\\s+not\\s+(listed|explained|covered|described|mentioned)"
+          ],
+          "minSources": 1,
+          "mustNotInclude": [
+            "(you|students)\\s+(can|may|are able to)\\s+(reserve|book)[^.]*stud(y|ies)\\s+rooms?",
+            "stud(y|ies)\\s+rooms?\\s+(can|may)\\s+be\\s+(reserved|booked)",
+            "(reserve|book)\\s+(a|your)\\s+(group\\s+)?stud(y|ies)\\s+room\\s+(through|on|at|via|by|online)"
+          ]
+        }
+      }
     },
     {
       "id": 30,

@@ -86,9 +86,12 @@ type Expect = {
   beachsyncTerm?: string | null; // Entry 34: pattern the BeachSync club search keyword must match; null = no BeachSync button
   clubsFromSources?: boolean; // Entry 36: every organization the answer names must appear in one of its cited pages
   noClubsNamed?: boolean; // Entry 36: the answer must not name any organization (a club our pages don't list)
+  // Entry 41: extra checks that apply only when the reply is an answer / a fallback.
+  ifAnswer?: Omit<Expect, "response">;
+  ifFallback?: Omit<Expect, "response">;
 };
 
-type Test = {
+export type Test = {
   id: number;
   question: string;
   questionRepeat?: { text: string; times: number };
@@ -102,7 +105,7 @@ type Test = {
   expect: Expect;
 };
 
-type ApiResult = {
+export type ApiResult = {
   httpStatus: number;
   body: {
     type?: string;
@@ -149,7 +152,7 @@ async function askWithoutApiKey(question: string): Promise<ApiResult> {
 }
 
 /** Check one result against what the test expects. Returns a list of problems (empty = pass). */
-function check(test: Test, result: ApiResult): string[] {
+export function check(test: Test, result: ApiResult): string[] {
   const { expect } = test;
   const { body, httpStatus } = result;
   const problems: string[] = [];
@@ -231,6 +234,10 @@ function check(test: Test, result: ApiResult): string[] {
     const laterAt = answer.search(new RegExp(later, "i"));
     if (laterAt !== -1 && (firstAt === -1 || firstAt > laterAt)) problems.push(`/${first}/ must come before /${later}/`);
   }
+  // Entry 41: checks that apply only to one kind of reply (e.g. a test that accepts a fallback OR
+  // an honest partial answer, each with its own rules).
+  const branch = actualType === "answer" ? expect.ifAnswer : actualType === "fallback" ? expect.ifFallback : undefined;
+  if (branch) problems.push(...check({ ...test, expect: { ...branch, response: actualType } }, result).map((p) => `(${actualType}) ${p}`));
   return problems;
 }
 
@@ -375,4 +382,5 @@ async function main() {
   process.exit(failures.length ? 1 : 0);
 }
 
-main();
+// Run only when started directly (npm run test:questions), not when a check script imports check() (Entry 41).
+if (process.argv[1]?.endsWith("run-tests.ts")) main();
