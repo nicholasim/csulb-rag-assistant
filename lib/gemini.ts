@@ -35,6 +35,7 @@ GROUNDING RULES
 - Answer ONLY from the numbered SOURCES in the message. Never use outside knowledge, even if you think you know the answer.
 - Never invent or guess phone numbers, emails, names, dates, prices, hours, or links. Copy them exactly from the sources.
 - If the sources only answer part of the question, answer that part and say plainly which part the sources don't cover.
+- If the sources only describe something related but not the exact thing the student asked about (for example podcast studios when they asked how to reserve a study room), never present it as the answer. Either use "fallback", or start with one sentence saying the sources don't cover the exact thing (name it, for example "Our sources don't explain how to reserve a study room."), then give the related information with its citation.
 
 CITATIONS
 - Cite with the source numbers given, like [1] or [2, 3].

@@ -2453,4 +2453,40 @@ A separate rerun of #5 passed, so the real baseline is about 16-17 of 40 (see th
 
 ---
 
+## Entry 42 (Grounding rule: related information must say what isn't covered first)
+
+**Date:** 2026-11-24
+**Who:**
+**Tool:** Claude Code (VS Code)
+
+**Prompt (summary):**
+> One prompt fix, plan first: add a general rule that if the sources only describe something related but not what the student asked, the answer must first say the sources don't cover the exact thing, then offer the related info with a citation. Test #29 five times, then run a full regression (presets, original, student, clubs), and show anything that got worse before fixing it.
+
+**Scope check:** Inside the assignment: a grounding and honesty rule in the existing system prompt. No new sources.
+
+**What the AI did:**
+- **New rule in `lib/gemini.ts` (GROUNDING RULES),** after the partial-answer rule: "If the sources only describe something related but not the exact thing the student asked about (for example podcast studios when they asked how to reserve a study room), never present it as the answer. Either use "fallback", or start with one sentence saying the sources don't cover the exact thing (name it…), then give the related information with its citation."
+- No code or test changes. Test #29's Entry 41 rules already check this.
+
+**Did it work?**
+- **#29 × 5: 5/5 passed** (was 3/5): 4 fallbacks and 1 honest partial answer, "Our sources don't explain how to reserve a study room. However, podcast studios are available for reservation in the ISPACE [1]."
+- **Full regression:**
+
+  | Set | Before | Now |
+  |---|---|---|
+  | Presets (22) | 22/22 | 22/22 |
+  | Original (42) | 40/42 (#3, #29) | 40/42 (#3, #17) |
+  | Student (48) | 48/48 | 48/48 |
+  | Club and community (17) | 17/17 | 17/17 |
+- **The one that got worse:** #17 "Where are the nearest taco spots near campus?" was treated as a CSULB question (Who can help: Beach Shops, plus an Eat and Shop page) instead of off-topic with example questions. It passed both reruns, and it failed the same way once before (commit `bcf957b`), before this rule existed. Run-to-run variation, not the new rule.
+- #3 is the known date-conflict limitation (Feb. 3 only).
+- tsc, eslint, build, `check:presets` and `check:test-rules` pass.
+
+**Troubleshooting or redirection (if any):**
+1. **#17's off-topic decision can flip between runs.** The question mentions "campus", so Gemini sometimes marks it as about CSULB. Nothing was changed. Noted for the team.
+
+**Screenshot / commit:** none
+
+---
+
 <!-- Copy an entry block above for each new prompt -->
